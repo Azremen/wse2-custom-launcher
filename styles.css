@@ -1,0 +1,56 @@
+@media (prefers-color-scheme: dark) {
+    body { background: #333; color: white; }
+}
+  
+@media (prefers-color-scheme: light) {
+    body { background: #ddd; color: black; }
+}
+
+#top-area {
+    height: calc(100vh - 100px);
+}
+
+#play-btn {
+    font-size: 24px;
+    border-width: 3px !important;
+}
+
+#settings {
+    height: 64px;
+    width: auto;
+}
+
+#footer-middle {
+
+}
+
+#version {
+
+}
+
+#list-pos {
+    height: calc(100vh - 160px);
+    overflow: auto;
+}
+
+#list-pos > button {
+    height: fit-content;
+    width: inherit;
+}
+
+#theme {
+
+}
+
+#buttons {
+
+}
+
+#module-img > img {
+    max-width: 50%;
+    height: auto;
+}
+
+#prg-bar {
+
+}

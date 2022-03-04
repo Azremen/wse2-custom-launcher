@@ -1,0 +1,25 @@
+{
+  "name": "wse2-launcher",
+  "version": "1.0.0",
+  "description": "Warband Script Enhancer 2 Launcher By Azremen",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "keywords": [
+    "WSE2",
+    "Launcher"
+  ],
+  "author": "Azremen <timurid76@gmail.com>",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^17.0.1",
+    "webpack": "^5.69.1",
+    "webpack-cli": "^4.9.2"
+  },
+  "dependencies": {
+    "decompress-zip": "^0.3.3",
+    "request": "^2.88.2"
+  }
+}
