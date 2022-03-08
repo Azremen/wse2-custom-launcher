@@ -18,6 +18,8 @@
 #settings {
     height: 64px;
     width: auto;
+    outline: none;
+    box-shadow: none;
 }
 
 #footer-middle {

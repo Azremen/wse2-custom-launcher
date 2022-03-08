@@ -1,21 +1,15 @@
-$('#toggle-dark-mode').click( function() {
-    const isDarkMode = window.darkMode.toggle();
-
-    $("body").toggleClass("dark", isDarkMode);
-
-    $("#theme-source").html(isDarkMode ? 'Dark' : 'Light');
-
-    $("#list-pos > a").html(isDarkMode ? "Light" : "Dark");
-});
-
 const userPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-$("#theme-source").html(userPrefersDark ? 'Dark' : 'Light');
+$('#toggle-dark-mode').click( async () => {
+    const isDarkMode = await darkMode.toggle();
 
-$("#list-pos > button").html(userPrefersDark ? "Dark" : "Light");
+    $("#theme-source").html(isDarkMode ? "Dark" : "Light");
+});
+
+$("#theme-source").html(userPrefersDark ? "Dark" : "Light");
 
 function updateProgressbar(perc) {
-    if(perc >= 100) {
+    if (perc >= 100) {
         $('.progress-bar').addClass('bg-success');
         $('.progress-bar').css('width', '100%');
     } else {
@@ -24,16 +18,32 @@ function updateProgressbar(perc) {
     }
 }
 
-stored = getData.data();
+if (stored = getData.data()) {
+    number = getData.moduleVersion()
+    for (i = 0; i < stored.length; i++) {
+        $("#list-pos").append("<button class='list-group-item list-group-item-action btn'>" + stored[i] + '<small> - ' + number[i] + "</small></button>");
+        //$("#module-img").append('<img src='+ img +'>');
 
-for (i = 0; i < stored.length; i++) {
-    $("#list-pos").append("<button class='list-group-item list-group-item-action btn'>"+ stored[i] + "</button>");
+    }
+} else {
+    console.log('error')
 }
 
-$('#list-pos > button').click( function() {
+function updateModuleIndex(stored, number) {
+    if (stored) {
+        number = getData.moduleVersion()
+        for (i = 0; i < stored.length; i++) {
+            $("#list-pos").append("<button class='list-group-item list-group-item-action btn'>" + stored[i] + '<small> - ' + number[i] + "</small></button>");
+        }
+    }
+}
+
+$('#list-pos > button').click(function () {
     $('#list-pos > button.active').removeClass('active');
+
     var $btn = $(this);
-    if($btn.hasClass('active')) {
+
+    if ($btn.hasClass('active')) {
         $btn.removeClass('active');
     } else {
         $btn.addClass('active');

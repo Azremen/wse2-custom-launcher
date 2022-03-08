@@ -5,28 +5,10 @@ var DecompressZip = require('decompress-zip');
 
 // Set global temporary directory for things like auto update downloads, creating it if it doesn't exist already.
 global.tempPath = "./Modules";
+
 if (!fs.existsSync(global.tempPath)) fs.mkdirSync(global.tempPath);
 
-var result = [];
-
-function getModules(dir, files_) {
-    files_ = files_ || [];
-
-    var files = fs.readdirSync(dir);
-
-    for (var i in files) {
-        var name = dir + '/' + files[i];
-        if (fs.lstatSync(dir).isDirectory() ) {
-            files_.push(files[i]);
-        }
-    }
-
-    return files_;
-}
-
 var dir = path.join(__dirname, 'Modules');
-
-var module = getModules(dir);
 
 var mainWindow = null;
 
@@ -44,37 +26,84 @@ function createWindow() {
 
     mainWindow.loadFile('main.html');
 
-    ipcMain.handle('dark-mode:toggle', () => {
+    ipcMain.handle('dark-mode:toggle', async (event, args) => {
         if (nativeTheme.shouldUseDarkColors) {
             nativeTheme.themeSource = 'light';
+            result = false
         }
         else {
             nativeTheme.themeSource = 'dark';
+            result = true
         }
 
-        return nativeTheme.shouldUseDarkColors;
-    });
-
-    ipcMain.handle('dark-mode:system', () => {
-        nativeTheme.themeSource = 'system';
+        return result;
     });
 
     ipcMain.on("download", (event, info) => {
+        console.log(info)
         mainWindow.webContents.session.downloadURL(info.url);
     });
 
-    ipcMain.on("store-data", (event, data) => {
-        event.returnValue = module;
+    ipcMain.on("store-data", (event, info) => {
+        var files = fs.readdirSync(dir);
+        
+        if (info.info == 'moduleVersion') {
+            var moduleVersion = moduleVersion || [];
+
+            for (i in files) {
+                var moduleVersionDir = path.join(__dirname, 'Modules', files[i], 'Version.json');
+
+                if (!fs.existsSync(moduleVersionDir)) {
+                    moduleVersion.push('Unknown Version');
+                } else {
+                    rawdata = fs.readFileSync(path.resolve(moduleVersionDir));
+                    moduleVersion.push(JSON.parse(rawdata).version);
+                }
+            }
+
+            event.returnValue = moduleVersion
+        } else if (info.info == 'data') {
+            var files = fs.readdirSync(dir);
+
+            for (i in files) {
+                var moduleDirectories = moduleDirectories || [];
+
+                if (fs.existsSync(dir)) {
+                    if (fs.lstatSync(dir).isDirectory()) {
+                        moduleDirectories.push(files[i]);
+                    } else {
+                        console.log('false')
+                        moduleDirectories.push(false);
+                    }
+                } else {
+                    console.log('help')
+                    moduleDirectories = false;
+                }
+            }
+
+            event.returnValue = moduleDirectories;
+        } else if (info.info == 'img') {
+            for (i in files) {
+                var img = path.join(__dirname, 'Modules', files[i], 'main.bmp');
+                
+                if (!fs.existsSync(img)) {
+                    img = 'No Image';
+                }
+
+                event.returnValue = img;
+            }
+        }
     });
 
     mainWindow.webContents.session.on('will-download', (event, item, webContents) => {
         // Set the save path, making Electron not to prompt a save dialog.
         const tempName = path.join(__dirname, "Modules", "temp.zip");
+        
         item.setSavePath(tempName)
         //  console.log(app.getAppPath())
 
         item.on('updated', (event, state) => {
-          
+
             if (state === 'interrupted') {
                 //item.resume()
                 console.log('Download is interrupted but can be resumed')
@@ -92,16 +121,18 @@ function createWindow() {
         item.once('done', (event, state) => {
             if (state === 'completed') {
                 var unzipper = new DecompressZip(tempName);
+
                 unzipper.on('extract', function (log) {
                     fs.unlinkSync(tempName);
                 });
+
                 unzipper.extract({
                     path: path.join(__dirname, "Modules")
                 });
-                mainWindow.webContents.executeJavaScript("updateProgressbar(101);");
+
                 console.log('Download successfully');
             } else {
-                console.log(`Download failed: ${state}`);
+                console.log("Download failed:" + state);
             }
         });
     });
