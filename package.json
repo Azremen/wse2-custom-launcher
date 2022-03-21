@@ -1,11 +1,51 @@
 {
   "name": "wse2-launcher",
-  "version": "1.0.0",
+  "version": "0.0.3",
   "description": "Warband Script Enhancer 2 Launcher By Azremen",
   "private": true,
   "main": "main.js",
+  "config": {
+    "forge": {
+      "packagerConfig": {
+        "asar": true
+      },
+      "makers": [
+        {
+          "name": "@electron-forge/maker-zip",
+          "config": {
+            "name": "wse2_launcher"
+          }
+        },
+        {
+          "name": "@electron-forge/maker-zip",
+          "platforms": [
+            "darwin"
+          ]
+        },
+        {
+          "name": "@electron-forge/maker-deb",
+          "config": {}
+        },
+        {
+          "name": "@electron-forge/maker-rpm",
+          "config": {}
+        },
+        {
+          "name": "@electron-forge/maker-squirrel",
+          "config": {
+            "certificateFile": "",
+            "certificatePassword": ""
+          }
+        }
+      ]
+    }
+  },
   "scripts": {
-    "start": "electron ."
+    "start": "electron-forge start",
+    "app:dir": "electron-builder --dir",
+    "app:dist": "electron-builder",
+    "package": "electron-forge package",
+    "make": "electron-forge make"
   },
   "keywords": [
     "WSE2",
@@ -14,12 +54,20 @@
   "author": "Azremen <timurid76@gmail.com>",
   "license": "ISC",
   "devDependencies": {
+    "@electron-forge/cli": "^6.0.0-beta.63",
+    "@electron-forge/maker-deb": "^6.0.0-beta.63",
+    "@electron-forge/maker-rpm": "^6.0.0-beta.63",
+    "@electron-forge/maker-squirrel": "^6.0.0-beta.63",
+    "@electron-forge/maker-zip": "^6.0.0-beta.63",
     "electron": "^17.0.1",
     "webpack": "^5.69.1",
     "webpack-cli": "^4.9.2"
   },
   "dependencies": {
+    "@electron-forge/plugin-auto-unpack-natives": "^6.0.0-beta.63",
+    "asar": "^3.1.0",
     "decompress-zip": "^0.3.3",
+    "electron-squirrel-startup": "^1.0.0",
     "request": "^2.88.2"
   }
 }

@@ -1,12 +1,14 @@
 const { app, BrowserWindow, ipcMain, nativeTheme, globalShortcut } = require("electron");
 const path = require("path");
-const fs = require("fs");
+const fs = require('fs');
 var DecompressZip = require('decompress-zip');
+
+if (require('electron-squirrel-startup')) app.quit();
 
 // Set global temporary directory for things like auto update downloads, creating it if it doesn't exist already.
 global.tempPath = "./Modules";
 
-if (!fs.existsSync(global.tempPath)) fs.mkdirSync(global.tempPath);
+if (!fs.existsSync(global.tempPath)) app.quit();
 
 var dir = path.join(__dirname, 'Modules');
 
@@ -39,6 +41,32 @@ function createWindow() {
         return result;
     });
 
+    ipcMain.on('sendLauncherVersion', (event, args) => {
+        result = app.getVersion().toString();
+
+        event.returnValue = result;
+    });
+
+    ipcMain.on('configWindow', (event, args) => {
+        cfgWindow = new BrowserWindow({
+            sandbox: true,
+            width: 640,
+            height: 360,
+            frame: false,
+            parent: mainWindow,
+            modal: true,
+            webPreferences: {
+                preload: path.join(__dirname, 'preload.js')
+            }
+        });
+
+        cfgWindow.once('ready-to-show', () => {
+            cfgWindow.show()
+        })
+
+        cfgWindow.loadFile('config.html');
+    });
+
     ipcMain.on("download", (event, info) => {
         console.log(info)
         mainWindow.webContents.session.downloadURL(info.url);
@@ -46,59 +74,40 @@ function createWindow() {
 
     ipcMain.on("store-data", (event, info) => {
         var files = fs.readdirSync(dir);
-        
-        if (info.info == 'moduleVersion') {
-            var moduleVersion = moduleVersion || [];
+        var ret = [];
 
-            for (i in files) {
-                var moduleVersionDir = path.join(__dirname, 'Modules', files[i], 'Version.json');
+        for (i in files) {
+            if (fs.existsSync(path.join(dir, files[i])) && fs.statSync(path.join(dir, files[i])).isDirectory()) {
+                var n = { name: null, version: null, path: null, img: null }
+                n.name = files[i];
+                n.path = path.join(__dirname, 'Modules', files[i]);
+                var moduleVersionDir = path.join(__dirname, 'Modules', files[i], 'version.json');
 
-                if (!fs.existsSync(moduleVersionDir)) {
-                    moduleVersion.push('Unknown Version');
-                } else {
+                if (fs.existsSync(moduleVersionDir)) {
                     rawdata = fs.readFileSync(path.resolve(moduleVersionDir));
-                    moduleVersion.push(JSON.parse(rawdata).version);
+                    n.version = JSON.parse(rawdata).version;
                 }
+                n.img = fs.existsSync(path.join(__dirname, 'Modules', files[i], 'main.bmp'));
+
+                ret.push(n);
             }
+        }
 
-            event.returnValue = moduleVersion
-        } else if (info.info == 'data') {
-            var files = fs.readdirSync(dir);
+        event.returnValue = ret;
+    });
 
-            for (i in files) {
-                var moduleDirectories = moduleDirectories || [];
-
-                if (fs.existsSync(dir)) {
-                    if (fs.lstatSync(dir).isDirectory()) {
-                        moduleDirectories.push(files[i]);
-                    } else {
-                        console.log('false')
-                        moduleDirectories.push(false);
-                    }
-                } else {
-                    console.log('help')
-                    moduleDirectories = false;
-                }
-            }
-
-            event.returnValue = moduleDirectories;
-        } else if (info.info == 'img') {
-            for (i in files) {
-                var img = path.join(__dirname, 'Modules', files[i], 'main.bmp');
-                
-                if (!fs.existsSync(img)) {
-                    img = 'No Image';
-                }
-
-                event.returnValue = img;
-            }
+    ipcMain.on('dirRemove', (event, args) => {
+        console.log(args)
+        if (args != null && fs.existsSync(args.module)) {
+            fs.rmSync(args.module, { recursive: true });
+            mainWindow.webContents.executeJavaScript('modules = getData.data();renderList();');
         }
     });
 
     mainWindow.webContents.session.on('will-download', (event, item, webContents) => {
         // Set the save path, making Electron not to prompt a save dialog.
         const tempName = path.join(__dirname, "Modules", "temp.zip");
-        
+
         item.setSavePath(tempName)
         //  console.log(app.getAppPath())
 
@@ -124,6 +133,7 @@ function createWindow() {
 
                 unzipper.on('extract', function (log) {
                     fs.unlinkSync(tempName);
+                    mainWindow.webContents.executeJavaScript('modules = getData.data();renderList();');
                 });
 
                 unzipper.extract({
@@ -139,7 +149,7 @@ function createWindow() {
 };
 
 app.whenReady().then(() => {
-    createWindow()
+    createWindow();
     globalShortcut.register('CommandOrControl+R', () => {
         mainWindow.reload();
     });

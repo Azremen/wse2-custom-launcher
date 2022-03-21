@@ -1,7 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('darkMode', {
-  toggle: async () => { 
+  toggle: async () => {
     return ipcRenderer.invoke('dark-mode:toggle').then((result) => {
       return result;
     }).catch((error) => {
@@ -18,20 +18,28 @@ contextBridge.exposeInMainWorld('downloadZipURL', {
   }
 });
 
+contextBridge.exposeInMainWorld('removeModule', {
+  module: (modulePath) => {
+    ipcRenderer.send("dirRemove", {
+      module: modulePath
+    });
+  }
+});
+
+contextBridge.exposeInMainWorld('openConfig', {
+  config: () => {
+    ipcRenderer.send("configWindow", {
+    });
+  }
+});
+
 contextBridge.exposeInMainWorld('getData', {
   data: () => {
     return ipcRenderer.sendSync("store-data", {
-      info: 'data'
     });
   },
-  moduleVersion: () => {
-    return ipcRenderer.sendSync("store-data", {
-      info: 'moduleVersion'
+  launcherVersion: () => {
+    return ipcRenderer.sendSync('sendLauncherVersion', {
     });
-  },
-  img: () => {
-    return ipcRenderer.sendSync("store-data", {
-      info: 'img'
-    });
-  },
+  }
 });

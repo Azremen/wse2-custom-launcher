@@ -16,21 +16,19 @@
 <body>
     <div class="container-fluid">
         <div id="top-area" class="pt-3 pb-1">
-            <div class="row" >
+            <div class="row">
                 <div class="col-3 col-md-4">
                     <ul class="list-group p-0 mb-0 bg-light text-dark" id="list-pos">
-                        <!--<button class="list-group-item list-group-item-action btn">Settler Warbands</button>-->
+
                     </ul>
                     <div id="buttons" class="pt-1">
-                        <button class="btn btn-primary btn-sm">Install</button>
-                        <button class="btn btn-primary btn-sm">Remove</button>
-                        <button class="btn btn-primary btn-sm">Configure</button>
+                        <button class="btn btn-primary btn-sm" id="btn-install">Install</button>
+                        <button class="btn btn-primary btn-sm" id="btn-remove">Remove</button>
+                        <button class="btn btn-primary btn-sm" id="btn-configure">Configure</button>
                     </div>
                 </div>
                 <div class="col-9 col-md-8">
-                    <div id="module-img">
-                        <!--<img src="./main.bmp">-->
-                    </div>
+                    <img id="module-img">
                 </div>
             </div>
         </div>
@@ -40,7 +38,7 @@
             </div>
             <div class="row">
                 <div class="col-4">
-                    <div class="small" id="version">
+                    <div class="small text-truncate" id="version">
                         <!--<strong>WSE2 Launcher Version</strong>: -->
                     </div>
                 </div>
@@ -53,7 +51,7 @@
                     </button>
                 </div>
                 <div class="col-4 text-right">
-                    <div class="" id="theme">
+                    <div id="theme">
                         <small>Current Theme: <strong id="theme-source"></strong></small>
                         <br>
                         <button class="btn btn-primary btn-sm" id="toggle-dark-mode">Toggle Mode</button>
