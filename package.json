@@ -29,13 +29,6 @@
         {
           "name": "@electron-forge/maker-rpm",
           "config": {}
-        },
-        {
-          "name": "@electron-forge/maker-squirrel",
-          "config": {
-            "certificateFile": "",
-            "certificatePassword": ""
-          }
         }
       ]
     }
@@ -52,7 +45,7 @@
     "Launcher"
   ],
   "author": "Azremen <timurid76@gmail.com>",
-  "license": "ISC",
+  "license": "AGPL-3.0-or-later",
   "devDependencies": {
     "@electron-forge/cli": "^6.0.0-beta.63",
     "@electron-forge/maker-deb": "^6.0.0-beta.63",
