@@ -12,7 +12,7 @@ contextBridge.exposeInMainWorld('darkMode', {
 
 contextBridge.exposeInMainWorld('downloadZipURL', {
   url: (downloadZipURL) => {
-    ipcRenderer.send("download", {
+    ipcRenderer.send('download', {
       url: downloadZipURL
     });
   }
@@ -20,7 +20,7 @@ contextBridge.exposeInMainWorld('downloadZipURL', {
 
 contextBridge.exposeInMainWorld('removeModule', {
   module: (modulePath) => {
-    ipcRenderer.send("dirRemove", {
+    ipcRenderer.send('dirRemove', {
       module: modulePath
     });
   }
@@ -28,14 +28,17 @@ contextBridge.exposeInMainWorld('removeModule', {
 
 contextBridge.exposeInMainWorld('openConfig', {
   config: () => {
-    ipcRenderer.send("configWindow", {
+    ipcRenderer.send('configWindow', {
     });
+  },
+  back: () => {
+    ipcRenderer.send('configWindowBack')
   }
 });
 
 contextBridge.exposeInMainWorld('getData', {
   data: () => {
-    return ipcRenderer.sendSync("store-data", {
+    return ipcRenderer.sendSync('store-data', {
     });
   },
   launcherVersion: () => {

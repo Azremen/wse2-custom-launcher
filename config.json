@@ -1,0 +1,587 @@
+{
+    "battle": {
+        "iMaxNumCorpses": {
+            "name": "Maximum amount of Corpses",
+            "default-name": "number_of_corpses",
+            "type": "range",
+            "default-value": 50,
+            "range-min": 0,
+            "range-max": 2000
+        },
+        "iMaxNumRagdolls": {
+            "name": "Maximum amount of Ragdolls",
+            "default-name": "number_of_ragdolls",
+            "type": "range",
+            "default-value": 10,
+            "range-min": 0,
+            "range-max": 100
+        },
+        "fFirstPersonFieldOfView": {
+            "name": "First Person Field Of View",
+            "type": "range",
+            "default-value": 75.0,
+            "range-min": 60.0,
+            "range-max": 100.0
+        },
+        "fThirdPersonFieldOfView": {
+            "name": "Third Person Field Of View",
+            "type": "range",
+            "default-value": 75.0,
+            "range-min": 60.0,
+            "range-max": 100.0
+        },
+        "iBloodStains": {
+            "name": "Blood Stains Visibility range",
+            "default-name": "blood_stains",
+            "type": "radio",
+            "default-value": 2,
+            "values": {
+                "0": "Off",
+                "1": "Near Player",
+                "2": "On"
+            }
+        },
+        "bBlood": {
+            "name": "Enable Blood",
+            "default-name": "enable_blood",
+            "type": "boolean",
+            "default-value": true
+        },
+        "fBloodMultiplier": {
+            "name": "Amount and velocity of Blood Particle Effects",
+            "default-name": "blood_multiplier",
+            "type": "input",
+            "default-value": 2.0
+        },
+        "fDamageToSelf": {
+            "name": "Damage multiplier for Player",
+            "default-name": "combat_difficulty",
+            "type": "range",
+            "default-value": 0.5,
+            "range-min": 0.1,
+            "range-max": 1.0
+        },
+        "fDamageToFriends": {
+            "name": "Damage multiplier for friendly Troops",
+            "default-name": "friend_combat_difficulty",
+            "type": "range",
+            "default-value": 0.5,
+            "range-min": 0.1,
+            "range-max": 1.0
+        },
+        "iBannerMode": {
+            "name": "Banner Labels visibility",
+            "default-name": "display_labels",
+            "type": "radio",
+            "default-value": 2,
+            "values": {
+                "0": "None",
+                "1": "On group",
+                "2": "On friendlies",
+                "3": "On everyone"
+            }
+        },
+        "iBannerOutlineMode": {
+            "name": "Outline on Banner Labels",
+            "type": "radio",
+            "default-value": 1,
+            "values": {
+                "0": "None",
+                "1": "On group",
+                "2": "On friendlies",
+                "3": "On everyone"
+            }
+        },
+        "uBannerOutlineColorFriendly": {
+            "name": "Color Code for friendly Troops' Banner Labels' Outline",
+            "type": "input",
+            "default-value": "0xFF00"
+        },
+        "uBannerOutlineColorEnemy": {
+            "name": "Color Code for enemy Troops' Banner Labels' Outline",
+            "type": "input",
+            "default-value": "0xFF0000"
+        },
+        "uBannerOutlineColorNeutral": {
+            "name": "Color Code for neutral Troops' Banner Labels' Outline",
+            "type": "input",
+            "default-value": "0xFF"
+        },
+        "fDynamicBannerTransparencyMinDistance": {
+            "name": "Maximum amount of corpses",
+            "type": "input",
+            "default-value": 400.0
+        },
+        "fDynamicBannerTransparencyMaxDistance": {
+            "name": "Maximum amount of corpses",
+            "type": "input",
+            "default-value": 600.0
+        },
+        "iDynamicBannerTransparencyMinAlpha": {
+            "name": "Minimum Banner Transparency Alpha value",
+            "type": "input",
+            "default-value": 165
+        },
+        "iDynamicBannerTransparencyMaxAlpha": {
+            "name": "Maximum Banner Transparency Alpha value",
+            "type": "input",
+            "default-value": 255
+        },
+        "iFixedBannerTransparencyAlpha": {
+            "name": "Banners' Transparency's Fixed Point Multiplier",
+            "type": "input",
+            "default-value": 215
+        },
+        "iFixedBannerTransparencyOutlineAlpha": {
+            "name": "Banners' Outline Transparency's Fixed Point Multiplier",
+            "type": "input",
+            "default-value": 205
+        },
+        "bDynamicBannerTransparency": {
+            "name": "Use dynamic Banner Transparency (depending on distance or fixed)",
+            "type": "boolean",
+            "default-value": true
+        },
+        "bShowReticle": {
+            "name": "Display Targeting Reticule",
+            "default-name": "display_targeting_reticule",
+            "type": "boolean",
+            "default-value": true
+        },
+        "bShowAttackDirection": {
+            "name": "Display Attack Direction",
+            "default-name": "display_attack_direction",
+            "type": "boolean",
+            "default-value": true
+        },
+        "iAttackControl": {
+            "name": "Attack Direction Controlling on Foot",
+            "type": "radio",
+            "default-value": 2,
+            "values": {
+                "0": "By Relative Enemy Position",
+                "1": "By Inverse Mouse Movement",
+                "2": "By Mouse Movement",
+                "3": "By Movement Keys"
+            }
+        },
+        "iMountedAttackControl": {
+            "name": "Attack Direction Controlling on Mount",
+            "type": "radio",
+            "default-value": 2, 
+            "values": {
+                "0": "By Relative Enemy Position",
+                "1": "By Inverse Mouse Movement",
+                "2": "By Mouse Movement",
+                "3": "By Movement Keys"
+            }
+        },
+        "iDefendControl": {
+            "name": "Defend Direction Controlling Setting on Foot",
+            "default-name": "defend_direction_control",
+            "type": "radio",
+            "default-value": 0,
+            "values": {
+                "0": "Automatic",
+                "1": "By Mouse Movement",
+                "2": "By Movement Keys"
+            }
+        },
+        "iMountedDefendControl": {
+            "name": "Defend Direction Controlling Setting on Mount",
+            "type": "radio",
+            "default-value": 0,
+            "values": {
+                "0": "Automatic",
+                "1": "By Mouse Movement",
+                "2": "By Movement Keys"
+            }
+        },
+        "iLanceControl": {
+            "name": "Mounted Couch and Lance Control",
+            "default-name": "lance_control",
+            "type": "radio",
+            "default-value": 0,
+            "values": {
+                "0": "Automatic",
+                "1": "Easy",
+                "2": "Hard"
+            }
+        },
+        "iHorseCameraMode": {
+            "name": "Turn Camera with Horse in First Person",
+            "default-name": "turn_camera_with_horse_in_first_person",
+            "type": "radio",
+            "default-value": 2,
+            "values": {
+                "0": "Never",
+                "1": "Ranged only",
+                "2": "Melee only",
+                "3": "Always"
+            }
+        },
+        "iCombatSpeed": {
+            "name": "Combat Speed",
+            "type": "range",
+            "default-value": 2,
+            "range-min": 0,
+            "range-max": 5
+        },
+        "fBattleSize": {
+            "name": "Battle Size",
+            "default-name": "battle_size",
+            "type": "range",
+            "default-value": 0.3422,
+            "range-min": 0.0,
+            "range-max": 10.0
+        },
+        "iBattleSizeMin": {
+            "name": "Displayed Minimum Battle Size in Settings",
+            "default-name": "battle_size_min",
+            "type": "input",
+            "default-value": 30
+        },
+        "iBattleSizeMax": {
+            "name": "Displayed Maximum Battle Size in Settings",
+            "default-name": "battle_size_max",
+            "type": "input",
+            "default-value": 150
+        },
+        "iNumWalkSamplePoints": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "fStrafeCooldown": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "fMinInflictedDamageForHighDamageHit": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "iMinSoakedDamageForHighArmorHit": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bWeaponsCollideWithGround": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "fKickCooldown": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "fJumpCooldown": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "fHorseJumpCooldown": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bNoJumpingWhileAttackingMelee": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bNoJumpingWhileAttackingThrowing": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bNoJumpingWhileAttackingRanged": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bNoAttackingWhileJumpingMelee": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bNoAttackingWhileJumpingThrowing": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bNoAttackingWhileJumpingRanged": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "fGhostModeCameraAcceleration": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "fGhostModeCameraMaxSpeed": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "fGhostModeCameraDamping": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "iMaxNumPrunableMissionObjects": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "vStickItemToLeftHandOffset": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "fMinActionProgressForAllyCollision": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "fMaxActionProgressForAllyCollision": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "fMinActionProgressForPropCollisionThrust": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bNoJumpingWhileAttackingRanged": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bNoJumpingWhileAttackingRanged": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bNoJumpingWhileAttackingRanged": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bNoJumpingWhileAttackingRanged": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bNoJumpingWhileAttackingRanged": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bNoJumpingWhileAttackingRanged": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bNoJumpingWhileAttackingRanged": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bNoJumpingWhileAttackingRanged": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bNoJumpingWhileAttackingRanged": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bNoJumpingWhileAttackingRanged": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bNoJumpingWhileAttackingRanged": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bNoJumpingWhileAttackingRanged": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bNoJumpingWhileAttackingRanged": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bNoJumpingWhileAttackingRanged": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bNoJumpingWhileAttackingRanged": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bNoJumpingWhileAttackingRanged": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bNoJumpingWhileAttackingRanged": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bNoJumpingWhileAttackingRanged": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bNoJumpingWhileAttackingRanged": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bNoJumpingWhileAttackingRanged": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bNoJumpingWhileAttackingRanged": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bNoJumpingWhileAttackingRanged": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bNoJumpingWhileAttackingRanged": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bNoJumpingWhileAttackingRanged": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bNoJumpingWhileAttackingRanged": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bNoJumpingWhileAttackingRanged": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bNoJumpingWhileAttackingRanged": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bNoJumpingWhileAttackingRanged": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        },
+        "bNoJumpingWhileAttackingRanged": {
+            "name": "",
+            "type": "",
+            "default-value": 
+        }
+    },
+    "battle-ai": {
+
+    },
+    "campaign": {
+
+    },
+    "campaign-ai": {
+
+    },
+    "dedicated-server": {
+
+    },
+    "face-generator": {
+
+    },
+    "fake-character-shadows": {
+
+    },
+    "flora": {
+
+    },
+    "font": {
+
+    },
+    "general": {
+
+    },
+    "graphics": {
+
+    },
+    "http": {
+
+    },
+    "input": {
+
+    },
+    "item-requirement": {
+
+    },
+    "log": {
+
+    },
+    "messages": {
+
+    },
+    "network": {
+
+    },
+    "particle-systems": {
+
+    },
+    "physics": {
+
+    },
+    "post-fx": {
+
+    },
+    "profiling": {
+
+    },
+    "reflections": {
+
+    },
+    "scene": {
+
+    },
+    "server-list": {
+
+    },
+    "shadow-map": {
+
+    },
+    "sound": {
+
+    },
+    "terrain-generator": {
+
+    },
+    "threads": {
+
+    }
+}

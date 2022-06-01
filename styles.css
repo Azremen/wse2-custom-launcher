@@ -22,14 +22,6 @@
     box-shadow: none;
 }
 
-#footer-middle {
-
-}
-
-#version {
-
-}
-
 #list-pos {
     height: calc(100vh - 160px);
     overflow: auto;
@@ -40,19 +32,7 @@
     width: inherit;
 }
 
-#theme {
-
-}
-
-#buttons {
-
-}
-
 #module-img > img {
     max-width: 50%;
     height: auto;
-}
-
-#prg-bar {
-
 }

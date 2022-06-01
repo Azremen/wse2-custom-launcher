@@ -3,12 +3,11 @@ const path = require("path");
 const fs = require('fs');
 var DecompressZip = require('decompress-zip');
 
-if (require('electron-squirrel-startup')) app.quit();
+var tempPath = "./Modules";
 
-// Set global temporary directory for things like auto update downloads, creating it if it doesn't exist already.
-global.tempPath = "./Modules";
+var cfgWindow = null;
 
-if (!fs.existsSync(global.tempPath)) app.quit();
+if (!fs.existsSync(tempPath)) fs.mkdirSync(tempPath);
 
 var dir = path.join(__dirname, 'Modules');
 
@@ -104,6 +103,12 @@ function createWindow() {
         }
     });
 
+    ipcMain.on('configWindowBack', (event, args) => {
+        if (cfgWindow != null) {
+            cfgWindow.close();
+        }
+    });
+
     mainWindow.webContents.session.on('will-download', (event, item, webContents) => {
         // Set the save path, making Electron not to prompt a save dialog.
         const tempName = path.join(__dirname, "Modules", "temp.zip");
@@ -152,6 +157,9 @@ app.whenReady().then(() => {
     createWindow();
     globalShortcut.register('CommandOrControl+R', () => {
         mainWindow.reload();
+        if (cfgWindow != null) {
+            cfgWindow.reload();
+        }
     });
 
     globalShortcut.register('CommandOrControl+D', () => {

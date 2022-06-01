@@ -101,7 +101,15 @@ var $removeBtn = $('#btn-remove');
 
 var $confBtn = $('#btn-configure');
 
+var $playBtn = $('#play-btn')
+
 var $listBtns = $('#list-pos > button');
+
+var $selectConfig = $('#select-config');
+
+var $backBtn = $('#config-back');
+
+var $saveBtn = $('#config-save');
 
 var listClickAction = function () {
     $listBtns.filter('.active').removeClass('active');
@@ -119,23 +127,33 @@ var listClickAction = function () {
             }
         })
     }
+    console.log(activeModule)
     if (activeModule != undefined && activeModule.img == true) {
         $('#module-img').attr('src', activeModule.path + '/main.bmp').toggleClass('d-none', false);
         $installBtn.prop('disabled', activeModule.version == null);
+        $removeBtn.prop('disabled', false, activeModule.name == btnName);
+        $confBtn.prop('disabled', false, activeModule.name == btnName);
+    } else if (activeModule != undefined && activeModule.version != null) {
+        $confBtn.prop('disabled', activeModule.img == null);
+        $removeBtn.prop('disabled', activeModule.url != null);
+        $installBtn.prop('disabled', false, activeModule.url != null);
     } else {
         $('#module-img').toggleClass('d-none', true);
+        $installBtn.prop('disabled', activeModule.version == null);
+        $removeBtn.prop('disabled', false, activeModule.path != null);
+        $confBtn.prop('disabled', false, activeModule.img == true);
     }
 }
 
 $installBtn.click(function () {
     if (activeModule != null) {
-        downloadZipURL.url(activeModule.url)
+        downloadZipURL.url(url + activeModule.url);
     }
 })
 
 $removeBtn.click(function () {
     if (activeModule != null) {
-        removeModule.module(activeModule.path)
+        removeModule.module(activeModule.path);
     }
 })
 
@@ -143,4 +161,12 @@ $confBtn.click(function () {
     if (activeModule != null) {
         openConfig.config();
     }
+})
+
+$backBtn.click(function () {
+    openConfig.back();
+})
+
+$selectConfig.click( function () {
+    
 })
