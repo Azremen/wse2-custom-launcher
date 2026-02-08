@@ -77,25 +77,77 @@ const installPath = getBaseDirectory();
 // app.commandLine.appendSwitch('disable-gpu');
 // app.commandLine.appendSwitch('disable-software-rasterizer');
 
-// Azremen's Modules path logic with fallback system
-let modulesPath = path.join(installPath, 'Modules');
-let tempZipPath = path.join(modulesPath, "temp.zip");
+// Robust Modules Path Discovery
+let possiblePaths = [];
 
-// Azremen's Permission Check: Try to create/access the preferred path. If it fails (permissions), fallback to UserData.
+// 1. Portable Executable Env (Electron Builder Nsis/Portable)
+if (process.env.PORTABLE_EXECUTABLE_DIR) {
+    possiblePaths.push(path.join(process.env.PORTABLE_EXECUTABLE_DIR, 'Modules'));
+}
+
+// 2. Install Path (Standard)
+possiblePaths.push(path.join(installPath, 'Modules'));
+
+// 3. Current Working Directory
+possiblePaths.push(path.join(process.cwd(), 'Modules'));
+
+// 4. Parent Directory (Useful if launcher is in /bin/)
+possiblePaths.push(path.join(installPath, '..', 'Modules'));
+
+let modulesPath = null;
+
+for (const p of possiblePaths) {
+    try {
+        if (fs.existsSync(p) && fs.statSync(p).isDirectory()) {
+            modulesPath = p;
+            console.log(`[Path Discovery] Found Modules at: ${modulesPath}`);
+            break;
+        }
+    } catch(e) { console.error(`Error checking path ${p}:`, e); }
+}
+
+// Fallback: If nothing found, default to Install Path
+if (!modulesPath) {
+    modulesPath = path.join(installPath, 'Modules');
+    console.log(`[Path Discovery] No existing Modules folder found. Defaulting to: ${modulesPath}`);
+}
+
+// Default temp zip location, may be overridden if read-only
+let tempZipPath = path.join(modulesPath, "temp.zip"); 
+
+// Azremen's Permission Check: 
+// Priority: Use the Installation Directory "Modules" folder so we can see existing game modules.
+// Fallback: Only use UserData if we cannot even READ/ACCESS the installation directory.
 try {
     if (!fs.existsSync(modulesPath)) {
+        // Try to create it if it doesn't exist
         fs.mkdirSync(modulesPath, { recursive: true });
     }
-    // Azremen: Test write permission to ensure we can save config
-    const testFile = path.join(modulesPath, '.test');
-    fs.writeFileSync(testFile, 'test');
-    fs.unlinkSync(testFile);
+
+    // Check Write Permissions (for downloading updates)
+    try {
+        const testFile = path.join(modulesPath, '.test_write');
+        fs.writeFileSync(testFile, 'test');
+        fs.unlinkSync(testFile);
+    } catch (writeErr) {
+        console.warn("Modules directory is read-only. Listing modules will work, but installing/updating may fail unless run as Admin.", writeErr);
+        // Move temp zip to a writable location so download phase doesn't fail immediately
+        tempZipPath = path.join(app.getPath('userData'), 'wse2_temp_update.zip');
+    }
+
 } catch (e) {
-    console.warn("Write access denied to install dir, falling back to UserData.", e);
-    modulesPath = path.join(app.getPath('userData'), 'Modules');
-    tempZipPath = path.join(modulesPath, "temp.zip");
-    if (!fs.existsSync(modulesPath)) {
-        fs.mkdirSync(modulesPath, { recursive: true });
+    console.warn("Could not access install directory Modules folder. Falling back to UserData.", e);
+    // If we can't even ensure existence or basic access, switch to UserData
+    // This usually happens if the launcher is in a completely restricted folder
+    const fallbackPath = path.join(app.getPath('userData'), 'Modules');
+    try {
+        if (!fs.existsSync(fallbackPath)) {
+            fs.mkdirSync(fallbackPath, { recursive: true });
+        }
+        modulesPath = fallbackPath;
+        tempZipPath = path.join(modulesPath, "temp.zip");
+    } catch (e2) {
+        console.error("Critical: Failed to initialize any Modules directory", e2);
     }
 }
 
@@ -282,7 +334,25 @@ ipcMain.handle('launch-game', (event, moduleName) => {
     const isWindows = process.platform === 'win32';
     
     const exeName = winExeName; 
-    const exePath = path.join(installPath, exeName);
+    
+    // Azremen Fix: Try to find Exe relative to the detected Modules folder first
+    // Because if the launcher is running from Temp (Zip/Installer), installPath is wrong.
+    // But modulesPath is correct (checked via CWD/Env).
+    // Structure: GameDir/Modules -> GameDir/mb_warband_wse2.exe
+    let potentialExePath = path.join(modulesPath, '..', exeName);
+    
+    if (!fs.existsSync(potentialExePath)) {
+        // Fallback: Check standard install path (legacy behavior)
+        potentialExePath = path.join(installPath, exeName);
+    }
+    
+    // Fallback 2: Check CWD directly
+    if (!fs.existsSync(potentialExePath)) {
+        potentialExePath = path.join(process.cwd(), exeName);
+    }
+    
+    const exePath = potentialExePath;
+    const workingDir = path.dirname(exePath); // Run from the folder containing the Exe
     
     console.log(`[Launch] Request to launch: ${exeName} with module ${moduleName} (Platform: ${process.platform})`);
     
@@ -336,7 +406,7 @@ ipcMain.handle('launch-game', (event, moduleName) => {
         const errLog = fs.openSync(path.join(installPath, 'wse2_launch_err.log'), 'w');
 
         const gameProcess = spawn(command, finalArgs, {
-            cwd: installPath, // Important: Run from game directory
+            cwd: workingDir, // Important: Run from game directory (where EXE is)
             detached: true,
             env: env, 
             stdio: ['ignore', outLog, errLog]

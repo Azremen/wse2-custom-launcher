@@ -291,11 +291,20 @@ async function initMainWindow() {
 
 async function refreshModuleList() {
     // Get Local
-    localModules = await window.api.modules.list();
+    try {
+        localModules = await window.api.modules.list();
+    } catch (e) {
+        console.error("Could not fetch local modules", e);
+        localModules = [];
+    }
     
     // Get Remote
     try {
-        remoteModules = await $.getJSON(REMOTE_URL + 'index.php');
+        remoteModules = await $.ajax({
+            dataType: "json",
+            url: REMOTE_URL + 'index.php',
+            timeout: 5000 // Timeout configuration
+        });
     } catch (e) {
         console.warn("Could not fetch remote modules", e);
         remoteModules = [];
@@ -330,7 +339,8 @@ function renderList() {
 
     // Add local modules not in remote
     localModules.forEach(lm => {
-        if (!remoteModules.find(rm => rm.name === lm.name)) {
+        const inRemote = Array.isArray(remoteModules) && remoteModules.find(rm => rm.name === lm.name);
+        if (!inRemote) {
             displayList.push({
                 name: lm.name,
                 remoteVersion: null,

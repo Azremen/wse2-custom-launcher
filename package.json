@@ -10,10 +10,10 @@
     "start": "electron .",
     "pack": "electron-builder --dir",
     "dist": "npm run dist:all",
-    "dist:all": "NODE_NO_WARNINGS=1 electron-builder --linux AppImage --win nsis portable --mac zip",
-    "dist:linux": "NODE_NO_WARNINGS=1 electron-builder --linux AppImage",
-    "dist:win": "NODE_NO_WARNINGS=1 electron-builder --win nsis portable",
-    "dist:mac": "NODE_NO_WARNINGS=1 electron-builder --mac zip"
+    "dist:all": "NODE_NO_WARNINGS=1 electron-builder --linux --win --mac",
+    "dist:linux": "NODE_NO_WARNINGS=1 electron-builder --linux",
+    "dist:win": "NODE_NO_WARNINGS=1 electron-builder --win",
+    "dist:mac": "NODE_NO_WARNINGS=1 electron-builder --mac"
   },
   "build": {
     "appId": "com.azremen.wse2-launcher",
@@ -38,8 +38,8 @@
     ],
     "win": {
       "target": [
-        "nsis",
-        "portable"
+        "portable",
+        "zip"
       ],
       "icon": "icons/icon.ico"
     },
@@ -50,17 +50,20 @@
       "deleteAppDataOnUninstall": true
     },
     "portable": {
-      "artifactName": "${productName} ${version} Portable.${ext}"
+      "artifactName": "${productName} ${version} Windows Portable.${ext}"
     },
     "linux": {
       "target": [
-        "AppImage"
+        "AppImage",
+        "zip"
       ],
+      "artifactName": "${productName} ${version} Linux.${ext}",
       "category": "Game",
       "icon": "icons/icon.png"
     },
     "mac": {
-      "target": "dmg",
+      "target": "zip",
+      "artifactName": "${productName} ${version} Mac.${ext}",
       "icon": "icons/icon.icns"
     }
   },
