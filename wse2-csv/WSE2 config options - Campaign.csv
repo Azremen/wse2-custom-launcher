@@ -1,0 +1,46 @@
+Name,Default Value,Warband Name,Description
+bSkipTutorial,FALSE,rgl_config.txt - skip_tutorial,"Deprecated, probably broken."
+fPlayerHealingFactor,1.0,,Multiplier of the wound treatment skill for player.
+fMainPartyHeroHealingFactor,1.0,,Multiplier of the wound treatment skill for main party hero.
+fMainPartyRegularHealingFactor,1.0,,Multiplier of the wound treatment skill for main party regular troops.
+fHeroHealingFactor,1.0,,Multiplier of the wound treatment skill for hero.
+fRegularHealingFactor,1.0,,Multiplier of the wound treatment skill for regular troops.
+fPlayerExperienceMultiplier,2.0,module.ini - player_xp_multiplier,Sets the xp multiplier the player gains by killing an enemy.
+fHeroExperienceMultiplier,2.0,module.ini - hero_xp_multiplier,Sets the xp multiplier heroes gain by killing an enemy.
+fRegularExperienceMultiplier,3.0,module.ini - regulars_xp_multiplier,Sets the xp multiplier regular troops gain by killing an enemy.
+fPlayerWoundedThreshold,5.0,module.ini - player_wounded_treshold,Determines the minimum number of hitpoints a player must have to appear in battles and contribute to party skills.
+fHeroWoundedThreshold,15.0,module.ini - hero_wounded_treshold,Determines the minimum hitpoints needed for heroes to appear in battles and contribute to party skills.
+fDayStartHour,4.0,,Defines the boundaries of day and night time.
+fDayEndHour,20.0,,Defines the boundaries of day and night time.
+vMapCameraMinPosition,"-50.0,-50.0","module.ini - map_min_x, map_min_y","Determines the eastern and northern bounds of the world map. The map can continue past this, but parties will not be able to travel past this boundary."
+vMapCameraMaxPosition,"50.0,50.0","module.ini - map_max_x, map_max_y","Determines the western and southern bounds of the world map. The map can continue past this, but parties will not be able to travel past this boundary."
+fMapCameraMinZoom,3.5,,Minimum amount of zoom out on the world map.
+fMapCameraMaxZoom,175.0,module.ini - map_max_distance,Maximum amount of zoom out on the world map.
+vMapSeaSpeed,"0.02,-0.02","module.ini - map_sea_speed_x, map_sea_speed_y",Used to determine the flow speed of the ocean shader for the world map.
+fMapSeaDirection,-40.0,module.ini - map_sea_direction,"Angle, sea wave foam direction."
+fMapSeaWaveRotation,300.0,module.ini - map_sea_wave_rotation,"Angle, this is where the tear artefact is visible on the sea."
+vMapRiverSpeed,"0.01,-0.01","module.ini - map_river_speed_x, map_river_speed_y",Used to determine the flow speed of the river shader for the world map.
+fMapRiverDirection,140.0,module.ini - map_river_direction,Angle used to determine the flow direction of the river shader for the world map.
+fSpottingMultiplier,6.5,module.ini - seeing_range,"Multiplier of the spotting skill, affects the visibility radius."
+fTrackSpottingMultiplier,0.8,module.ini - track_spotting_multiplier,Multiplier of the tracking skill. If set to 0 no tracking marks will appear at the world map no matter the skill.
+iLeadershipSkillBonus,3,module.ini - skill_leadership_bonus,Sets how many additional troops per leadership skill point the player can have in his party.
+iPrisonerManagementSkillBonus,5,module.ini - skill_prisoner_management_bonus,Sets how many additional prisoners per prisoner management skill point the player can have in his party.
+iBaseCompanionLimit,20,module.ini - base_companion_limit,Maximum amount of companions in the player party without leadership skill.
+fTimeMultiplier,0.25,module.ini - time_multiplier,Speed with which time passes on the map screen. With 0.25 as default value 1 GAME hour is 4 seconds of REAL time.
+bShowPartyIdsInsteadOfNames,FALSE,module.ini - show_party_ids_instead_of_names,Determines if a party’s id value is show above them instead of their name. Change to true for ease in module development.
+bDontLoadRegularTroopInventories,FALSE,module.ini - dont_load_regular_troop_inventories,"Determines if the game saves inventories for regular troops (i.e. not heroes) too. Also, savegames will be a bit bigger."
+bShowFactionColor,FALSE,module.ini - show_faction_color,Determines if party names on the world map will show their faction color.
+bAutoCreateNoteIndices,TRUE,module.ini - auto_create_note_indices,Determines whether or not automatically search through all troops/factions/towns to check if they have note text.
+bShowTroopUpgradesButton,FALSE,module.ini - show_troop_upgrades_button,Determines if the mod shows the troop upgrade button.
+fSkillPointsPerLevel,1.0,module.ini - skill_points_per_level,Sets how many skill points are gained per level.
+fAttributePointsPerLevel,1.0,module.ini - attribute_points_per_level,Sets how many attribute points are gained per level.
+fWeaponPointsPerLevel,10.0,module.ini - weapon_points_per_level,Sets how many weapon proficiency points are gained per level.
+fLevelBoundaryMultiplier,1.0,module.ini - level_boundary_multiplier,Sets the multiplier for EXP needed for troop to upgrade.
+iAttributeRequiredPerSkillLevel,3,module.ini - attribute_required_per_skill_level,Sets how many attribute points are required per skill level.
+iDisableDisbandOnTerrainType,-1,module.ini - disable_disband_on_terrain_type,Used to insure parties cannot disband on certain tiles (Like passable water).
+bDisableForceLeavingConversations,FALSE,module.ini - disable_force_leaving_conversations,Disables the TAB end in conversations.
+fMapCameraMinElevation,0.1,module.ini - map_min_elevation,Sets the minimum distance the camera can be from the terrain in the world map.
+fMapCameraMaxElevation,1.570796,module.ini - map_max_elevation,Sets the maximum distance the camera can be from the terrain in the world map.
+bAutoComputePartyRadius,FALSE,module.ini - auto_compute_party_radius,"Uses the party icon model to determine party radius. Especially important for modules with large town icons as it allows parties to interact with them in expected locations, as opposed to the center of the icon."
+iMinBattleAdvantage,-32,,Minimum value for battle advantage.
+iMaxBattleAdvantage,6,,Maximum value for battle advantage.

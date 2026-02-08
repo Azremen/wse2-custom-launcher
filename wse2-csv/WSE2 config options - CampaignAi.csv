@@ -1,0 +1,3 @@
+Name,Default Value,Warband Name,Description
+iReduceCampaignAi,2,rgl_config.txt - reduce_campaign_ai,"Deprecated. 0 - good, 1 - average, 2 - poor. Operations: options_get_campaign_ai, options_set_campaign_ai, game_get_reduce_campaign_ai."
+bUseStrictPathfindingForShips,FALSE,module.ini - use_strict_pathfinding_for_ships,Keeps ships at sea for sea-to-sea routes.

@@ -4,15 +4,10 @@
     $modules = [];
 
     $modules[] = [
-        'name' => 'Settler Warbands',
-        'version' => '0.0.1',
-        'url' => 'Settler Warbands.zip'
+        'name' => 'Native',
+        'version' => '1.7.5',
+        'url' => 'Native.zip'
     ];
-
-    /* $modules[] = [
-        'name' => 'Settler Warbands',
-        'version' => '0.0.1'
-    ]; */
 
     echo json_encode($modules);
 ?>

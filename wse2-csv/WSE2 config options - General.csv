@@ -1,0 +1,37 @@
+Name,Default Value,Warband Name,Description
+bFirstRun,TRUE,rgl_config.txt - first_time,When you first start the game sets certain settings depending on the configuration of the PC.
+sCoreResources,"core_shaders,core_textures,core_materials,core_ui_meshes,core_pictures,core_physics_materials",,"Core resources list, loaded first when launching any mod."
+sIntroVideos,"paradox.bik,taleworlds_intro.bik",,You can override list of videos for your module by specifying a relative path to module folder for them.
+iMaxFrameRate,90,rgl_config.txt - max_framerate,
+bShowFrameRate,FALSE,rgl_config.txt - show_framerate,
+bPauseWhenMinimized,FALSE,,"Pause game when window minimized, does not recommend for multiplayer, because disconnect from server due to timeout."
+bSuppressPerformanceWarnings,FALSE,module.ini - give_performance_warnings,
+bSuppressWarnings,FALSE,module.ini - dont_supress_initial_warnings,
+bSuppressScriptErrors,FALSE,,
+iScreenshotFormat,1,module.ini - screenshot_format,"0=JPG,1=PNG,2=BMP,3=TGA"
+bHasTutorial,TRUE,module.ini - has_tutorial,Determines if Tutorial appears on the main menu.
+bHasSingleplayer,TRUE,module.ini - has_single_player,Determines if New Game and Load Game appear on main menu.
+bHasMultiplayer,TRUE,module.ini - has_multiplayer,Determines if Multiplayer appears on the main menu.
+bHasCustomBattle,TRUE,module.ini - has_custom_battle,Determines if Custom Battle appears on the main menu.
+iNumHints,0,module.ini - num_hints,Total number of hints visible on the secondary loading screen.
+bHasOneHanded,TRUE,module.ini - display_wp_one_handed,"Determines the visibility of the weapon proficiency inside the character menu, but the weapons and the ability to use them still exists in the game."
+bHasTwoHanded,TRUE,module.ini - display_wp_two_handed,same
+bHasPolearms,TRUE,module.ini - display_wp_polearms,same
+bHasArchery,TRUE,module.ini - display_wp_archery,same
+bHasCrossbows,TRUE,module.ini - display_wp_crossbows,same
+bHasThrowing,TRUE,module.ini - display_wp_throwing,same
+bHasFirearms,TRUE,module.ini - display_wp_firearms,same
+bEnableAltF4,FALSE,,alt + f4 closes the game.
+bEnableLogWindowBackground,TRUE,,Background mesh for multiplayer log window.
+sModuleDownloadUrl,http://www.taleworlds.com/mb_warband_download_module.html,wse module.ini - module_download_url,"When you try to connect to a server for which there is no module in the game, it offers to download it from this link."
+bUseCaseInsensitiveMeshSearches,FALSE,module.ini - use_case_insensitive_mesh_searches,Determines if your module allows case insensitive references to mesh names i.e. sword_a and Sword_a being treated as the same reference.
+sStoragePath,,wse_setting.ini - wse storage_path,Path where WSE created files are stored (empty for default).
+bLuaDisableGameConstWarnings,FALSE,wse_setting.ini - lua disable_game_const_warnings,Mutes warnings during msfiles folder scanning for lua.
+bCheatMode,FALSE,rgl_config.txt - cheat_mode,"In-game cheats, useful for mod development. Operations: is_cheat_mode_enabled, options_get_cheat_mode, options_set_cheat_mode."
+bEditMode,FALSE,rgl_config.txt - enable_edit_mode,"Scene editor, some debug features. Be warned, this slows down the game. Operations: is_edit_mode_enabled, edit_mode_set_enabled."
+bMainMenuScene,FALSE,,Add scene to your module main menu. https://forums.taleworlds.com/index.php?threads/warband-script-enhancer-2-v1-0-6-4.384882/page-18#post-9758258
+iAttributeLimit,64,,Limit for troop attributes.
+bAllowDuplicateMeshes,TRUE,,Merges meshes with the same name.
+bLoadModuleIniOptions,TRUE,,Loads Warband's options from module.ini.
+bLocalVariablesZeroInitialization,TRUE,wse module.ini - local_variables_zero_initialization,"set to TRUE to initialize all locals variables with zeros, FALSE will give better performance"
+bHasMultiplayerCampaign,FALSE,,Determines if Join a Campaign appears on the Multiplayer menu.

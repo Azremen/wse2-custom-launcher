@@ -1,0 +1,7 @@
+Name,Default Value,Warband Name,Description
+sUserAgent,Mount Blade HTTP,,Default user agent.
+iMaxNumRetries,3,,For master server requests.
+iResolveTimeout,10000,,"In milliseconds, to use for name resolution."
+iConnectTimeout,10000,,"In milliseconds, to use for server connection requests."
+iSendTimeout,10000,,"In milliseconds, to use for sending requests."
+iReceiveTimeout,10000,,"In milliseconds, to receive a response to a request."

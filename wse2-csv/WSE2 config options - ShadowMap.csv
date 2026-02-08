@@ -1,0 +1,7 @@
+Name,Default Value,Warband Name,Description
+bShadowMap,TRUE,,
+iShadowMapTextureSize,1024,rgl_config.txt - shadowmap_quality,"values: 256, 512, 1024, 2048, 4096, 8192"
+fShadowMapDepthBias,0.0002,,
+fShadowMapSlopeScaledDepthBias,2.0,,
+sShadowMapShader,shadow_shader,,
+iShadowMapNumPasses,4,,

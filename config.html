@@ -5,127 +5,49 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- CSP -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' http://localhost:*;">
 
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="./bootstrap-4.6.1-dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="./libs/css/bootstrap.min.css">
     <link rel="stylesheet" href="./styles.css" />
-    <link rel="stylesheet" href="./font-awesome-4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="./libs/fontawesome/css/all.min.css">
 </head>
 
 <body>
-    <div class="container-fluid">
-        <div id="top-area" class="pt-3 pb-1">
-            <ul class="nav nav-tabs" id="configTabs" role="tablist">
-                <li class="nav-item dropdown">
-                    <a id="select-config" class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button"
-                        aria-expanded="false">Select Config</a>
-                    <div class="dropdown-menu">
-                        <a class="dropdown-item" id="battle-tab" data-toggle="tab" href="#battle" role="tab"
-                            aria-controls="battle">Battle</a>
-                        <a class="dropdown-item" id="battle-ai-tab" data-toggle="tab" href="#battle-ai" role="tab"
-                            aria-controls="battle-ai">Battle AI</a>
-                        <a class="dropdown-item" id="campaign-tab" data-toggle="tab" href="#campaign" role="tab"
-                            aria-controls="campaign">Campaign</a>
-                        <a class="dropdown-item" id="campaign-ai-tab" data-toggle="tab" href="#campaign-ai" role="tab"
-                            aria-controls="campaign-ai">Campaign AI</a>
-                        <a class="dropdown-item" id="dedicated-server-tab" data-toggle="tab" href="#dedicated-server"
-                            role="tab" aria-controls="dedicated-server">Dedicated Server</a>
-                        <a class="dropdown-item" id="face-generator-tab" data-toggle="tab" href="#face-generator"
-                            role="tab" aria-controls="face-generator">Face Generator</a>
-                        <a class="dropdown-item" id="fake-character-shadows-tab" data-toggle="tab"
-                            href="#fake-character-shadows" role="tab" aria-controls="fake-character-shadows">Fake
-                            Character Shadows</a>
-                        <a class="dropdown-item" id="flora-tab" data-toggle="tab" href="#flora" role="tab"
-                            aria-controls="flora">Flora</a>
-                        <a class="dropdown-item" id="font-tab" data-toggle="tab" href="#font" role="tab"
-                            aria-controls="font">Font</a>
-                        <a class="dropdown-item" id="general-tab" data-toggle="tab" href="#general" role="tab"
-                            aria-controls="general">General</a>
-                        <a class="dropdown-item" id="graphics-tab" data-toggle="tab" href="#graphics" role="tab"
-                            aria-controls="graphics">Graphics</a>
-                        <a class="dropdown-item" id="http-tab" data-toggle="tab" href="#http" role="tab"
-                            aria-controls="http">Http</a>
-                        <a class="dropdown-item" id="input-tab" data-toggle="tab" href="#input" role="tab"
-                            aria-controls="input">Input</a>
-                        <a class="dropdown-item" id="item-requirement-tab" data-toggle="tab" href="#item-requirement"
-                            role="tab" aria-controls="item-requirement">Item Requirement</a>
-                        <a class="dropdown-item" id="log-tab" data-toggle="tab" href="#log" role="tab"
-                            aria-controls="log">Log</a>
-                        <a class="dropdown-item" id="messages-tab" data-toggle="tab" href="#messages" role="tab"
-                            aria-controls="messages">Messages</a>
-                        <a class="dropdown-item" id="network-tab" data-toggle="tab" href="#network" role="tab"
-                            aria-controls="network">Network</a>
-                        <a class="dropdown-item" id="particle-systems-tab" data-toggle="tab" href="#particle-systems"
-                            role="tab" aria-controls="particle-systems">Particle Systems</a>
-                        <a class="dropdown-item" id="physics-tab" data-toggle="tab" href="#physics" role="tab"
-                            aria-controls="physics">Physics</a>
-                        <a class="dropdown-item" id="post-fx-tab" data-toggle="tab" href="#post-fx" role="tab"
-                            aria-controls="post-fx">Post Fx</a>
-                        <a class="dropdown-item" id="profiling-tab" data-toggle="tab" href="#profiling" role="tab"
-                            aria-controls="profiling">Profiling</a>
-                        <a class="dropdown-item" id="reflections-tab" data-toggle="tab" href="#reflections" role="tab"
-                            aria-controls="reflections">Reflections</a>
-                        <a class="dropdown-item" id="scene-tab" data-toggle="tab" href="#scene" role="tab"
-                            aria-controls="scene">Scene</a>
-                        <a class="dropdown-item" id="server-list-tab" data-toggle="tab" href="#server-list" role="tab"
-                            aria-controls="server-list">Server List</a>
-                        <a class="dropdown-item" id="shadow-map-tab" data-toggle="tab" href="#shadow-map" role="tab"
-                            aria-controls="shadow-map">Shadow Map</a>
-                        <a class="dropdown-item" id="sound-tab" data-toggle="tab" href="#sound" role="tab"
-                            aria-controls="sound">Sound</a>
-                        <a class="dropdown-item" id="terrain-generator-tab" data-toggle="tab" href="#terrain-generator"
-                            role="tab" aria-controls="terrain-generator">Terrain Generator</a>
-                        <a class="dropdown-item" id="threads-tab" data-toggle="tab" href="#threads" role="tab"
-                            aria-controls="threads">Threads</a>
-                        </a>
-                    </div>
-                </li>
-            </ul>
-            <div class="tab-content" id="configTabsContent">
-                <div class="tab-pane fade" id="battle" role="tabpanel" aria-labelledby="battle-tab"></div>
-                <div class="tab-pane fade" id="battle-ai" role="tabpanel" aria-labelledby="battle-ai-tab"></div>
-                <div class="tab-pane fade" id="campaign" role="tabpanel" aria-labelledby="campaign-tab"></div>
-                <div class="tab-pane fade" id="dedicated-server" role="tabpanel" aria-labelledby="dedicated-server-tab">
+    <div class="container-fluid p-0">
+        <div class="row g-0 h-100">
+            <!-- Sidebar -->
+            <div class="col-3 col-lg-2 bg-light border-end d-flex flex-column" style="height: 100vh;">
+                <div class="p-3 border-bottom">
+                    <h5 class="m-0" data-i18n="ui_settings">Settings</h5>
                 </div>
-                <div class="tab-pane fade" id="face-generator" role="tabpanel" aria-labelledby="face-generator-tab">
+                <div class="list-group list-group-flush flex-grow-1 overflow-auto" id="config-sidebar">
+                    <!-- Populated by renderer.js -->
                 </div>
-                <div class="tab-pane fade" id="fake-character-shadows" role="tabpanel"
-                    aria-labelledby="fake-character-shadows-tab"></div>
-                <div class="tab-pane fade" id="flora" role="tabpanel" aria-labelledby="flora-tab"></div>
-                <div class="tab-pane fade" id="font" role="tabpanel" aria-labelledby="font-tab"></div>
-                <div class="tab-pane fade" id="general" role="tabpanel" aria-labelledby="general-tab"></div>
-                <div class="tab-pane fade" id="graphics" role="tabpanel" aria-labelledby="graphics-tab"></div>
-                <div class="tab-pane fade" id="http" role="tabpanel" aria-labelledby="http-tab"></div>
-                <div class="tab-pane fade" id="input" role="tabpanel" aria-labelledby="input-tab"></div>
-                <div class="tab-pane fade" id="item-requirement" role="tabpanel" aria-labelledby="item-requirement-tab">
+                <div class="p-2 border-top bg-light">
+                     <button class="btn btn-outline-secondary btn-sm w-100 mb-1" id="config-back">Back</button>
+                     <button class="btn btn-primary btn-sm w-100" id="config-save">Save</button>
                 </div>
-                <div class="tab-pane fade" id="log" role="tabpanel" aria-labelledby="log-tab"></div>
-                <div class="tab-pane fade" id="messages" role="tabpanel" aria-labelledby="messages-tab"></div>
-                <div class="tab-pane fade" id="network" role="tabpanel" aria-labelledby="network-tab"></div>
-                <div class="tab-pane fade" id="particle-systems" role="tabpanel" aria-labelledby="particle-systems-tab">
-                </div>
-                <div class="tab-pane fade" id="physics" role="tabpanel" aria-labelledby="physics-tab"></div>
-                <div class="tab-pane fade" id="post-fx" role="tabpanel" aria-labelledby="post-fx-tab"></div>
-                <div class="tab-pane fade" id="profiling" role="tabpanel" aria-labelledby="profiling-tab"></div>
-                <div class="tab-pane fade" id="reflections" role="tabpanel" aria-labelledby="reflections-tab"></div>
-                <div class="tab-pane fade" id="scene" role="tabpanel" aria-labelledby="scene-tab"></div>
-                <div class="tab-pane fade" id="server-list" role="tabpanel" aria-labelledby="server-list-tab"></div>
-                <div class="tab-pane fade" id="shadow-map" role="tabpanel" aria-labelledby="shadow-map-tab"></div>
-                <div class="tab-pane fade" id="sound" role="tabpanel" aria-labelledby="sound-tab"></div>
-                <div class="tab-pane fade" id="terrain-generator" role="tabpanel"
-                    aria-labelledby="terrain-generator-tab"></div>
-                <div class="tab-pane fade" id="threads" role="tabpanel" aria-labelledby="threads-tab"></div>
             </div>
-        </div>
-        <div id="footer" class="pt-5 pb-1">
-            <div class="col-3">
-                <button class="btn btn-primary btn-sm" id="config-back">Back</button>
-                <button class="btn btn-primary btn-sm" id="config-save">Save</button>
+
+            <!-- Content -->
+            <div class="col-9 col-lg-10 d-flex flex-column" style="height: 100vh;">
+                <div class="p-3 border-bottom bg-white">
+                    <h4 id="config-section-title" class="m-0 text-primary"></h4>
+                </div>
+                <div class="p-3 flex-grow-1 overflow-auto bg-white">
+                     <div class="tab-content" id="configTabsContent">
+                        <!-- Populated by renderer.js -->
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    <script src="./jquery-3.6.0.min.js"></script>
-    <script src="./bootstrap-4.6.1-dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Scripts -->
+    <script src="./libs/js/jquery.min.js"></script>
+    <script src="./libs/js/bootstrap.bundle.min.js"></script>
     <script src="./renderer.js"></script>
 </body>
 

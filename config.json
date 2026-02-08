@@ -1,587 +1,4397 @@
 {
-    "battle": {
+    "BattleAi": {
+        "iReduceBattleAi": {
+            "name": "Reduce Battle Ai",
+            "description": "Affects agent's ai. 0 - good, 1 - average, 2 - poor.  Operations: options_get_combat_ai, options_set_combat_ai.",
+            "type": "number",
+            "default-value": 2,
+            "inputType": "select",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "Good"
+                },
+                {
+                    "value": 1,
+                    "label": "Average"
+                },
+                {
+                    "value": 2,
+                    "label": "Poor"
+                }
+            ]
+        },
+        "iMinNumAgentsForNavMeshReuse": {
+            "name": "Min Num Agents For Nav Mesh Reuse",
+            "description": "Used for ai agent compute path.",
+            "type": "number",
+            "default-value": 12,
+            "inputType": "number"
+        },
+        "bUseAdvancedFormation": {
+            "name": "Use Advanced Formation",
+            "description": "Determines if the module uses Native’s advanced formations. Those add extensions to the order menus related to formations and weapon usage.\nPlayers can then let the troops line up from one row to five rows and order their archers to fire at their command. Some lines need to be added to ui.csv for this.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bAiDecideDirectionAccordingToDamage": {
+            "name": "Ai Decide Direction According To Damage",
+            "description": "AI will take into consideration what each directional attack’s damage will be when deciding what attack to use.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bConsiderWeaponLengthForWeaponQuality": {
+            "name": "Consider Weapon Length For Weapon Quality",
+            "description": "Makes agents take into account a weapon’s length when choosing a weapon at their inventory.",
+            "type": "checkbox",
+            "default-value": false
+        }
+    },
+    "PostFx": {
+        "iFxaa": {
+            "name": "Fxaa",
+            "description": "Antialiasing (FXAA). Smooths out jagged edges, significantly blurs the screen. 0 - none, 1 - low, 2 - medium, 3 - high.",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "combobox",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "None"
+                },
+                {
+                    "value": 1,
+                    "label": "Low"
+                },
+                {
+                    "value": 2,
+                    "label": "Medium"
+                },
+                {
+                    "value": 3,
+                    "label": "High"
+                }
+            ]
+        },
+        "iPostProcess": {
+            "name": "Post Process",
+            "description": "Post Processing Filter. 0 - none, 1 - Light Sharpen, 2 - Strong Sharpen, 3 - MAKE MY EYES BLEED",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "combobox",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "None"
+                },
+                {
+                    "value": 1,
+                    "label": "Light Sharpen"
+                },
+                {
+                    "value": 2,
+                    "label": "Strong Sharpen"
+                },
+                {
+                    "value": 3,
+                    "label": "MAKE MY EYES BLEED"
+                }
+            ]
+        },
+        "iHighDynamicRange": {
+            "name": "High Dynamic Range",
+            "description": "High dynamic range (HDR) is a technique that produces images with a greater dynamic range of luminosity than standard dynamic range (SDR) images, allowing for realistic depictions of color and brightness. 0 - off, 1 - low, 2 - high",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "select",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "Off"
+                },
+                {
+                    "value": 1,
+                    "label": "Low"
+                },
+                {
+                    "value": 2,
+                    "label": "High"
+                }
+            ]
+        },
+        "bDepthEffects": {
+            "name": "Depth Effects",
+            "description": "Depth of Field is a post-processing effect that simulates the focus properties of a camera lens.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bAutoExposure": {
+            "name": "Auto Exposure",
+            "description": "Auto Exposure mimics how the human eye adjusts in varying levels of darkness.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bDisableHighHDR": {
+            "name": "Disable High H D R",
+            "description": "Disable High HDR setting",
+            "type": "checkbox",
+            "default-value": false
+        }
+    },
+    "Flora": {
+        "iGrassMinFilter": {
+            "name": "Grass Min Filter",
+            "description": "0 - filtering disabled, 1 - nearest, 2 - linear interpolation, 3 - anisotropic",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "combobox",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "Filtering Disabled"
+                },
+                {
+                    "value": 1,
+                    "label": "Nearest"
+                },
+                {
+                    "value": 2,
+                    "label": "Linear Interpolation"
+                },
+                {
+                    "value": 3,
+                    "label": "Anisotropic"
+                }
+            ]
+        },
+        "iGrassMagFilter": {
+            "name": "Grass Mag Filter",
+            "description": "0 - filtering disabled, 1 - nearest, 2 - linear interpolation, 3 - anisotropic",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "combobox",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "Filtering Disabled"
+                },
+                {
+                    "value": 1,
+                    "label": "Nearest"
+                },
+                {
+                    "value": 2,
+                    "label": "Linear Interpolation"
+                },
+                {
+                    "value": 3,
+                    "label": "Anisotropic"
+                }
+            ]
+        },
+        "iGrassMipFilter": {
+            "name": "Grass Mip Filter",
+            "description": "0 - filtering disabled, 1 - nearest, 2 - linear interpolation",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "select",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "Filtering Disabled"
+                },
+                {
+                    "value": 1,
+                    "label": "Nearest"
+                },
+                {
+                    "value": 2,
+                    "label": "Linear Interpolation"
+                }
+            ]
+        },
+        "iGrassMaxAnisotropy": {
+            "name": "Grass Max Anisotropy",
+            "description": "limit for anisotropic filtering",
+            "type": "number",
+            "default-value": 4.0,
+            "inputType": "number"
+        },
+        "fGrassDensity": {
+            "name": "Grass Density",
+            "description": "",
+            "type": "number",
+            "default-value": 0.5,
+            "inputType": "number"
+        },
+        "fFloraDegradeDistance": {
+            "name": "Flora Degrade Distance",
+            "description": "",
+            "type": "number",
+            "default-value": 100.0,
+            "inputType": "number"
+        },
+        "iFloraShadows": {
+            "name": "Flora Shadows",
+            "description": "0 - none, 1 - quick, 2 - full",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "select",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "None"
+                },
+                {
+                    "value": 1,
+                    "label": "Quick"
+                },
+                {
+                    "value": 2,
+                    "label": "Full"
+                }
+            ]
+        },
+        "iFloraLod": {
+            "name": "Flora Lod",
+            "description": "0 - low, 1 - medium, 2 - high, 3 - very high",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "combobox",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "Low"
+                },
+                {
+                    "value": 1,
+                    "label": "Medium"
+                },
+                {
+                    "value": 2,
+                    "label": "High"
+                },
+                {
+                    "value": 3,
+                    "label": "Very High"
+                }
+            ]
+        }
+    },
+    "General": {
+        "bFirstRun": {
+            "name": "First Run",
+            "description": "When you first start the game sets certain settings depending on the configuration of the PC.",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "sCoreResources": {
+            "name": "Core Resources",
+            "description": "Core resources list, loaded first when launching any mod.",
+            "type": "text",
+            "default-value": "core_shaders,core_textures,core_materials,core_ui_meshes,core_pictures,core_physics_materials",
+            "inputType": "text"
+        },
+        "sIntroVideos": {
+            "name": "Intro Videos",
+            "description": "You can override list of videos for your module by specifying a relative path to module folder for them.",
+            "type": "text",
+            "default-value": "paradox.bik,taleworlds_intro.bik",
+            "inputType": "text"
+        },
+        "iMaxFrameRate": {
+            "name": "Max Frame Rate",
+            "description": "",
+            "type": "number",
+            "default-value": 90,
+            "inputType": "number"
+        },
+        "bShowFrameRate": {
+            "name": "Show Frame Rate",
+            "description": "",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bPauseWhenMinimized": {
+            "name": "Pause When Minimized",
+            "description": "Pause game when window minimized, does not recommend for multiplayer, because disconnect from server due to timeout.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bSuppressPerformanceWarnings": {
+            "name": "Suppress Performance Warnings",
+            "description": "",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bSuppressWarnings": {
+            "name": "Suppress Warnings",
+            "description": "",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bSuppressScriptErrors": {
+            "name": "Suppress Script Errors",
+            "description": "",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "iScreenshotFormat": {
+            "name": "Screenshot Format",
+            "description": "0=JPG,1=PNG,2=BMP,3=TGA",
+            "type": "number",
+            "default-value": 1,
+            "inputType": "number"
+        },
+        "bHasTutorial": {
+            "name": "Has Tutorial",
+            "description": "Determines if Tutorial appears on the main menu.",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bHasSingleplayer": {
+            "name": "Has Singleplayer",
+            "description": "Determines if New Game and Load Game appear on main menu.",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bHasMultiplayer": {
+            "name": "Has Multiplayer",
+            "description": "Determines if Multiplayer appears on the main menu.",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bHasCustomBattle": {
+            "name": "Has Custom Battle",
+            "description": "Determines if Custom Battle appears on the main menu.",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "iNumHints": {
+            "name": "Num Hints",
+            "description": "Total number of hints visible on the secondary loading screen.",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "number"
+        },
+        "bHasOneHanded": {
+            "name": "Has One Handed",
+            "description": "Determines the visibility of the weapon proficiency inside the character menu, but the weapons and the ability to use them still exists in the game.",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bHasTwoHanded": {
+            "name": "Has Two Handed",
+            "description": "same",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bHasPolearms": {
+            "name": "Has Polearms",
+            "description": "same",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bHasArchery": {
+            "name": "Has Archery",
+            "description": "same",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bHasCrossbows": {
+            "name": "Has Crossbows",
+            "description": "same",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bHasThrowing": {
+            "name": "Has Throwing",
+            "description": "same",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bHasFirearms": {
+            "name": "Has Firearms",
+            "description": "same",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bEnableAltF4": {
+            "name": "Enable Alt F4",
+            "description": "alt + f4 closes the game.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bEnableLogWindowBackground": {
+            "name": "Enable Log Window Background",
+            "description": "Background mesh for multiplayer log window.",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "sModuleDownloadUrl": {
+            "name": "Module Download Url",
+            "description": "When you try to connect to a server for which there is no module in the game, it offers to download it from this link.",
+            "type": "text",
+            "default-value": "http://www.taleworlds.com/mb_warband_download_module.html",
+            "inputType": "text"
+        },
+        "bUseCaseInsensitiveMeshSearches": {
+            "name": "Use Case Insensitive Mesh Searches",
+            "description": "Determines if your module allows case insensitive references to mesh names i.e. sword_a and Sword_a being treated as the same reference.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "sStoragePath": {
+            "name": "Storage Path",
+            "description": "Path where WSE created files are stored (empty for default).",
+            "type": "text",
+            "default-value": "nan",
+            "inputType": "text"
+        },
+        "bLuaDisableGameConstWarnings": {
+            "name": "Lua Disable Game Const Warnings",
+            "description": "Mutes warnings during msfiles folder scanning for lua.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bCheatMode": {
+            "name": "Cheat Mode",
+            "description": "In-game cheats, useful for mod development. Operations: is_cheat_mode_enabled, options_get_cheat_mode, options_set_cheat_mode.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bEditMode": {
+            "name": "Edit Mode",
+            "description": "Scene editor, some debug features. Be warned, this slows down the game. Operations: is_edit_mode_enabled, edit_mode_set_enabled.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bMainMenuScene": {
+            "name": "Main Menu Scene",
+            "description": "Add scene to your module main menu. https://forums.taleworlds.com/index.php?threads/warband-script-enhancer-2-v1-0-6-4.384882/page-18#post-9758258",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "iAttributeLimit": {
+            "name": "Attribute Limit",
+            "description": "Limit for troop attributes.",
+            "type": "number",
+            "default-value": 64,
+            "inputType": "number"
+        },
+        "bAllowDuplicateMeshes": {
+            "name": "Allow Duplicate Meshes",
+            "description": "Merges meshes with the same name.",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bLoadModuleIniOptions": {
+            "name": "Load Module Ini Options",
+            "description": "Loads Warband's options from module.ini.",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bLocalVariablesZeroInitialization": {
+            "name": "Local Variables Zero Initialization",
+            "description": "set to TRUE to initialize all locals variables with zeros, FALSE will give better performance",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bHasMultiplayerCampaign": {
+            "name": "Has Multiplayer Campaign",
+            "description": "Determines if Join a Campaign appears on the Multiplayer menu.",
+            "type": "checkbox",
+            "default-value": false
+        }
+    },
+    "Battle": {
         "iMaxNumCorpses": {
-            "name": "Maximum amount of Corpses",
-            "default-name": "number_of_corpses",
-            "type": "range",
+            "name": "Max Num Corpses",
+            "description": "range: 0-2000",
+            "type": "number",
             "default-value": 50,
-            "range-min": 0,
-            "range-max": 2000
+            "inputType": "select",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "2000"
+                }
+            ]
         },
         "iMaxNumRagdolls": {
-            "name": "Maximum amount of Ragdolls",
-            "default-name": "number_of_ragdolls",
-            "type": "range",
+            "name": "Max Num Ragdolls",
+            "description": "range: 0-100",
+            "type": "number",
             "default-value": 10,
-            "range-min": 0,
-            "range-max": 100
+            "inputType": "select",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "100"
+                }
+            ]
         },
         "fFirstPersonFieldOfView": {
             "name": "First Person Field Of View",
-            "type": "range",
-            "default-value": 75.0,
-            "range-min": 60.0,
-            "range-max": 100.0
+            "description": "Extent of the observable game world that is seen on the display at any given moment for first person. Range: 55.0-100.0",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "select",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "100"
+                }
+            ]
         },
         "fThirdPersonFieldOfView": {
             "name": "Third Person Field Of View",
-            "type": "range",
-            "default-value": 75.0,
-            "range-min": 60.0,
-            "range-max": 100.0
+            "description": "Extent of the observable game world that is seen on the display at any given moment for third person. Range: 55.0-100.0",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "select",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "100"
+                }
+            ]
         },
         "iBloodStains": {
-            "name": "Blood Stains Visibility range",
-            "default-name": "blood_stains",
-            "type": "radio",
+            "name": "Blood Stains",
+            "description": "0 - off, 1 - near player only, 2 - on",
+            "type": "number",
             "default-value": 2,
-            "values": {
-                "0": "Off",
-                "1": "Near Player",
-                "2": "On"
-            }
+            "inputType": "select",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "Off"
+                },
+                {
+                    "value": 1,
+                    "label": "Near Player Only"
+                },
+                {
+                    "value": 2,
+                    "label": "On"
+                }
+            ]
         },
         "bBlood": {
-            "name": "Enable Blood",
-            "default-name": "enable_blood",
-            "type": "boolean",
+            "name": "Blood",
+            "description": "",
+            "type": "checkbox",
             "default-value": true
         },
         "fBloodMultiplier": {
-            "name": "Amount and velocity of Blood Particle Effects",
-            "default-name": "blood_multiplier",
-            "type": "input",
-            "default-value": 2.0
+            "name": "Blood Multiplier",
+            "description": "Determines the amount and velocity of blood particle effects.",
+            "type": "number",
+            "default-value": 2.0,
+            "inputType": "number"
         },
         "fDamageToSelf": {
-            "name": "Damage multiplier for Player",
-            "default-name": "combat_difficulty",
-            "type": "range",
-            "default-value": 0.5,
-            "range-min": 0.1,
-            "range-max": 1.0
+            "name": "Damage To Self",
+            "description": "Range: 0.1-1.0. Operations: options_get_damage_to_player, options_set_damage_to_player.",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "select",
+            "options": [
+                {
+                    "value": 1,
+                    "label": "1"
+                }
+            ]
         },
         "fDamageToFriends": {
-            "name": "Damage multiplier for friendly Troops",
-            "default-name": "friend_combat_difficulty",
-            "type": "range",
-            "default-value": 0.5,
-            "range-min": 0.1,
-            "range-max": 1.0
+            "name": "Damage To Friends",
+            "description": "Range: 0.1-1.0. Operations: options_get_damage_to_friends, options_set_damage_to_friends.",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "select",
+            "options": [
+                {
+                    "value": 1,
+                    "label": "1"
+                }
+            ]
         },
         "iBannerMode": {
-            "name": "Banner Labels visibility",
-            "default-name": "display_labels",
-            "type": "radio",
+            "name": "Banner Mode",
+            "description": "0 - none, 1 - on group, 2 - on friendlies, 3 - on everyone",
+            "type": "number",
             "default-value": 2,
-            "values": {
-                "0": "None",
-                "1": "On group",
-                "2": "On friendlies",
-                "3": "On everyone"
-            }
+            "inputType": "combobox",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "None"
+                },
+                {
+                    "value": 1,
+                    "label": "On Group"
+                },
+                {
+                    "value": 2,
+                    "label": "On Friendlies"
+                },
+                {
+                    "value": 3,
+                    "label": "On Everyone"
+                }
+            ]
         },
         "iBannerOutlineMode": {
-            "name": "Outline on Banner Labels",
-            "type": "radio",
+            "name": "Banner Outline Mode",
+            "description": "0 - none, 1 - on group, 2 - on friendlies, 3 - on everyone",
+            "type": "number",
             "default-value": 1,
-            "values": {
-                "0": "None",
-                "1": "On group",
-                "2": "On friendlies",
-                "3": "On everyone"
-            }
+            "inputType": "combobox",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "None"
+                },
+                {
+                    "value": 1,
+                    "label": "On Group"
+                },
+                {
+                    "value": 2,
+                    "label": "On Friendlies"
+                },
+                {
+                    "value": 3,
+                    "label": "On Everyone"
+                }
+            ]
         },
         "uBannerOutlineColorFriendly": {
-            "name": "Color Code for friendly Troops' Banner Labels' Outline",
-            "type": "input",
-            "default-value": "0xFF00"
+            "name": "Banner Outline Color Friendly",
+            "description": "",
+            "type": "text",
+            "default-value": "0xFF00",
+            "inputType": "color"
         },
         "uBannerOutlineColorEnemy": {
-            "name": "Color Code for enemy Troops' Banner Labels' Outline",
-            "type": "input",
-            "default-value": "0xFF0000"
+            "name": "Banner Outline Color Enemy",
+            "description": "",
+            "type": "text",
+            "default-value": "0xFF0000",
+            "inputType": "color"
         },
         "uBannerOutlineColorNeutral": {
-            "name": "Color Code for neutral Troops' Banner Labels' Outline",
-            "type": "input",
-            "default-value": "0xFF"
+            "name": "Banner Outline Color Neutral",
+            "description": "",
+            "type": "text",
+            "default-value": "0xFF",
+            "inputType": "color"
         },
         "fDynamicBannerTransparencyMinDistance": {
-            "name": "Maximum amount of corpses",
-            "type": "input",
-            "default-value": 400.0
+            "name": "Dynamic Banner Transparency Min Distance",
+            "description": "",
+            "type": "number",
+            "default-value": 400.0,
+            "inputType": "number"
         },
         "fDynamicBannerTransparencyMaxDistance": {
-            "name": "Maximum amount of corpses",
-            "type": "input",
-            "default-value": 600.0
+            "name": "Dynamic Banner Transparency Max Distance",
+            "description": "",
+            "type": "number",
+            "default-value": 600.0,
+            "inputType": "number"
         },
-        "iDynamicBannerTransparencyMinAlpha": {
-            "name": "Minimum Banner Transparency Alpha value",
-            "type": "input",
-            "default-value": 165
+        "iFloraShadows": {
+            "name": "Flora Shadows",
+            "description": "",
+            "type": "number",
+            "default-value": 165,
+            "inputType": "number"
         },
         "iDynamicBannerTransparencyMaxAlpha": {
-            "name": "Maximum Banner Transparency Alpha value",
-            "type": "input",
-            "default-value": 255
+            "name": "Dynamic Banner Transparency Max Alpha",
+            "description": "",
+            "type": "number",
+            "default-value": 255,
+            "inputType": "number"
         },
         "iFixedBannerTransparencyAlpha": {
-            "name": "Banners' Transparency's Fixed Point Multiplier",
-            "type": "input",
-            "default-value": 215
+            "name": "Fixed Banner Transparency Alpha",
+            "description": "",
+            "type": "number",
+            "default-value": 215,
+            "inputType": "number"
         },
         "iFixedBannerTransparencyOutlineAlpha": {
-            "name": "Banners' Outline Transparency's Fixed Point Multiplier",
-            "type": "input",
-            "default-value": 205
+            "name": "Fixed Banner Transparency Outline Alpha",
+            "description": "",
+            "type": "number",
+            "default-value": 205,
+            "inputType": "number"
         },
         "bDynamicBannerTransparency": {
-            "name": "Use dynamic Banner Transparency (depending on distance or fixed)",
-            "type": "boolean",
+            "name": "Dynamic Banner Transparency",
+            "description": "Use dynamic banner transparency depending on distance or fixed.",
+            "type": "checkbox",
             "default-value": true
         },
         "bShowReticle": {
-            "name": "Display Targeting Reticule",
-            "default-name": "display_targeting_reticule",
-            "type": "boolean",
+            "name": "Show Reticle",
+            "description": "",
+            "type": "checkbox",
             "default-value": true
         },
         "bShowAttackDirection": {
-            "name": "Display Attack Direction",
-            "default-name": "display_attack_direction",
-            "type": "boolean",
+            "name": "Show Attack Direction",
+            "description": "",
+            "type": "checkbox",
             "default-value": true
         },
         "iAttackControl": {
-            "name": "Attack Direction Controlling on Foot",
-            "type": "radio",
+            "name": "Attack Control",
+            "description": "0 - by relative enemy position, 1 - by inverse mouse movement, 2 - by mouse movement, 3 - by movement keys",
+            "type": "number",
             "default-value": 2,
-            "values": {
-                "0": "By Relative Enemy Position",
-                "1": "By Inverse Mouse Movement",
-                "2": "By Mouse Movement",
-                "3": "By Movement Keys"
-            }
+            "inputType": "combobox",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "By Relative Enemy Position"
+                },
+                {
+                    "value": 1,
+                    "label": "By Inverse Mouse Movement"
+                },
+                {
+                    "value": 2,
+                    "label": "By Mouse Movement"
+                },
+                {
+                    "value": 3,
+                    "label": "By Movement Keys"
+                }
+            ]
         },
         "iMountedAttackControl": {
-            "name": "Attack Direction Controlling on Mount",
-            "type": "radio",
-            "default-value": 2, 
-            "values": {
-                "0": "By Relative Enemy Position",
-                "1": "By Inverse Mouse Movement",
-                "2": "By Mouse Movement",
-                "3": "By Movement Keys"
-            }
+            "name": "Mounted Attack Control",
+            "description": "0 - by relative enemy position, 1 - by inverse mouse movement, 2 - by mouse movement, 3 - by movement keys",
+            "type": "number",
+            "default-value": 2,
+            "inputType": "combobox",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "By Relative Enemy Position"
+                },
+                {
+                    "value": 1,
+                    "label": "By Inverse Mouse Movement"
+                },
+                {
+                    "value": 2,
+                    "label": "By Mouse Movement"
+                },
+                {
+                    "value": 3,
+                    "label": "By Movement Keys"
+                }
+            ]
         },
         "iDefendControl": {
-            "name": "Defend Direction Controlling Setting on Foot",
-            "default-name": "defend_direction_control",
-            "type": "radio",
+            "name": "Defend Control",
+            "description": "0 - automatic, 1 - by mouse movement, 2 - by movement keys, 3 - by inverse mouse movement",
+            "type": "number",
             "default-value": 0,
-            "values": {
-                "0": "Automatic",
-                "1": "By Mouse Movement",
-                "2": "By Movement Keys"
-            }
+            "inputType": "combobox",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "Automatic"
+                },
+                {
+                    "value": 1,
+                    "label": "By Mouse Movement"
+                },
+                {
+                    "value": 2,
+                    "label": "By Movement Keys"
+                },
+                {
+                    "value": 3,
+                    "label": "By Inverse Mouse Movement"
+                }
+            ]
         },
         "iMountedDefendControl": {
-            "name": "Defend Direction Controlling Setting on Mount",
-            "type": "radio",
+            "name": "Mounted Defend Control",
+            "description": "0 - automatic, 1 - by mouse movement, 2 - by movement keys, 3 - by inverse mouse movement",
+            "type": "number",
             "default-value": 0,
-            "values": {
-                "0": "Automatic",
-                "1": "By Mouse Movement",
-                "2": "By Movement Keys"
-            }
+            "inputType": "combobox",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "Automatic"
+                },
+                {
+                    "value": 1,
+                    "label": "By Mouse Movement"
+                },
+                {
+                    "value": 2,
+                    "label": "By Movement Keys"
+                },
+                {
+                    "value": 3,
+                    "label": "By Inverse Mouse Movement"
+                }
+            ]
         },
         "iLanceControl": {
-            "name": "Mounted Couch and Lance Control",
-            "default-name": "lance_control",
-            "type": "radio",
+            "name": "Lance Control",
+            "description": "0 - automatic, 1 - manual (easy), 2 - manual (hard)",
+            "type": "number",
             "default-value": 0,
-            "values": {
-                "0": "Automatic",
-                "1": "Easy",
-                "2": "Hard"
-            }
+            "inputType": "select",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "Automatic"
+                },
+                {
+                    "value": 1,
+                    "label": "Manual (easy)"
+                },
+                {
+                    "value": 2,
+                    "label": "Manual (hard)"
+                }
+            ]
         },
         "iHorseCameraMode": {
-            "name": "Turn Camera with Horse in First Person",
-            "default-name": "turn_camera_with_horse_in_first_person",
-            "type": "radio",
+            "name": "Horse Camera Mode",
+            "description": "0 - never, 1 - ranged only, 2 - melee only, 3 - always",
+            "type": "number",
             "default-value": 2,
-            "values": {
-                "0": "Never",
-                "1": "Ranged only",
-                "2": "Melee only",
-                "3": "Always"
-            }
+            "inputType": "combobox",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "Never"
+                },
+                {
+                    "value": 1,
+                    "label": "Ranged Only"
+                },
+                {
+                    "value": 2,
+                    "label": "Melee Only"
+                },
+                {
+                    "value": 3,
+                    "label": "Always"
+                }
+            ]
         },
         "iCombatSpeed": {
             "name": "Combat Speed",
-            "type": "range",
+            "description": "0 - slowest, 1 - slower, 2 - normal, 3 - faster, 5 - fastest. Operations: options_get_combat_speed, options_set_combat_speed.",
+            "type": "number",
             "default-value": 2,
-            "range-min": 0,
-            "range-max": 5
+            "inputType": "combobox",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "Slowest"
+                },
+                {
+                    "value": 1,
+                    "label": "Slower"
+                },
+                {
+                    "value": 2,
+                    "label": "Normal"
+                },
+                {
+                    "value": 3,
+                    "label": "Faster"
+                },
+                {
+                    "value": 5,
+                    "label": "Fastest"
+                }
+            ]
         },
         "fBattleSize": {
             "name": "Battle Size",
-            "default-name": "battle_size",
-            "type": "range",
-            "default-value": 0.3422,
-            "range-min": 0.0,
-            "range-max": 10.0
+            "description": "Range: 0.0-10.0. Operations: options_get_battle_size, options_set_battle_size.",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "select",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "10"
+                }
+            ]
         },
         "iBattleSizeMin": {
-            "name": "Displayed Minimum Battle Size in Settings",
-            "default-name": "battle_size_min",
-            "type": "input",
-            "default-value": 30
+            "name": "Battle Size Min",
+            "description": "The minimum value for a visual display of the size of the battle, depending on fBattleSize.",
+            "type": "number",
+            "default-value": 30,
+            "inputType": "number"
         },
         "iBattleSizeMax": {
-            "name": "Displayed Maximum Battle Size in Settings",
-            "default-name": "battle_size_max",
-            "type": "input",
-            "default-value": 150
+            "name": "Battle Size Max",
+            "description": "The maximum value for a visual display of the size of the battle, depending on fBattleSize.",
+            "type": "number",
+            "default-value": 150,
+            "inputType": "number"
         },
         "iNumWalkSamplePoints": {
-            "name": "",
-            "type": "",
-            "default-value": 
+            "name": "Num Walk Sample Points",
+            "description": "Used for animation progress with arf_use_inv_walk_progress or arf_use_walk_progress flags.",
+            "type": "number",
+            "default-value": 8,
+            "inputType": "number"
         },
         "fStrafeCooldown": {
-            "name": "",
-            "type": "",
-            "default-value": 
+            "name": "Strafe Cooldown",
+            "description": "Cooldown for walking action strafe.",
+            "type": "number",
+            "default-value": 0.45,
+            "inputType": "number"
         },
         "fMinInflictedDamageForHighDamageHit": {
-            "name": "",
-            "type": "",
-            "default-value": 
+            "name": "Min Inflicted Damage For High Damage Hit",
+            "description": "Affects hit sound for melee weapon.",
+            "type": "number",
+            "default-value": 9.0,
+            "inputType": "number"
         },
         "iMinSoakedDamageForHighArmorHit": {
-            "name": "",
-            "type": "",
-            "default-value": 
+            "name": "Min Soaked Damage For High Armor Hit",
+            "description": "Affects hit sound for melee weapon.",
+            "type": "number",
+            "default-value": 14,
+            "inputType": "number"
         },
         "bWeaponsCollideWithGround": {
-            "name": "",
-            "type": "",
-            "default-value": 
+            "name": "Weapons Collide With Ground",
+            "description": "Enable weapon collision with ground.",
+            "type": "checkbox",
+            "default-value": false
         },
         "fKickCooldown": {
-            "name": "",
-            "type": "",
-            "default-value": 
+            "name": "Kick Cooldown",
+            "description": "",
+            "type": "number",
+            "default-value": 1.8,
+            "inputType": "number"
         },
         "fJumpCooldown": {
-            "name": "",
-            "type": "",
-            "default-value": 
+            "name": "Jump Cooldown",
+            "description": "",
+            "type": "number",
+            "default-value": 2.0,
+            "inputType": "number"
         },
         "fHorseJumpCooldown": {
-            "name": "",
-            "type": "",
-            "default-value": 
+            "name": "Horse Jump Cooldown",
+            "description": "",
+            "type": "number",
+            "default-value": 4.0,
+            "inputType": "number"
         },
         "bNoJumpingWhileAttackingMelee": {
-            "name": "",
-            "type": "",
-            "default-value": 
+            "name": "No Jumping While Attacking Melee",
+            "description": "Determines if an agent can jumping while melee attack.",
+            "type": "checkbox",
+            "default-value": false
         },
         "bNoJumpingWhileAttackingThrowing": {
-            "name": "",
-            "type": "",
-            "default-value": 
+            "name": "No Jumping While Attacking Throwing",
+            "description": "Determines if an agent can jumping while throwing attack.",
+            "type": "checkbox",
+            "default-value": false
         },
         "bNoJumpingWhileAttackingRanged": {
-            "name": "",
-            "type": "",
-            "default-value": 
+            "name": "No Jumping While Attacking Ranged",
+            "description": "Determines if an agent can jumping while ranged attack.",
+            "type": "checkbox",
+            "default-value": false
         },
         "bNoAttackingWhileJumpingMelee": {
-            "name": "",
-            "type": "",
-            "default-value": 
+            "name": "No Attacking While Jumping Melee",
+            "description": "Determines if an agent can melee attack while jumping.",
+            "type": "checkbox",
+            "default-value": false
         },
         "bNoAttackingWhileJumpingThrowing": {
-            "name": "",
-            "type": "",
-            "default-value": 
+            "name": "No Attacking While Jumping Throwing",
+            "description": "Determines if an agent can throwing attack while jumping.",
+            "type": "checkbox",
+            "default-value": false
         },
         "bNoAttackingWhileJumpingRanged": {
-            "name": "",
-            "type": "",
-            "default-value": 
+            "name": "No Attacking While Jumping Ranged",
+            "description": "Determines if an agent can ranged attack while jumping.",
+            "type": "checkbox",
+            "default-value": false
         },
         "fGhostModeCameraAcceleration": {
-            "name": "",
-            "type": "",
-            "default-value": 
+            "name": "Ghost Mode Camera Acceleration",
+            "description": "",
+            "type": "number",
+            "default-value": 25.0,
+            "inputType": "number"
         },
         "fGhostModeCameraMaxSpeed": {
-            "name": "",
-            "type": "",
-            "default-value": 
+            "name": "Ghost Mode Camera Max Speed",
+            "description": "",
+            "type": "number",
+            "default-value": 10.0,
+            "inputType": "number"
         },
         "fGhostModeCameraDamping": {
-            "name": "",
-            "type": "",
-            "default-value": 
+            "name": "Ghost Mode Camera Damping",
+            "description": "",
+            "type": "number",
+            "default-value": 5.0,
+            "inputType": "number"
         },
         "iMaxNumPrunableMissionObjects": {
-            "name": "",
-            "type": "",
-            "default-value": 
+            "name": "Max Num Prunable Mission Objects",
+            "description": "When this limit is reached, deletes the oldest prunable mission object.",
+            "type": "number",
+            "default-value": 500,
+            "inputType": "number"
         },
         "vStickItemToLeftHandOffset": {
-            "name": "",
-            "type": "",
-            "default-value": 
+            "name": "Stick Item To Left Hand Offset",
+            "description": "Used for flag arf_stick_item_to_left_hand.",
+            "type": "text",
+            "default-value": "0.0,-0.37,-0.04",
+            "inputType": "text"
         },
         "fMinActionProgressForAllyCollision": {
-            "name": "",
-            "type": "",
-            "default-value": 
+            "name": "Min Action Progress For Ally Collision",
+            "description": "Operation: set_ally_collision_threshold.",
+            "type": "number",
+            "default-value": 0.45,
+            "inputType": "number"
         },
         "fMaxActionProgressForAllyCollision": {
-            "name": "",
-            "type": "",
-            "default-value": 
+            "name": "Max Action Progress For Ally Collision",
+            "description": "Operation: set_ally_collision_threshold.",
+            "type": "number",
+            "default-value": 0.6,
+            "inputType": "number"
         },
         "fMinActionProgressForPropCollisionThrust": {
-            "name": "",
-            "type": "",
-            "default-value": 
+            "name": "Min Action Progress For Prop Collision Thrust",
+            "description": "Operation: set_prop_collision_threshold.",
+            "type": "number",
+            "default-value": 0.4,
+            "inputType": "number"
         },
-        "bNoJumpingWhileAttackingRanged": {
-            "name": "",
-            "type": "",
-            "default-value": 
+        "fMinActionProgressForPropCollisionSwingRight": {
+            "name": "Min Action Progress For Prop Collision Swing Right",
+            "description": "Operation: set_prop_collision_threshold.",
+            "type": "number",
+            "default-value": 0.4,
+            "inputType": "number"
         },
-        "bNoJumpingWhileAttackingRanged": {
-            "name": "",
-            "type": "",
-            "default-value": 
+        "fMinActionProgressForPropCollisionSwingLeft": {
+            "name": "Min Action Progress For Prop Collision Swing Left",
+            "description": "Operation: set_prop_collision_threshold.",
+            "type": "number",
+            "default-value": 0.4,
+            "inputType": "number"
         },
-        "bNoJumpingWhileAttackingRanged": {
-            "name": "",
-            "type": "",
-            "default-value": 
+        "fMinActionProgressForPropCollisionOverswing": {
+            "name": "Min Action Progress For Prop Collision Overswing",
+            "description": "Operation: set_prop_collision_threshold.",
+            "type": "number",
+            "default-value": 0.4,
+            "inputType": "number"
         },
-        "bNoJumpingWhileAttackingRanged": {
-            "name": "",
-            "type": "",
-            "default-value": 
+        "fMaxActionProgressForPropCollisionThrust": {
+            "name": "Max Action Progress For Prop Collision Thrust",
+            "description": "Operation: set_prop_collision_threshold.",
+            "type": "number",
+            "default-value": 0.8,
+            "inputType": "number"
         },
-        "bNoJumpingWhileAttackingRanged": {
-            "name": "",
-            "type": "",
-            "default-value": 
+        "fMaxActionProgressForPropCollisionSwingRight": {
+            "name": "Max Action Progress For Prop Collision Swing Right",
+            "description": "Operation: set_prop_collision_threshold.",
+            "type": "number",
+            "default-value": 0.8,
+            "inputType": "number"
         },
-        "bNoJumpingWhileAttackingRanged": {
-            "name": "",
-            "type": "",
-            "default-value": 
+        "fMaxActionProgressForPropCollisionSwingLeft": {
+            "name": "Max Action Progress For Prop Collision Swing Left",
+            "description": "Operation: set_prop_collision_threshold.",
+            "type": "number",
+            "default-value": 0.8,
+            "inputType": "number"
         },
-        "bNoJumpingWhileAttackingRanged": {
-            "name": "",
-            "type": "",
-            "default-value": 
+        "fMaxActionProgressForPropCollisionOverswing": {
+            "name": "Max Action Progress For Prop Collision Overswing",
+            "description": "Operation: set_prop_collision_threshold.",
+            "type": "number",
+            "default-value": 0.75,
+            "inputType": "number"
         },
-        "bNoJumpingWhileAttackingRanged": {
-            "name": "",
-            "type": "",
-            "default-value": 
+        "fRangedDamageToPropsFactor": {
+            "name": "Ranged Damage To Props Factor",
+            "description": "Damage multiplier to props for ranged weapon.",
+            "type": "number",
+            "default-value": 0.1,
+            "inputType": "number"
         },
-        "bNoJumpingWhileAttackingRanged": {
-            "name": "",
-            "type": "",
-            "default-value": 
+        "fCouchedDamageToPropsFactor": {
+            "name": "Couched Damage To Props Factor",
+            "description": "Damage multiplier to props for couched attack.",
+            "type": "number",
+            "default-value": 0.2,
+            "inputType": "number"
         },
-        "bNoJumpingWhileAttackingRanged": {
-            "name": "",
-            "type": "",
-            "default-value": 
+        "fBonusDamageToPropsFactor": {
+            "name": "Bonus Damage To Props Factor",
+            "description": "Damage multiplier to props if the weapon has a flag itp_bonus_against_shield.",
+            "type": "number",
+            "default-value": 1.1,
+            "inputType": "number"
         },
-        "bNoJumpingWhileAttackingRanged": {
-            "name": "",
-            "type": "",
-            "default-value": 
+        "fFallDamageMultiplier": {
+            "name": "Fall Damage Multiplier",
+            "description": "Scale fall damage.",
+            "type": "number",
+            "default-value": 1.0,
+            "inputType": "number"
         },
-        "bNoJumpingWhileAttackingRanged": {
-            "name": "",
-            "type": "",
-            "default-value": 
+        "fHorseChargeDamageMultiplier": {
+            "name": "Horse Charge Damage Multiplier",
+            "description": "Scale charge damage inflicted by horses when ramming into human agents.",
+            "type": "number",
+            "default-value": 1.0,
+            "inputType": "number"
         },
-        "bNoJumpingWhileAttackingRanged": {
-            "name": "",
-            "type": "",
-            "default-value": 
+        "fCouchedLanceDamageMultiplier": {
+            "name": "Couched Lance Damage Multiplier",
+            "description": "Scale couched lance damage.",
+            "type": "number",
+            "default-value": 0.65,
+            "inputType": "number"
         },
-        "bNoJumpingWhileAttackingRanged": {
-            "name": "",
-            "type": "",
-            "default-value": 
+        "fMissileDamageSpeedPower": {
+            "name": "Missile Damage Speed Power",
+            "description": "Range: 1.0-2.0. Setting speed_power to 2.0 makes damage scale with the square of missile’s speed. You can set it to 1.0 to make it scale linearly.",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "select",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "2"
+                }
+            ]
         },
-        "bNoJumpingWhileAttackingRanged": {
-            "name": "",
-            "type": "",
-            "default-value": 
+        "fMeleeDamageSpeedPower": {
+            "name": "Melee Damage Speed Power",
+            "description": "Range: 1.0-2.0. Setting speed_power to 2.0 makes damage scale with the square of weapon’s speed. You can set it to 1.0 to make it scale linearly.",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "select",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "2"
+                }
+            ]
         },
-        "bNoJumpingWhileAttackingRanged": {
-            "name": "",
-            "type": "",
-            "default-value": 
+        "fShieldPenetrationOffset": {
+            "name": "Shield Penetration Offset",
+            "description": "Missiles with (damage > shield_penetration_offset + shield_penetration_factor * shield) will penetrate a shield and cause damage to the wielder.",
+            "type": "number",
+            "default-value": 30.0,
+            "inputType": "number"
         },
-        "bNoJumpingWhileAttackingRanged": {
-            "name": "",
-            "type": "",
-            "default-value": 
+        "fShieldPenetrationFactor": {
+            "name": "Shield Penetration Factor",
+            "description": "Used in conjunction with shield_penetration_offset to determine if a missile can penetrate a shield.",
+            "type": "number",
+            "default-value": 3.0,
+            "inputType": "number"
         },
-        "bNoJumpingWhileAttackingRanged": {
-            "name": "",
-            "type": "",
-            "default-value": 
+        "fAirFrictionArrow": {
+            "name": "Air Friction Arrow",
+            "description": "Set the drag coefficient.",
+            "type": "number",
+            "default-value": 0.002,
+            "inputType": "number"
         },
-        "bNoJumpingWhileAttackingRanged": {
-            "name": "",
-            "type": "",
-            "default-value": 
+        "fAirFrictionBullet": {
+            "name": "Air Friction Bullet",
+            "description": "Set the drag coefficient for bullets.",
+            "type": "number",
+            "default-value": 0.002,
+            "inputType": "number"
         },
-        "bNoJumpingWhileAttackingRanged": {
-            "name": "",
-            "type": "",
-            "default-value": 
+        "fExtraSoakFactor": {
+            "name": "Extra Soak Factor",
+            "description": "Used in conjunction with itp_extra_penetration to determine at what level extra penetration is soaked by armor.",
+            "type": "number",
+            "default-value": 1.0,
+            "inputType": "number"
         },
-        "bNoJumpingWhileAttackingRanged": {
-            "name": "",
-            "type": "",
-            "default-value": 
+        "fExtraReduceFactor": {
+            "name": "Extra Reduce Factor",
+            "description": "Used in conjunction with itp_extra_penetration to determine at what level extra penetration is reduced by armor.",
+            "type": "number",
+            "default-value": 1.0,
+            "inputType": "number"
         },
-        "bNoJumpingWhileAttackingRanged": {
-            "name": "",
-            "type": "",
-            "default-value": 
+        "fCutSoakFactor": {
+            "name": "Cut Soak Factor",
+            "description": "Determines the amount which will be directly subtracted from cut damage due to armor.",
+            "type": "number",
+            "default-value": 0.8,
+            "inputType": "number"
         },
-        "bNoJumpingWhileAttackingRanged": {
-            "name": "",
-            "type": "",
-            "default-value": 
+        "fCutReduceFactor": {
+            "name": "Cut Reduce Factor",
+            "description": "Determines the percentage reduction from the cut damage.",
+            "type": "number",
+            "default-value": 1.0,
+            "inputType": "number"
         },
-        "bNoJumpingWhileAttackingRanged": {
-            "name": "",
-            "type": "",
-            "default-value": 
+        "fBluntSoakFactor": {
+            "name": "Blunt Soak Factor",
+            "description": "Determines the amount which will be directly subtracted from blunt damage due to armor.",
+            "type": "number",
+            "default-value": 0.5,
+            "inputType": "number"
         },
-        "bNoJumpingWhileAttackingRanged": {
-            "name": "",
-            "type": "",
-            "default-value": 
+        "fBluntReduceFactor": {
+            "name": "Blunt Reduce Factor",
+            "description": "Determines the percentage reduction from the blunt damage.",
+            "type": "number",
+            "default-value": 0.75,
+            "inputType": "number"
         },
-        "bNoJumpingWhileAttackingRanged": {
-            "name": "",
-            "type": "",
-            "default-value": 
+        "fPierceSoakFactor": {
+            "name": "Pierce Soak Factor",
+            "description": "Determines the amount which will be directly subtracted from pierce damage due to armor.",
+            "type": "number",
+            "default-value": 0.65,
+            "inputType": "number"
         },
-        "bNoJumpingWhileAttackingRanged": {
-            "name": "",
-            "type": "",
-            "default-value": 
+        "fPierceReduceFactor": {
+            "name": "Pierce Reduce Factor",
+            "description": "Determines the percentage reduction from the pierce damage.",
+            "type": "number",
+            "default-value": 0.5,
+            "inputType": "number"
         },
-        "bNoJumpingWhileAttackingRanged": {
-            "name": "",
-            "type": "",
-            "default-value": 
+        "fCrushthroughThreshold": {
+            "name": "Crushthrough Threshold",
+            "description": "Determines how much damage is required to crush through overhead blocks on weapons with the appropriate flag itp_crush_through.",
+            "type": "number",
+            "default-value": 2.4,
+            "inputType": "number"
         },
-        "bNoJumpingWhileAttackingRanged": {
-            "name": "",
-            "type": "",
-            "default-value": 
+        "fInterruptThreshold": {
+            "name": "Interrupt Threshold",
+            "description": "Damage below this will not interrupt melee attacks.",
+            "type": "number",
+            "default-value": 3.0,
+            "inputType": "number"
+        },
+        "fInterruptThresholdMultiplayer": {
+            "name": "Interrupt Threshold Multiplayer",
+            "description": "Damage below this will not interrupt melee attacks in multiplayer.",
+            "type": "number",
+            "default-value": 1.0,
+            "inputType": "number"
+        },
+        "fBrokenShieldPruneTime": {
+            "name": "Broken Shield Prune Time",
+            "description": "Seconds required before a broken shield is removed from the scene. Setting it to 0 will prevent the items from despawning during a mission.",
+            "type": "number",
+            "default-value": 180.0,
+            "inputType": "number"
+        },
+        "fDroppedItemPruneTime": {
+            "name": "Dropped Item Prune Time",
+            "description": "Seconds required before a dropped item is removed from the scene. Setting it to 0 will prevent the items from despawning during a mission.",
+            "type": "number",
+            "default-value": 180.0,
+            "inputType": "number"
+        },
+        "fMissileItemPruneTime": {
+            "name": "Missile Item Prune Time",
+            "description": "Seconds required before a fired arrow is removed from the scene. Setting it to 0 will prevent the items from despawning during a mission.",
+            "type": "number",
+            "default-value": 180.0,
+            "inputType": "number"
+        },
+        "iWeaponTrails": {
+            "name": "Weapon Trails",
+            "description": "Weapon trails with motion blur. 0 - none, 1 - partial, 2 - full",
+            "type": "number",
+            "default-value": 2,
+            "inputType": "select",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "None"
+                },
+                {
+                    "value": 1,
+                    "label": "Partial"
+                },
+                {
+                    "value": 2,
+                    "label": "Full"
+                }
+            ]
+        },
+        "bDismountHorseOnUse": {
+            "name": "Dismount Horse On Use",
+            "description": "Dismount when looking at a horse and pressing gk_action.",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bShowMultiplayerGold": {
+            "name": "Show Multiplayer Gold",
+            "description": "Determines if the player’s gold is shown in multiplayer.",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bMultiplayerWalkEnabled": {
+            "name": "Multiplayer Walk Enabled",
+            "description": "Determines if the players on a multiplayer server can use gk_walk to walk instead of run.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bDropAllItemsOnDeath": {
+            "name": "Drop All Items On Death",
+            "description": "Drop all item on death or only wielded.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bDisableZoom": {
+            "name": "Disable Zoom",
+            "description": "Determines whether or not the player can use gk_zoom to narrow the camera’s field of vision. Operation: is_zoom_disabled.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bCanObjectsMakeSound": {
+            "name": "Can Objects Make Sound",
+            "description": "Determines if scene props can emit sounds inside a scene. Different values on client and server break network compatibility and cause a crash.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bApplyAllAmmoDamageModifiers": {
+            "name": "Apply All Ammo Damage Modifiers",
+            "description": "Added missile damage to weapons damage for any ranged weapons. Otherwise only for bows and crossbows.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bUseMissileDamageType": {
+            "name": "Use Missile Damage Type",
+            "description": "Use missile (arrow, bolt, bullet) damage type (cut, pierce, blunt) instead of launcher item (bow, crossbow, musket, pistol) damage type.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "fFarPlaneDistance": {
+            "name": "Far Plane Distance",
+            "description": "Amount of units (in centimeters) that the render plane extends out from the camera inside of scenes.",
+            "type": "number",
+            "default-value": 1250.0,
+            "inputType": "number"
+        },
+        "bCanRunFasterWithSkills": {
+            "name": "Can Run Faster With Skills",
+            "description": "Determines how agility and athletics affect running speed. ",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bHorsesTryRunningAway": {
+            "name": "Horses Try Running Away",
+            "description": "Determines if riderless horse agents will try to get away from aggressive agents.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bHorsesRearWithAttack": {
+            "name": "Horses Rear With Attack",
+            "description": "Determines if horses rear upon being struck with enough damage with thrust polearm blow.",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bSyncRagdollEffects": {
+            "name": "Sync Ragdoll Effects",
+            "description": "Determines if ragdolls are synced between client and server.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bCanAdjustCameraDistance": {
+            "name": "Can Adjust Camera Distance",
+            "description": "Determines if the player can use gk_camera_closer and gk_camera_farther to adjust the default camera position.\r",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bRestrictAttacksMoreInMultiplayer": {
+            "name": "Restrict Attacks More In Multiplayer",
+            "description": "For multiplayer if an agent is stabbing or doing an overhead attack then the limit of the rotational speed will be set to 11 instead 16.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bNoFriendlyFireForBots": {
+            "name": "No Friendly Fire For Bots",
+            "description": "Determines if AI agents can cause friendly fire.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "fLancePikeEffectSpeed": {
+            "name": "Lance Pike Effect Speed",
+            "description": "Determines the necessary speed of the horse at which the polearm causes horses rear.",
+            "type": "number",
+            "default-value": 3.0,
+            "inputType": "number"
+        },
+        "fLancePikeEffectMinLength": {
+            "name": "Lance Pike Effect Min Length",
+            "description": "Determines minimum lenght for polearm causes horses rear.",
+            "type": "number",
+            "default-value": 1.3,
+            "inputType": "number"
+        },
+        "fLancePikeEffectMinDamage": {
+            "name": "Lance Pike Effect Min Damage",
+            "description": "Determines minimum inflicted damage at which the polearm causes horses rear.",
+            "type": "number",
+            "default-value": 0.0,
+            "inputType": "number"
+        },
+        "bCanUseScenePropsInSinglePlayer": {
+            "name": "Can Use Scene Props In Single Player",
+            "description": "Determines if player in singleplayer can interact with scene_props like in multiplayer (using doors and drawbridges for example).",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "iMeekModifierSpeedBonus": {
+            "name": "Meek Modifier Speed Bonus",
+            "description": "Speed modifier for the horses that have the imod_timid modifier.",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "number"
+        },
+        "iTimidModifierSpeedBonus": {
+            "name": "Timid Modifier Speed Bonus",
+            "description": "Speed modifier for the horses that have the imod_meek modifier",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "number"
+        },
+        "bShorterPistolAiming": {
+            "name": "Shorter Pistol Aiming",
+            "description": "Required aiming animation progress for the shot is shorter for pistols, same as for muskets and crossbows. Otherwise only for muskets and crossbows.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bCanCrouch": {
+            "name": "Can Crouch",
+            "description": "Determines if human agents can crouch. Different values on client and server break network compatibility due to replication.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bUsePhasedReload": {
+            "name": "Use Phased Reload",
+            "description": "Determines if reloading can be done in steps. That means if your reload has been interrupted, you’ll start from the begining of the phase at which the reload was stopped. Phased reload works if you use itcf_reload_musket or itcf_reload_pistol for the ranged weapon.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bUseCrossbowAsFirearm": {
+            "name": "Use Crossbow As Firearm",
+            "description": "Determines whether crossbows will fire with smoke and a sound of explosion or with normal crossbow sound. Allow players reload crossbows while running or walking.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bCanReloadWhileMoving": {
+            "name": "Can Reload While Moving",
+            "description": "Determines if ai agent can reload crossbows while running or walking. Does not affect horseback. Needs bUseCrossbowAsFirearm to be enabled as well. Also limits movement speed when reloading for both ai and players.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "fBraceRotationLimit": {
+            "name": "Brace Rotation Limit",
+            "description": "Affects items with the flag itp_is_pike and is used for rotation speed limiting while bracing spears (e.g. in NW). If the turning acceleration is less than 0.01 or the set value (whichever is higher) the game engine plays the pike crouch animation (anim_crouch_pike) and otherwise the crouch staff animation (anim_crouch_staff). You can obviously not give a value below the default one of 0.01 and if you provide a big value (it seems like 0.5 is enough) you can completely override the canceling effect.",
+            "type": "number",
+            "default-value": 0.01,
+            "inputType": "number"
+        },
+        "bUseHorseSlopeForRiderPosition": {
+            "name": "Use Horse Slope For Rider Position",
+            "description": "Сorrect legs position for riders on steep slopes.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bTurnAgentAsMultiplayer": {
+            "name": "Turn Agent As Multiplayer",
+            "description": "Rotate the agent in the direction of view in singleplayer, just like in multiplayer.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bApplySkillForCouchingDamage": {
+            "name": "Apply Skill For Couching Damage",
+            "description": "Apply proficiency, power strike and strength to couching damage.",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bAdvancedTurnRateFormulaForMelee": {
+            "name": "Advanced Turn Rate Formula For Melee",
+            "description": "For multiplayer if an agent is release melee overswing or thrust attack instead default limit of the rotational speed use formula taking into account the type of weapon, the weight and length of the weapon.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bAdjustedSweetSpot": {
+            "name": "Adjusted Sweet Spot",
+            "description": "Changed sweetspot calculation.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bAdjustedAttackHoldFactor": {
+            "name": "Adjusted Attack Hold Factor",
+            "description": "Changed hold factor calculation.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bAdjustedCrushthrough": {
+            "name": "Adjusted Crushthrough",
+            "description": "Changed crushthrough calculation.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bAdjustedShieldSkillDamage": {
+            "name": "Adjusted Shield Skill Damage",
+            "description": "Changed damage formula for shield on shield hit depending on shield skill.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bAdjustedStagger": {
+            "name": "Adjusted Stagger",
+            "description": "Changed stagger formula for thrown, bow and crossbow, more chance when hitting legs.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bAdjustedKnockdown": {
+            "name": "Adjusted Knockdown",
+            "description": "Changed knockdown formula, more chance when hitting legs or head.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bPolearmStagger": {
+            "name": "Polearm Stagger",
+            "description": "Stagger for polearms.",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bNerfHorseManeuver": {
+            "name": "Nerf Horse Maneuver",
+            "description": "Reduced horse turn speed.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bItemSpeedAffectSpeedBonusForDamage": {
+            "name": "Item Speed Affect Speed Bonus For Damage",
+            "description": "Item speed for melee weapon affects speed bonus for damage calculation.",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bTakeAttackersSpeedForRangedSpeedBonus": {
+            "name": "Take Attackers Speed For Ranged Speed Bonus",
+            "description": "Whether to take into account speed of shooter agent together with speed of missile to calculate damage of missile, or only speed of missile.",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bTweakCrushthroughDamageReduction": {
+            "name": "Tweak Crushthrough Damage Reduction",
+            "description": "With crushthrough for attack power use multiplier from range 0.7 - 0.8 instead 0.4 - 0.6.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bRandomTroopEquipping": {
+            "name": "Random Troop Equipping",
+            "description": "Changes the algorithm of random equipment for troops and does not take into account the value of the item.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bReduceDamageRandomness": {
+            "name": "Reduce Damage Randomness",
+            "description": "Random multiplier range for soaked and reduced damage 0.7 - 0.75 instead 0.45 - 1.0.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bParry": {
+            "name": "Parry",
+            "description": "Not tested yet.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bCouchedLanceChambered": {
+            "name": "Couched Lance Chambered",
+            "description": "Possible to chamber couched lance.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "fKickRange": {
+            "name": "Kick Range",
+            "description": "Squared range for kick, so 0.16 means 0.4 meters.",
+            "type": "number",
+            "default-value": 0.16,
+            "inputType": "number"
+        },
+        "fHorseBumpMinSpeed": {
+            "name": "Horse Bump Min Speed",
+            "description": "Minimum speed for horse charge.",
+            "type": "number",
+            "default-value": 3.5,
+            "inputType": "number"
+        },
+        "bAllowKickDuringMeleeAttacks": {
+            "name": "Allow Kick During Melee Attacks",
+            "description": "This is warbang bug. https://forums.taleworlds.com/index.php?threads/warband-script-enhancer-2-v1-0-6-4.384882/page-14#post-9679055",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bMoreProficiencyEffectForMovingSpeedWhileReloading": {
+            "name": "More Proficiency Effect For Moving Speed While Reloading",
+            "description": "Changes formula for moving speed while reloading for more effect from reloadable weapon proficiency.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bShowCrosshair": {
+            "name": "Show Crosshair",
+            "description": "Show crosshair for singleplayer. Operation: set_show_crosshair.",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bHorseFriendlyFire": {
+            "name": "Horse Friendly Fire",
+            "description": "Horse charge friendly fire for singleplayer. Operation: set_horse_friendly_fire.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bSyncBlockDirections": {
+            "name": "Sync Block Directions",
+            "description": "Determines if block directions are synced between client and server.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "fToggleItemModeCooldown": {
+            "name": "Toggle Item Mode Cooldown",
+            "description": "",
+            "type": "number",
+            "default-value": 1.0,
+            "inputType": "number"
+        },
+        "fPowerDrawSkillDamageBonus": {
+            "name": "Power Draw Skill Damage Bonus",
+            "description": "",
+            "type": "number",
+            "default-value": 0.14,
+            "inputType": "number"
+        },
+        "fPowerThrowSkillDamageBonus": {
+            "name": "Power Throw Skill Damage Bonus",
+            "description": "",
+            "type": "number",
+            "default-value": 0.1,
+            "inputType": "number"
+        },
+        "fPowerStrikeSkillDamageBonus": {
+            "name": "Power Strike Skill Damage Bonus",
+            "description": "",
+            "type": "number",
+            "default-value": 0.08,
+            "inputType": "number"
+        },
+        "bShieldSkillAffectsProtectionArea": {
+            "name": "Shield Skill Affects Protection Area",
+            "description": "Determines if shield skill affects shield's area of protection.",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "fSpeedPenaltyForTwoHandedAndPolearmWithShield": {
+            "name": "Speed Penalty For Two Handed And Polearm With Shield",
+            "description": "",
+            "type": "number",
+            "default-value": 0.15,
+            "inputType": "number"
+        },
+        "fAdditionalSpeedPenaltyForTwoHandedPropertyWithShield": {
+            "name": "Additional Speed Penalty For Two Handed Property With Shield",
+            "description": "",
+            "type": "number",
+            "default-value": 0.05,
+            "inputType": "number"
+        },
+        "fDamagePenaltyMultiplierForTwoHandedAndPolearmWithShield": {
+            "name": "Damage Penalty Multiplier For Two Handed And Polearm With Shield",
+            "description": "",
+            "type": "number",
+            "default-value": 0.85,
+            "inputType": "number"
+        },
+        "fAdditionalDamagePenaltyMultiplierForPolearmWithShield": {
+            "name": "Additional Damage Penalty Multiplier For Polearm With Shield",
+            "description": "",
+            "type": "number",
+            "default-value": 0.85,
+            "inputType": "number"
+        },
+        "fAdditionalDamagePenaltyMultiplierForTwoHandedPropertyWithShield": {
+            "name": "Additional Damage Penalty Multiplier For Two Handed Property With Shield",
+            "description": "",
+            "type": "number",
+            "default-value": 0.9,
+            "inputType": "number"
+        },
+        "fDamagePenaltyMultiplierForTwoHandedAndPolearmWithMount": {
+            "name": "Damage Penalty Multiplier For Two Handed And Polearm With Mount",
+            "description": "",
+            "type": "number",
+            "default-value": 0.85,
+            "inputType": "number"
+        },
+        "fAdditionalDamagePenaltyMultiplierForPolearmWithMount": {
+            "name": "Additional Damage Penalty Multiplier For Polearm With Mount",
+            "description": "",
+            "type": "number",
+            "default-value": 0.85,
+            "inputType": "number"
+        },
+        "fAdditionalDamagePenaltyMultiplierForTwoHandedPropertyWithMount": {
+            "name": "Additional Damage Penalty Multiplier For Two Handed Property With Mount",
+            "description": "",
+            "type": "number",
+            "default-value": 0.9,
+            "inputType": "number"
+        },
+        "bOverswingAndThrustMusketUsableOnHorseback": {
+            "name": "Overswing And Thrust Musket Usable On Horseback",
+            "description": "",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bOverswingSpearUsableOnHorseback": {
+            "name": "Overswing Spear Usable On Horseback",
+            "description": "",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bHorsebackSlashPolearmUsableOnlyWithoutShield": {
+            "name": "Horseback Slash Polearm Usable Only Without Shield",
+            "description": "",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bThrustMusketUsableOnlyWithoutShield": {
+            "name": "Thrust Musket Usable Only Without Shield",
+            "description": "",
+            "type": "checkbox",
+            "default-value": false
         }
     },
-    "battle-ai": {
-
+    "FaceGenerator": {
+        "bUseLowVariationCache": {
+            "name": "Use Low Variation Cache",
+            "description": "Reduces variation of cached meshes (possibly improving performance) in modules with two skins (male, female) only.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bHasAccessoriesForFemale": {
+            "name": "Has Accessories For Female",
+            "description": "Changed beard caption for female skin (1) from ui_change_beard to ui_change_accessories.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bMoreSkinsSupportForMultiplayerProfile": {
+            "name": "More Skins Support For Multiplayer Profile",
+            "description": "Enable support for more than two multiplayer skins for profile.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "iNumSkinsForMultiplayerProfile": {
+            "name": "Num Skins For Multiplayer Profile",
+            "description": "Num skins for multiplayer profile.",
+            "type": "number",
+            "default-value": 2,
+            "inputType": "number"
+        },
+        "bLimitHairColors": {
+            "name": "Limit Hair Colors",
+            "description": "Set to true if you don’t have extra hair textures. Each human skin definition in Native uses hair_blonde along with vertex coloring. If you set the value to false the game expects to find for example a material and texture named hair_red, beard_black, etc.",
+            "type": "checkbox",
+            "default-value": true
+        }
     },
-    "campaign": {
-
+    "TerrainGenerator": {
+        "fOuterTerrainMaxBlendDistance": {
+            "name": "Outer Terrain Max Blend Distance",
+            "description": "For fit outer terrain mesh.",
+            "type": "number",
+            "default-value": 100.0,
+            "inputType": "number"
+        },
+        "fOuterTerrainHeightOffset": {
+            "name": "Outer Terrain Height Offset",
+            "description": "For fit outer terrain mesh.",
+            "type": "number",
+            "default-value": 1.5,
+            "inputType": "number"
+        },
+        "iMaxNumGrassInstances": {
+            "name": "Max Num Grass Instances",
+            "description": "",
+            "type": "number",
+            "default-value": 262144.0,
+            "inputType": "number"
+        },
+        "iMaxNumGrassTypes": {
+            "name": "Max Num Grass Types",
+            "description": "",
+            "type": "number",
+            "default-value": 32.0,
+            "inputType": "number"
+        },
+        "iMaxNumTreeInstances": {
+            "name": "Max Num Tree Instances",
+            "description": "",
+            "type": "number",
+            "default-value": 2048.0,
+            "inputType": "number"
+        },
+        "iMaxNumTreeTypes": {
+            "name": "Max Num Tree Types",
+            "description": "",
+            "type": "number",
+            "default-value": 32.0,
+            "inputType": "number"
+        },
+        "iMaxNumFloraInstances": {
+            "name": "Max Num Flora Instances",
+            "description": "",
+            "type": "number",
+            "default-value": 4096.0,
+            "inputType": "number"
+        },
+        "iMaxNumFloraTypes": {
+            "name": "Max Num Flora Types",
+            "description": "",
+            "type": "number",
+            "default-value": 32.0,
+            "inputType": "number"
+        }
     },
-    "campaign-ai": {
-
+    "ServerList": {
+        "iDeadFavoritesPurgeTime": {
+            "name": "Dead Favorites Purge Time",
+            "description": "Remove dead server from favorites after this time.",
+            "type": "number",
+            "default-value": 604800,
+            "inputType": "number"
+        },
+        "iDeadFavoritesPurgeTries": {
+            "name": "Dead Favorites Purge Tries",
+            "description": "Remove dead server from favorites after this num search tries.",
+            "type": "number",
+            "default-value": 7,
+            "inputType": "number"
+        },
+        "bHideOtherModServers": {
+            "name": "Hide Other Mod Servers",
+            "description": "Hide servers running other mods from the servers list.",
+            "type": "checkbox",
+            "default-value": false
+        }
     },
-    "dedicated-server": {
-
+    "Messages": {
+        "bShowDamage": {
+            "name": "Show Damage",
+            "description": "",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bShowCasualties": {
+            "name": "Show Casualties",
+            "description": "",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bShowShotDifficulty": {
+            "name": "Show Shot Difficulty",
+            "description": "",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bShowExperienceGain": {
+            "name": "Show Experience Gain",
+            "description": "Operations: options_get_verbose_casualties, options_set_verbose_casualties.",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bShowProficiencyGain": {
+            "name": "Show Proficiency Gain",
+            "description": "",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bShowScreenshotPath": {
+            "name": "Show Screenshot Path",
+            "description": "",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bShowMultiplayerChat": {
+            "name": "Show Multiplayer Chat",
+            "description": "",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bShowMultiplayerTeamChat": {
+            "name": "Show Multiplayer Team Chat",
+            "description": "",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "iMultiplayerKills": {
+            "name": "Multiplayer Kills",
+            "description": "0 - none, 1 - own, 2 - all, 3 - player deaths, 4 - own kills and player deaths",
+            "type": "number",
+            "default-value": 2,
+            "inputType": "combobox",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "None"
+                },
+                {
+                    "value": 1,
+                    "label": "Own"
+                },
+                {
+                    "value": 2,
+                    "label": "All"
+                },
+                {
+                    "value": 3,
+                    "label": "Player Deaths"
+                },
+                {
+                    "value": 4,
+                    "label": "Own Kills And Player Deaths"
+                }
+            ]
+        },
+        "uMultiplayerChatColor": {
+            "name": "Multiplayer Chat Color",
+            "description": "",
+            "type": "text",
+            "default-value": "0xFFCCCCCC",
+            "inputType": "color"
+        },
+        "uMultiplayerTeamChatColor": {
+            "name": "Multiplayer Team Chat Color",
+            "description": "",
+            "type": "text",
+            "default-value": "0xFF8888CC",
+            "inputType": "color"
+        },
+        "iMaxNumNotificationMessages": {
+            "name": "Max Num Notification Messages",
+            "description": "Number of messages in battle. Value 4 - about 10 messages. It may be confusing, but the formula is linear, so it's not hard to figure out the number of rows you need.",
+            "type": "number",
+            "default-value": 100,
+            "inputType": "select",
+            "options": [
+                {
+                    "value": 4,
+                    "label": "About 10 Messages"
+                }
+            ]
+        },
+        "bFixNotificationMessages": {
+            "name": "Fix Notification Messages",
+            "description": "Fix Warband bug where the combat log disappears from the screen if too much information is being written out too quickly. ",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "vNotificationMessagesPosition": {
+            "name": "Notification Messages Position",
+            "description": "x,y",
+            "type": "text",
+            "default-value": "0.000500,0.100000",
+            "inputType": "text"
+        }
     },
-    "face-generator": {
-
+    "Campaign": {
+        "bSkipTutorial": {
+            "name": "Skip Tutorial",
+            "description": "Deprecated, probably broken.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "fPlayerHealingFactor": {
+            "name": "Player Healing Factor",
+            "description": "Multiplier of the wound treatment skill for player.",
+            "type": "number",
+            "default-value": 1.0,
+            "inputType": "number"
+        },
+        "fMainPartyHeroHealingFactor": {
+            "name": "Main Party Hero Healing Factor",
+            "description": "Multiplier of the wound treatment skill for main party hero.",
+            "type": "number",
+            "default-value": 1.0,
+            "inputType": "number"
+        },
+        "fMainPartyRegularHealingFactor": {
+            "name": "Main Party Regular Healing Factor",
+            "description": "Multiplier of the wound treatment skill for main party regular troops.",
+            "type": "number",
+            "default-value": 1.0,
+            "inputType": "number"
+        },
+        "fHeroHealingFactor": {
+            "name": "Hero Healing Factor",
+            "description": "Multiplier of the wound treatment skill for hero.",
+            "type": "number",
+            "default-value": 1.0,
+            "inputType": "number"
+        },
+        "fRegularHealingFactor": {
+            "name": "Regular Healing Factor",
+            "description": "Multiplier of the wound treatment skill for regular troops.",
+            "type": "number",
+            "default-value": 1.0,
+            "inputType": "number"
+        },
+        "fPlayerExperienceMultiplier": {
+            "name": "Player Experience Multiplier",
+            "description": "Sets the xp multiplier the player gains by killing an enemy.",
+            "type": "number",
+            "default-value": 2.0,
+            "inputType": "number"
+        },
+        "fHeroExperienceMultiplier": {
+            "name": "Hero Experience Multiplier",
+            "description": "Sets the xp multiplier heroes gain by killing an enemy.",
+            "type": "number",
+            "default-value": 2.0,
+            "inputType": "number"
+        },
+        "fRegularExperienceMultiplier": {
+            "name": "Regular Experience Multiplier",
+            "description": "Sets the xp multiplier regular troops gain by killing an enemy.",
+            "type": "number",
+            "default-value": 3.0,
+            "inputType": "number"
+        },
+        "fPlayerWoundedThreshold": {
+            "name": "Player Wounded Threshold",
+            "description": "Determines the minimum number of hitpoints a player must have to appear in battles and contribute to party skills.",
+            "type": "number",
+            "default-value": 5.0,
+            "inputType": "number"
+        },
+        "fHeroWoundedThreshold": {
+            "name": "Hero Wounded Threshold",
+            "description": "Determines the minimum hitpoints needed for heroes to appear in battles and contribute to party skills.",
+            "type": "number",
+            "default-value": 15.0,
+            "inputType": "number"
+        },
+        "fDayStartHour": {
+            "name": "Day Start Hour",
+            "description": "Defines the boundaries of day and night time.",
+            "type": "number",
+            "default-value": 4.0,
+            "inputType": "number"
+        },
+        "fDayEndHour": {
+            "name": "Day End Hour",
+            "description": "Defines the boundaries of day and night time.",
+            "type": "number",
+            "default-value": 20.0,
+            "inputType": "number"
+        },
+        "vMapCameraMinPosition": {
+            "name": "Map Camera Min Position",
+            "description": "Determines the eastern and northern bounds of the world map. The map can continue past this, but parties will not be able to travel past this boundary.",
+            "type": "text",
+            "default-value": "-50.0,-50.0",
+            "inputType": "text"
+        },
+        "vMapCameraMaxPosition": {
+            "name": "Map Camera Max Position",
+            "description": "Determines the western and southern bounds of the world map. The map can continue past this, but parties will not be able to travel past this boundary.",
+            "type": "text",
+            "default-value": "50.0,50.0",
+            "inputType": "text"
+        },
+        "fMapCameraMinZoom": {
+            "name": "Map Camera Min Zoom",
+            "description": "Minimum amount of zoom out on the world map.",
+            "type": "number",
+            "default-value": 3.5,
+            "inputType": "number"
+        },
+        "fMapCameraMaxZoom": {
+            "name": "Map Camera Max Zoom",
+            "description": "Maximum amount of zoom out on the world map.",
+            "type": "number",
+            "default-value": 175.0,
+            "inputType": "number"
+        },
+        "vMapSeaSpeed": {
+            "name": "Map Sea Speed",
+            "description": "Used to determine the flow speed of the ocean shader for the world map.",
+            "type": "text",
+            "default-value": "0.02,-0.02",
+            "inputType": "text"
+        },
+        "fMapSeaDirection": {
+            "name": "Map Sea Direction",
+            "description": "Angle, sea wave foam direction.",
+            "type": "number",
+            "default-value": -40.0,
+            "inputType": "number"
+        },
+        "fMapSeaWaveRotation": {
+            "name": "Map Sea Wave Rotation",
+            "description": "Angle, this is where the tear artefact is visible on the sea.",
+            "type": "number",
+            "default-value": 300.0,
+            "inputType": "number"
+        },
+        "vMapRiverSpeed": {
+            "name": "Map River Speed",
+            "description": "Used to determine the flow speed of the river shader for the world map.",
+            "type": "text",
+            "default-value": "0.01,-0.01",
+            "inputType": "text"
+        },
+        "fMapRiverDirection": {
+            "name": "Map River Direction",
+            "description": "Angle used to determine the flow direction of the river shader for the world map.",
+            "type": "number",
+            "default-value": 140.0,
+            "inputType": "number"
+        },
+        "fSpottingMultiplier": {
+            "name": "Spotting Multiplier",
+            "description": "Multiplier of the spotting skill, affects the visibility radius.",
+            "type": "number",
+            "default-value": 6.5,
+            "inputType": "number"
+        },
+        "fTrackSpottingMultiplier": {
+            "name": "Track Spotting Multiplier",
+            "description": "Multiplier of the tracking skill. If set to 0 no tracking marks will appear at the world map no matter the skill.",
+            "type": "number",
+            "default-value": 0.8,
+            "inputType": "number"
+        },
+        "iLeadershipSkillBonus": {
+            "name": "Leadership Skill Bonus",
+            "description": "Sets how many additional troops per leadership skill point the player can have in his party.",
+            "type": "number",
+            "default-value": 3,
+            "inputType": "number"
+        },
+        "iPrisonerManagementSkillBonus": {
+            "name": "Prisoner Management Skill Bonus",
+            "description": "Sets how many additional prisoners per prisoner management skill point the player can have in his party.",
+            "type": "number",
+            "default-value": 5,
+            "inputType": "number"
+        },
+        "iBaseCompanionLimit": {
+            "name": "Base Companion Limit",
+            "description": "Maximum amount of companions in the player party without leadership skill.",
+            "type": "number",
+            "default-value": 20,
+            "inputType": "number"
+        },
+        "fTimeMultiplier": {
+            "name": "Time Multiplier",
+            "description": "Speed with which time passes on the map screen. With 0.25 as default value 1 GAME hour is 4 seconds of REAL time.",
+            "type": "number",
+            "default-value": 0.25,
+            "inputType": "number"
+        },
+        "bShowPartyIdsInsteadOfNames": {
+            "name": "Show Party Ids Instead Of Names",
+            "description": "Determines if a party’s id value is show above them instead of their name. Change to true for ease in module development.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bDontLoadRegularTroopInventories": {
+            "name": "Dont Load Regular Troop Inventories",
+            "description": "Determines if the game saves inventories for regular troops (i.e. not heroes) too. Also, savegames will be a bit bigger.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bShowFactionColor": {
+            "name": "Show Faction Color",
+            "description": "Determines if party names on the world map will show their faction color.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bAutoCreateNoteIndices": {
+            "name": "Auto Create Note Indices",
+            "description": "Determines whether or not automatically search through all troops/factions/towns to check if they have note text.",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bShowTroopUpgradesButton": {
+            "name": "Show Troop Upgrades Button",
+            "description": "Determines if the mod shows the troop upgrade button.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "fSkillPointsPerLevel": {
+            "name": "Skill Points Per Level",
+            "description": "Sets how many skill points are gained per level.",
+            "type": "number",
+            "default-value": 1.0,
+            "inputType": "number"
+        },
+        "fAttributePointsPerLevel": {
+            "name": "Attribute Points Per Level",
+            "description": "Sets how many attribute points are gained per level.",
+            "type": "number",
+            "default-value": 1.0,
+            "inputType": "number"
+        },
+        "fWeaponPointsPerLevel": {
+            "name": "Weapon Points Per Level",
+            "description": "Sets how many weapon proficiency points are gained per level.",
+            "type": "number",
+            "default-value": 10.0,
+            "inputType": "number"
+        },
+        "fLevelBoundaryMultiplier": {
+            "name": "Level Boundary Multiplier",
+            "description": "Sets the multiplier for EXP needed for troop to upgrade.",
+            "type": "number",
+            "default-value": 1.0,
+            "inputType": "number"
+        },
+        "iAttributeRequiredPerSkillLevel": {
+            "name": "Attribute Required Per Skill Level",
+            "description": "Sets how many attribute points are required per skill level.",
+            "type": "number",
+            "default-value": 3,
+            "inputType": "number"
+        },
+        "iDisableDisbandOnTerrainType": {
+            "name": "Disable Disband On Terrain Type",
+            "description": "Used to insure parties cannot disband on certain tiles (Like passable water).",
+            "type": "number",
+            "default-value": -1,
+            "inputType": "number"
+        },
+        "bDisableForceLeavingConversations": {
+            "name": "Disable Force Leaving Conversations",
+            "description": "Disables the TAB end in conversations.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "fMapCameraMinElevation": {
+            "name": "Map Camera Min Elevation",
+            "description": "Sets the minimum distance the camera can be from the terrain in the world map.",
+            "type": "number",
+            "default-value": 0.1,
+            "inputType": "number"
+        },
+        "fMapCameraMaxElevation": {
+            "name": "Map Camera Max Elevation",
+            "description": "Sets the maximum distance the camera can be from the terrain in the world map.",
+            "type": "number",
+            "default-value": 1.570796,
+            "inputType": "number"
+        },
+        "bAutoComputePartyRadius": {
+            "name": "Auto Compute Party Radius",
+            "description": "Uses the party icon model to determine party radius. Especially important for modules with large town icons as it allows parties to interact with them in expected locations, as opposed to the center of the icon.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "iMinBattleAdvantage": {
+            "name": "Min Battle Advantage",
+            "description": "Minimum value for battle advantage.",
+            "type": "number",
+            "default-value": -32,
+            "inputType": "number"
+        },
+        "iMaxBattleAdvantage": {
+            "name": "Max Battle Advantage",
+            "description": "Maximum value for battle advantage.",
+            "type": "number",
+            "default-value": 6,
+            "inputType": "number"
+        }
     },
-    "fake-character-shadows": {
-
+    "Graphics": {
+        "bUseDirect3D9ExIfAvailable": {
+            "name": "Use Direct3 D9 Ex If Available",
+            "description": "An extension only available in Windows Vista and newer.",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "iMaximumFrameLatency": {
+            "name": "Maximum Frame Latency",
+            "description": "Works only if Direct3D9Ex is enabled. The maximum number of back buffer frames that a driver can queue. The value defaults to 3, but can range from 1 to 16. A value of 0 will reset latency to the default. ",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "number"
+        },
+        "iPreset": {
+            "name": "Preset",
+            "description": "0 - custom, 1 - low, 2 - medium, 3 - high, 4 - very high",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "combobox",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "Custom"
+                },
+                {
+                    "value": 1,
+                    "label": "Low"
+                },
+                {
+                    "value": 2,
+                    "label": "Medium"
+                },
+                {
+                    "value": 3,
+                    "label": "High"
+                },
+                {
+                    "value": 4,
+                    "label": "Very High"
+                }
+            ]
+        },
+        "iWindowedDisplayX": {
+            "name": "Windowed Display X",
+            "description": "",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "number"
+        },
+        "iWindowedDisplayY": {
+            "name": "Windowed Display Y",
+            "description": "",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "number"
+        },
+        "iWindowedDisplayWidth": {
+            "name": "Windowed Display Width",
+            "description": "",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "number"
+        },
+        "iWindowedDisplayHeight": {
+            "name": "Windowed Display Height",
+            "description": "",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "number"
+        },
+        "iFullscreenDisplayWidth": {
+            "name": "Fullscreen Display Width",
+            "description": "",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "number"
+        },
+        "iFullscreenDisplayHeight": {
+            "name": "Fullscreen Display Height",
+            "description": "",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "number"
+        },
+        "iFullscreenDisplayDepth": {
+            "name": "Fullscreen Display Depth",
+            "description": "",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "number"
+        },
+        "iFullscreenDisplayRefreshRate": {
+            "name": "Fullscreen Display Refresh Rate",
+            "description": "",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "number"
+        },
+        "bWindowed": {
+            "name": "Windowed",
+            "description": "",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bMaximized": {
+            "name": "Maximized",
+            "description": "",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "iGraphicsBufferLockFailThreshold": {
+            "name": "Graphics Buffer Lock Fail Threshold",
+            "description": "",
+            "type": "number",
+            "default-value": 100,
+            "inputType": "number"
+        },
+        "bAutoAdjustAspectRatio": {
+            "name": "Auto Adjust Aspect Ratio",
+            "description": "",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bForceVSync": {
+            "name": "Force V Sync",
+            "description": "Prevents screen tearing, can cause input lag.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "iAnisotropicFiltering": {
+            "name": "Anisotropic Filtering",
+            "description": "Reduces blur on distant surfaces. Values: 0, 2, 4, 8, 16.",
+            "type": "number",
+            "default-value": 4,
+            "inputType": "number"
+        },
+        "bInstancing": {
+            "name": "Instancing",
+            "description": "Method that renders multiple copies of a mesh with the same material in a single draw call. Each copy of the mesh is called an instance. This is useful for drawing things that appear multiple times in a scene, for example, trees or bushes.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "iMultisampleType": {
+            "name": "Multisample Type",
+            "description": "Antialiasing (MSAA). Smooths out jagged edges on solid objects.",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "number"
+        },
+        "bAlphaToCoverage": {
+            "name": "Alpha To Coverage",
+            "description": "Transparency Antialiasing (MSAA). Smooths out jagged edges on semi-transparent objects.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "iShaderQuality": {
+            "name": "Shader Quality",
+            "description": "0 - abysmal, 1 - low, 2 - medium, 3 - high",
+            "type": "number",
+            "default-value": 2,
+            "inputType": "combobox",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "Abysmal"
+                },
+                {
+                    "value": 1,
+                    "label": "Low"
+                },
+                {
+                    "value": 2,
+                    "label": "Medium"
+                },
+                {
+                    "value": 3,
+                    "label": "High"
+                }
+            ]
+        },
+        "bDynamicLighting": {
+            "name": "Dynamic Lighting",
+            "description": "",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bDynamicMeshBatching": {
+            "name": "Dynamic Mesh Batching",
+            "description": "For small enough meshes, this transforms their vertices on the CPU, groups similar vertices together, and renders them in one draw call. Requires \"Combine meshes\" or \"Combine low-poly meshes\" flag for material in brf.",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "iMaxNumBatchedMeshVertices": {
+            "name": "Max Num Batched Mesh Vertices",
+            "description": "Vertices limit for collection size.",
+            "type": "number",
+            "default-value": 1000,
+            "inputType": "number"
+        },
+        "iMaxNumAutoBatchMeshVertices": {
+            "name": "Max Num Auto Batch Mesh Vertices",
+            "description": "Vertices limit for mesh with \"Combine low-poly meshes\" material flag.",
+            "type": "number",
+            "default-value": 30,
+            "inputType": "number"
+        },
+        "bOnDemandTextures": {
+            "name": "On Demand Textures",
+            "description": "",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "iOnDemandTextureCheckThreshold": {
+            "name": "On Demand Texture Check Threshold",
+            "description": "",
+            "type": "number",
+            "default-value": 100,
+            "inputType": "number"
+        },
+        "fOnDemandTextureCheckPeriod": {
+            "name": "On Demand Texture Check Period",
+            "description": "",
+            "type": "number",
+            "default-value": 10.0,
+            "inputType": "number"
+        },
+        "fOnDemandTextureForceCheckPeriod": {
+            "name": "On Demand Texture Force Check Period",
+            "description": "",
+            "type": "number",
+            "default-value": 60.0,
+            "inputType": "number"
+        },
+        "iOnDemandTextureTimeout": {
+            "name": "On Demand Texture Timeout",
+            "description": "",
+            "type": "number",
+            "default-value": 12000000,
+            "inputType": "number"
+        },
+        "fGamma": {
+            "name": "Gamma",
+            "description": "range: 1.5-2.5",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "select",
+            "options": [
+                {
+                    "value": 5,
+                    "label": "2"
+                }
+            ]
+        },
+        "iTextureQuality": {
+            "name": "Texture Quality",
+            "description": "0 - abysmal, 1 - low, 2 - medium, 3 - high",
+            "type": "number",
+            "default-value": 2,
+            "inputType": "combobox",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "Abysmal"
+                },
+                {
+                    "value": 1,
+                    "label": "Low"
+                },
+                {
+                    "value": 2,
+                    "label": "Medium"
+                },
+                {
+                    "value": 3,
+                    "label": "High"
+                }
+            ]
+        },
+        "iInitialNumBufferedInstances": {
+            "name": "Initial Num Buffered Instances",
+            "description": "",
+            "type": "number",
+            "default-value": 1024,
+            "inputType": "number"
+        },
+        "iMaxNumBufferedInstances": {
+            "name": "Max Num Buffered Instances",
+            "description": "",
+            "type": "number",
+            "default-value": 32768,
+            "inputType": "number"
+        },
+        "iIndexBufferSizeStatic": {
+            "name": "Index Buffer Size Static",
+            "description": "",
+            "type": "number",
+            "default-value": 131072,
+            "inputType": "number"
+        },
+        "iIndexBufferSizeDynamic": {
+            "name": "Index Buffer Size Dynamic",
+            "description": "",
+            "type": "number",
+            "default-value": 262144,
+            "inputType": "number"
+        },
+        "iVertexBufferSizeRegularStatic": {
+            "name": "Vertex Buffer Size Regular Static",
+            "description": "Modders may adjust these large enough so that the game will not need to restore buffers during the game. However keeping them excessively large will reduce performance in most systems.",
+            "type": "number",
+            "default-value": 131072,
+            "inputType": "number"
+        },
+        "iVertexBufferSizeRegularDynamic": {
+            "name": "Vertex Buffer Size Regular Dynamic",
+            "description": "",
+            "type": "number",
+            "default-value": 65536,
+            "inputType": "number"
+        },
+        "iVertexBufferSizeNormalMapStatic": {
+            "name": "Vertex Buffer Size Normal Map Static",
+            "description": "",
+            "type": "number",
+            "default-value": 131072,
+            "inputType": "number"
+        },
+        "iVertexBufferSizeNormalMapDynamic": {
+            "name": "Vertex Buffer Size Normal Map Dynamic",
+            "description": "",
+            "type": "number",
+            "default-value": 65536,
+            "inputType": "number"
+        },
+        "iVertexBufferSizeSkinningStatic": {
+            "name": "Vertex Buffer Size Skinning Static",
+            "description": "",
+            "type": "number",
+            "default-value": 131072,
+            "inputType": "number"
+        },
+        "iVertexBufferSizeSkinningDynamic": {
+            "name": "Vertex Buffer Size Skinning Dynamic",
+            "description": "",
+            "type": "number",
+            "default-value": 65536,
+            "inputType": "number"
+        },
+        "iVertexBufferSizeNormalMapSkinningStatic": {
+            "name": "Vertex Buffer Size Normal Map Skinning Static",
+            "description": "",
+            "type": "number",
+            "default-value": 131072,
+            "inputType": "number"
+        },
+        "iVertexBufferSizeNormalMapSkinningDynamic": {
+            "name": "Vertex Buffer Size Normal Map Skinning Dynamic",
+            "description": "",
+            "type": "number",
+            "default-value": 65536,
+            "inputType": "number"
+        },
+        "iVertexBufferSizeSpecialStatic": {
+            "name": "Vertex Buffer Size Special Static",
+            "description": "",
+            "type": "number",
+            "default-value": 65536,
+            "inputType": "number"
+        },
+        "iVertexBufferSizeSpecialDynamic": {
+            "name": "Vertex Buffer Size Special Dynamic",
+            "description": "",
+            "type": "number",
+            "default-value": 32768,
+            "inputType": "number"
+        },
+        "iDiffuseMapMinFilter": {
+            "name": "Diffuse Map Min Filter",
+            "description": "0 - filtering disabled, 1 - nearest, 2 - linear interpolation, 3 - anisotropic",
+            "type": "number",
+            "default-value": 3,
+            "inputType": "combobox",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "Filtering Disabled"
+                },
+                {
+                    "value": 1,
+                    "label": "Nearest"
+                },
+                {
+                    "value": 2,
+                    "label": "Linear Interpolation"
+                },
+                {
+                    "value": 3,
+                    "label": "Anisotropic"
+                }
+            ]
+        },
+        "iDiffuseMapMagFilter": {
+            "name": "Diffuse Map Mag Filter",
+            "description": "0 - filtering disabled, 1 - nearest, 2 - linear interpolation, 3 - anisotropic",
+            "type": "number",
+            "default-value": 3,
+            "inputType": "combobox",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "Filtering Disabled"
+                },
+                {
+                    "value": 1,
+                    "label": "Nearest"
+                },
+                {
+                    "value": 2,
+                    "label": "Linear Interpolation"
+                },
+                {
+                    "value": 3,
+                    "label": "Anisotropic"
+                }
+            ]
+        },
+        "iDiffuseMapMipFilter": {
+            "name": "Diffuse Map Mip Filter",
+            "description": "0 - filtering disabled, 1 - nearest, 2 - linear interpolation",
+            "type": "number",
+            "default-value": 2,
+            "inputType": "select",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "Filtering Disabled"
+                },
+                {
+                    "value": 1,
+                    "label": "Nearest"
+                },
+                {
+                    "value": 2,
+                    "label": "Linear Interpolation"
+                }
+            ]
+        },
+        "iDiffuseMapMaxAnisotropy": {
+            "name": "Diffuse Map Max Anisotropy",
+            "description": "limit for anisotropic filtering",
+            "type": "number",
+            "default-value": 16,
+            "inputType": "number"
+        },
+        "iNormalMapMinFilter": {
+            "name": "Normal Map Min Filter",
+            "description": "0 - filtering disabled, 1 - nearest, 2 - linear interpolation, 3 - anisotropic",
+            "type": "number",
+            "default-value": 3,
+            "inputType": "combobox",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "Filtering Disabled"
+                },
+                {
+                    "value": 1,
+                    "label": "Nearest"
+                },
+                {
+                    "value": 2,
+                    "label": "Linear Interpolation"
+                },
+                {
+                    "value": 3,
+                    "label": "Anisotropic"
+                }
+            ]
+        },
+        "iNormalMapMagFilter": {
+            "name": "Normal Map Mag Filter",
+            "description": "0 - filtering disabled, 1 - nearest, 2 - linear interpolation, 3 - anisotropic",
+            "type": "number",
+            "default-value": 3,
+            "inputType": "combobox",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "Filtering Disabled"
+                },
+                {
+                    "value": 1,
+                    "label": "Nearest"
+                },
+                {
+                    "value": 2,
+                    "label": "Linear Interpolation"
+                },
+                {
+                    "value": 3,
+                    "label": "Anisotropic"
+                }
+            ]
+        },
+        "iNormalMapMipFilter": {
+            "name": "Normal Map Mip Filter",
+            "description": "0 - filtering disabled, 1 - nearest, 2 - linear interpolation",
+            "type": "number",
+            "default-value": 2,
+            "inputType": "select",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "Filtering Disabled"
+                },
+                {
+                    "value": 1,
+                    "label": "Nearest"
+                },
+                {
+                    "value": 2,
+                    "label": "Linear Interpolation"
+                }
+            ]
+        },
+        "iNormalMapMaxAnisotropy": {
+            "name": "Normal Map Max Anisotropy",
+            "description": "limit for anisotropic filtering",
+            "type": "number",
+            "default-value": 4,
+            "inputType": "number"
+        },
+        "iSpecularMapMinFilter": {
+            "name": "Specular Map Min Filter",
+            "description": "0 - filtering disabled, 1 - nearest, 2 - linear interpolation, 3 - anisotropic",
+            "type": "number",
+            "default-value": 2,
+            "inputType": "combobox",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "Filtering Disabled"
+                },
+                {
+                    "value": 1,
+                    "label": "Nearest"
+                },
+                {
+                    "value": 2,
+                    "label": "Linear Interpolation"
+                },
+                {
+                    "value": 3,
+                    "label": "Anisotropic"
+                }
+            ]
+        },
+        "iSpecularMapMagFilter": {
+            "name": "Specular Map Mag Filter",
+            "description": "0 - filtering disabled, 1 - nearest, 2 - linear interpolation, 3 - anisotropic",
+            "type": "number",
+            "default-value": 2,
+            "inputType": "combobox",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "Filtering Disabled"
+                },
+                {
+                    "value": 1,
+                    "label": "Nearest"
+                },
+                {
+                    "value": 2,
+                    "label": "Linear Interpolation"
+                },
+                {
+                    "value": 3,
+                    "label": "Anisotropic"
+                }
+            ]
+        },
+        "iSpecularMapMipFilter": {
+            "name": "Specular Map Mip Filter",
+            "description": "0 - filtering disabled, 1 - nearest, 2 - linear interpolation",
+            "type": "number",
+            "default-value": 2,
+            "inputType": "select",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "Filtering Disabled"
+                },
+                {
+                    "value": 1,
+                    "label": "Nearest"
+                },
+                {
+                    "value": 2,
+                    "label": "Linear Interpolation"
+                }
+            ]
+        },
+        "iSpecularMapMaxAnisotropy": {
+            "name": "Specular Map Max Anisotropy",
+            "description": "limit for anisotropic filtering",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "number"
+        },
+        "iEnvironmentMapMinFilter": {
+            "name": "Environment Map Min Filter",
+            "description": "0 - filtering disabled, 1 - nearest, 2 - linear interpolation, 3 - anisotropic",
+            "type": "number",
+            "default-value": 2,
+            "inputType": "combobox",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "Filtering Disabled"
+                },
+                {
+                    "value": 1,
+                    "label": "Nearest"
+                },
+                {
+                    "value": 2,
+                    "label": "Linear Interpolation"
+                },
+                {
+                    "value": 3,
+                    "label": "Anisotropic"
+                }
+            ]
+        },
+        "iEnvironmentMapMagFilter": {
+            "name": "Environment Map Mag Filter",
+            "description": "0 - filtering disabled, 1 - nearest, 2 - linear interpolation, 3 - anisotropic",
+            "type": "number",
+            "default-value": 2,
+            "inputType": "combobox",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "Filtering Disabled"
+                },
+                {
+                    "value": 1,
+                    "label": "Nearest"
+                },
+                {
+                    "value": 2,
+                    "label": "Linear Interpolation"
+                },
+                {
+                    "value": 3,
+                    "label": "Anisotropic"
+                }
+            ]
+        },
+        "iEnvironmentMapMipFilter": {
+            "name": "Environment Map Mip Filter",
+            "description": "0 - filtering disabled, 1 - nearest, 2 - linear interpolation",
+            "type": "number",
+            "default-value": 2,
+            "inputType": "select",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "Filtering Disabled"
+                },
+                {
+                    "value": 1,
+                    "label": "Nearest"
+                },
+                {
+                    "value": 2,
+                    "label": "Linear Interpolation"
+                }
+            ]
+        },
+        "iEnvironmentMapMaxAnisotropy": {
+            "name": "Environment Map Max Anisotropy",
+            "description": "limit for anisotropic filtering",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "number"
+        },
+        "iCubeMapMinFilter": {
+            "name": "Cube Map Min Filter",
+            "description": "0 - filtering disabled, 1 - nearest, 2 - linear interpolation, 3 - anisotropic",
+            "type": "number",
+            "default-value": 2,
+            "inputType": "combobox",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "Filtering Disabled"
+                },
+                {
+                    "value": 1,
+                    "label": "Nearest"
+                },
+                {
+                    "value": 2,
+                    "label": "Linear Interpolation"
+                },
+                {
+                    "value": 3,
+                    "label": "Anisotropic"
+                }
+            ]
+        },
+        "iCubeMapMagFilter": {
+            "name": "Cube Map Mag Filter",
+            "description": "0 - filtering disabled, 1 - nearest, 2 - linear interpolation, 3 - anisotropic",
+            "type": "number",
+            "default-value": 2,
+            "inputType": "combobox",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "Filtering Disabled"
+                },
+                {
+                    "value": 1,
+                    "label": "Nearest"
+                },
+                {
+                    "value": 2,
+                    "label": "Linear Interpolation"
+                },
+                {
+                    "value": 3,
+                    "label": "Anisotropic"
+                }
+            ]
+        },
+        "iCubeMapMipFilter": {
+            "name": "Cube Map Mip Filter",
+            "description": "0 - filtering disabled, 1 - nearest, 2 - linear interpolation",
+            "type": "number",
+            "default-value": 2,
+            "inputType": "select",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "Filtering Disabled"
+                },
+                {
+                    "value": 1,
+                    "label": "Nearest"
+                },
+                {
+                    "value": 2,
+                    "label": "Linear Interpolation"
+                }
+            ]
+        },
+        "iCubeMapMaxAnisotropy": {
+            "name": "Cube Map Max Anisotropy",
+            "description": "limit for anisotropic filtering",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "number"
+        },
+        "bUseBorderedShadowSampler": {
+            "name": "Use Bordered Shadow Sampler",
+            "description": "use D3DTADDRESS_BORDER instead D3DTADDRESS_CLAMP for shadow map sampler",
+            "type": "checkbox",
+            "default-value": false
+        }
     },
-    "flora": {
-
+    "Input": {
+        "fMouseSensitivity": {
+            "name": "Mouse Sensitivity",
+            "description": "range: 0.0-1.0",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "select",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "1"
+                }
+            ]
+        },
+        "fMouseXScale": {
+            "name": "Mouse X Scale",
+            "description": "",
+            "type": "number",
+            "default-value": 1.0,
+            "inputType": "number"
+        },
+        "fMouseYScale": {
+            "name": "Mouse Y Scale",
+            "description": "",
+            "type": "number",
+            "default-value": 1.5,
+            "inputType": "number"
+        },
+        "bInvertMouseX": {
+            "name": "Invert Mouse X",
+            "description": "",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bInvertMouseY": {
+            "name": "Invert Mouse Y",
+            "description": "",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "fMouseScrollTime": {
+            "name": "Mouse Scroll Time",
+            "description": "For key_mouse_scroll_down and key_mouse_scroll_up keys.",
+            "type": "number",
+            "default-value": 0.5,
+            "inputType": "number"
+        }
     },
-    "font": {
-
+    "Log": {
+        "sLogPath": {
+            "name": "Log Path",
+            "description": "",
+            "type": "text",
+            "default-value": "rgl_log.txt",
+            "inputType": "text"
+        },
+        "bAutoFlushLog": {
+            "name": "Auto Flush Log",
+            "description": "Flush ather each commit.",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "sStoredLogDirectory": {
+            "name": "Stored Log Directory",
+            "description": "",
+            "type": "text",
+            "default-value": "Logs",
+            "inputType": "text"
+        },
+        "iMaxNumStoredLogs": {
+            "name": "Max Num Stored Logs",
+            "description": "The oldest backups are deleted.",
+            "type": "number",
+            "default-value": 50,
+            "inputType": "number"
+        },
+        "bBackupOnExit": {
+            "name": "Backup On Exit",
+            "description": "Backup log on game exit.",
+            "type": "checkbox",
+            "default-value": true
+        }
     },
-    "general": {
-
+    "Scene": {
+        "bSunFlare": {
+            "name": "Sun Flare",
+            "description": "Display sun flare mesh.",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "sSunFlareMesh": {
+            "name": "Sun Flare Mesh",
+            "description": "",
+            "type": "text",
+            "default-value": "sample_flare",
+            "inputType": "text"
+        },
+        "sSunFlareMaterial": {
+            "name": "Sun Flare Material",
+            "description": "",
+            "type": "text",
+            "default-value": "flare",
+            "inputType": "text"
+        },
+        "fCharacterDetail": {
+            "name": "Character Detail",
+            "description": "Used to select a entity lod depending on distance. Range: 0.0-1.0.",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "select",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "1"
+                }
+            ]
+        },
+        "bUseSceneUnloading": {
+            "name": "Use Scene Unloading",
+            "description": "Once you start mission, it’s unload all scenes from RAM.",
+            "type": "checkbox",
+            "default-value": false
+        }
     },
-    "graphics": {
-
+    "Network": {
+        "iUdpReceiveBufferSize": {
+            "name": "Udp Receive Buffer Size",
+            "description": "Size of a socket's receive buffer.",
+            "type": "number",
+            "default-value": 262144,
+            "inputType": "number"
+        },
+        "iUdpSendBufferSize": {
+            "name": "Udp Send Buffer Size",
+            "description": "Size of a socket's send buffer.",
+            "type": "number",
+            "default-value": 262144,
+            "inputType": "number"
+        },
+        "iMaxNumServerSearchConnections": {
+            "name": "Max Num Server Search Connections",
+            "description": "",
+            "type": "number",
+            "default-value": 16,
+            "inputType": "number"
+        },
+        "bSecureMasterServerConnection": {
+            "name": "Secure Master Server Connection",
+            "description": "https",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bLoopbackServer": {
+            "name": "Loopback Server",
+            "description": "",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "sServerAddress": {
+            "name": "Server Address",
+            "description": "empty for ANY",
+            "type": "text",
+            "default-value": "nan",
+            "inputType": "text"
+        },
+        "iServerPort": {
+            "name": "Server Port",
+            "description": "",
+            "type": "number",
+            "default-value": 7240,
+            "inputType": "number"
+        },
+        "sClientAddress": {
+            "name": "Client Address",
+            "description": "empty for ANY",
+            "type": "text",
+            "default-value": "nan",
+            "inputType": "text"
+        },
+        "iClientPort": {
+            "name": "Client Port",
+            "description": "",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "number"
+        },
+        "bAutoSelectClientPort": {
+            "name": "Auto Select Client Port",
+            "description": "",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "fServerActivityTimeout": {
+            "name": "Server Activity Timeout",
+            "description": "",
+            "type": "number",
+            "default-value": 20.0,
+            "inputType": "number"
+        },
+        "fClientActivityTimeout": {
+            "name": "Client Activity Timeout",
+            "description": "",
+            "type": "number",
+            "default-value": 20.0,
+            "inputType": "number"
+        },
+        "fServerInfoRequestActivityTimeout": {
+            "name": "Server Info Request Activity Timeout",
+            "description": "",
+            "type": "number",
+            "default-value": 3.0,
+            "inputType": "number"
+        },
+        "fPlayerInfoRequestActivityTimeout": {
+            "name": "Player Info Request Activity Timeout",
+            "description": "",
+            "type": "number",
+            "default-value": 3.0,
+            "inputType": "number"
+        },
+        "bHttpServerQueries": {
+            "name": "Http Server Queries",
+            "description": "Returns xml by default. Can be overridden using wse_get_server_info script.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bBreakWarbandCompatibility": {
+            "name": "Break Warband Compatibility",
+            "description": "Changes the network protocol for enable some advanced WSE features like composite network messages and more skins in multiplayer.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bOGPServer": {
+            "name": "O G P Server",
+            "description": "Open game protocol for quering server info.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "iOGPServerPort": {
+            "name": "O G P Server Port",
+            "description": "UDP",
+            "type": "number",
+            "default-value": 22222,
+            "inputType": "number"
+        },
+        "bRCONServer": {
+            "name": "R C O N Server",
+            "description": "Source rcon protocol for remote console commands.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "iRCONServerPort": {
+            "name": "R C O N Server Port",
+            "description": "TCP",
+            "type": "number",
+            "default-value": 22222,
+            "inputType": "number"
+        },
+        "sRCONServerPassword": {
+            "name": "R C O N Server Password",
+            "description": "",
+            "type": "text",
+            "default-value": "qwerty",
+            "inputType": "text"
+        },
+        "iNumPlayersLimit": {
+            "name": "Num Players Limit",
+            "description": "Different values on client and server break network compatibility (different size of number in bits). So put this value in the settings of your module and not only to server. Range: 2-1000. Operation: get_max_players.",
+            "type": "number",
+            "default-value": 250,
+            "inputType": "select",
+            "options": [
+                {
+                    "value": 2,
+                    "label": "1000"
+                }
+            ]
+        },
+        "iMultiplayerEventForAnnounce": {
+            "name": "Multiplayer Event For Announce",
+            "description": "Used for announce console command and other WSE2 server notifications since Warband doesn't have a hardcoded event for that purpose. 111 for Native and VC, 105 for NW. For other modules check header_common.py and search multiplayer_event_show_server_message or similar.",
+            "type": "number",
+            "default-value": 111,
+            "inputType": "number"
+        },
+        "bServerLockFov": {
+            "name": "Server Lock Fov",
+            "description": "Used server-side for lock fov for all WSE2 players to default 75.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bFastDL": {
+            "name": "Fast D L",
+            "description": "Quick download of server's custom maps from external storage.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bFastDLUrl": {
+            "name": "Fast D L Url",
+            "description": "Supports http, https, ftp.",
+            "type": "checkbox",
+            "default-value": false
+        }
     },
-    "http": {
-
+    "Reflections": {
+        "iReflectionsMode": {
+            "name": "Reflections Mode",
+            "description": "Water reflections mode. Full reflections are performance heavy. Disable them if you are experiencing low frame rates. 0 - disable, 1 - sky, 2 - sky and landscape objects, 3 - full (perfomance heavy)",
+            "type": "number",
+            "default-value": 2,
+            "inputType": "combobox",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "Disable"
+                },
+                {
+                    "value": 1,
+                    "label": "Sky"
+                },
+                {
+                    "value": 2,
+                    "label": "Sky And Landscape Objects"
+                },
+                {
+                    "value": 3,
+                    "label": "Full (perfomance Heavy)"
+                }
+            ]
+        },
+        "iReflectionsTextureSize": {
+            "name": "Reflections Texture Size",
+            "description": "values: 128, 256, 512, 1024, 2048, 4096",
+            "type": "number",
+            "default-value": 256,
+            "inputType": "number"
+        },
+        "iReflectionsMinFilter": {
+            "name": "Reflections Min Filter",
+            "description": "0 - filtering disabled, 1 - nearest, 2 - linear interpolation, 3 - anisotropic",
+            "type": "number",
+            "default-value": 2,
+            "inputType": "combobox",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "Filtering Disabled"
+                },
+                {
+                    "value": 1,
+                    "label": "Nearest"
+                },
+                {
+                    "value": 2,
+                    "label": "Linear Interpolation"
+                },
+                {
+                    "value": 3,
+                    "label": "Anisotropic"
+                }
+            ]
+        },
+        "iReflectionsMagFilter": {
+            "name": "Reflections Mag Filter",
+            "description": "0 - filtering disabled, 1 - nearest, 2 - linear interpolation, 3 - anisotropic",
+            "type": "number",
+            "default-value": 2,
+            "inputType": "combobox",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "Filtering Disabled"
+                },
+                {
+                    "value": 1,
+                    "label": "Nearest"
+                },
+                {
+                    "value": 2,
+                    "label": "Linear Interpolation"
+                },
+                {
+                    "value": 3,
+                    "label": "Anisotropic"
+                }
+            ]
+        },
+        "iReflectionsMipFilter": {
+            "name": "Reflections Mip Filter",
+            "description": "0 - filtering disabled, 1 - nearest, 2 - linear interpolation",
+            "type": "number",
+            "default-value": 2,
+            "inputType": "select",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "Filtering Disabled"
+                },
+                {
+                    "value": 1,
+                    "label": "Nearest"
+                },
+                {
+                    "value": 2,
+                    "label": "Linear Interpolation"
+                }
+            ]
+        },
+        "iReflectionsMaxAnisotropy": {
+            "name": "Reflections Max Anisotropy",
+            "description": "limit for anisotropic filtering",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "number"
+        }
     },
-    "input": {
-
+    "DedicatedServer": {
+        "bAutoRestartOnCrash": {
+            "name": "Auto Restart On Crash",
+            "description": "",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "iMaxNumFailedAutoRestarts": {
+            "name": "Max Num Failed Auto Restarts",
+            "description": "Prevents a restart loop if the server crashes on startup.",
+            "type": "number",
+            "default-value": 5,
+            "inputType": "number"
+        },
+        "fMinTimeForSuccessfulAutoRestart": {
+            "name": "Min Time For Successful Auto Restart",
+            "description": "The minimum server uptime at which a restart is considered successful and the restart counter is reset.",
+            "type": "number",
+            "default-value": 120.0,
+            "inputType": "number"
+        },
+        "bLogConnects": {
+            "name": "Log Connects",
+            "description": "",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bLogDisconnects": {
+            "name": "Log Disconnects",
+            "description": "",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bLogKills": {
+            "name": "Log Kills",
+            "description": "",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bLogChat": {
+            "name": "Log Chat",
+            "description": "",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bLogTeamChat": {
+            "name": "Log Team Chat",
+            "description": "",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bLogBans": {
+            "name": "Log Bans",
+            "description": "",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bLogIPs": {
+            "name": "Log I Ps",
+            "description": "Logs ip with player's connect and disconnect.",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "cLogSeparatorChar": {
+            "name": "c Log Separator Char",
+            "description": "For advanced log format.",
+            "type": "text",
+            "default-value": ",",
+            "inputType": "text"
+        },
+        "bStoreConsolePlacement": {
+            "name": "Store Console Placement",
+            "description": "",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "vConsoleWindowPosition": {
+            "name": "Console Window Position",
+            "description": "",
+            "type": "text",
+            "default-value": "-1,-1",
+            "inputType": "text"
+        },
+        "vConsoleWindowSize": {
+            "name": "Console Window Size",
+            "description": "",
+            "type": "text",
+            "default-value": "-1,-1",
+            "inputType": "text"
+        },
+        "bAutoSplitModuleConsoleCommands": {
+            "name": "Auto Split Module Console Commands",
+            "description": "Automatically splits the console command by spaces and puts strings into registers for wse_console_command_received script.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bAdvancedLogFormat": {
+            "name": "Advanced Log Format",
+            "description": "Uses advanced log format instead standart Warband's. More convenient for parsing logs.",
+            "type": "checkbox",
+            "default-value": false
+        }
     },
-    "item-requirement": {
-
+    "FakeCharacterShadows": {
+        "bFakeCharacterShadows": {
+            "name": "Fake Character Shadows",
+            "description": "Enables fake character shadows (shadows that are cast on collision meshes).",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bFakeCharacterShadowsHighQuality": {
+            "name": "Fake Character Shadows High Quality",
+            "description": "Use sFakeCharacterShadowShaderHighQuality instead sFakeCharacterShadowShader.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "fFakeCharacterShadowDetail": {
+            "name": "Fake Character Shadow Detail",
+            "description": "range: 0.0-1.0",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "select",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "1"
+                }
+            ]
+        },
+        "iFakeCharacterShadowTextureSize": {
+            "name": "Fake Character Shadow Texture Size",
+            "description": "values: 64, 128, 256, 512, 1024, 2048",
+            "type": "number",
+            "default-value": 256,
+            "inputType": "number"
+        },
+        "sFakeCharacterShadowShader": {
+            "name": "Fake Character Shadow Shader",
+            "description": "",
+            "type": "text",
+            "default-value": "shadow_shader",
+            "inputType": "text"
+        },
+        "sFakeCharacterShadowShaderHighQuality": {
+            "name": "Fake Character Shadow Shader High Quality",
+            "description": "",
+            "type": "text",
+            "default-value": "shadow_shader_new",
+            "inputType": "text"
+        },
+        "uFakeCharacterShadowColor": {
+            "name": "Fake Character Shadow Color",
+            "description": "",
+            "type": "text",
+            "default-value": "0xff000915",
+            "inputType": "color"
+        },
+        "fFakeCharacterShadowDepthBias": {
+            "name": "Fake Character Shadow Depth Bias",
+            "description": "",
+            "type": "number",
+            "default-value": 0.0002,
+            "inputType": "number"
+        },
+        "fFakeCharacterShadowSlopeScaledDepthBias": {
+            "name": "Fake Character Shadow Slope Scaled Depth Bias",
+            "description": "",
+            "type": "number",
+            "default-value": 2.0,
+            "inputType": "number"
+        }
     },
-    "log": {
-
+    "Sound": {
+        "fSoundVolume": {
+            "name": "Sound Volume",
+            "description": "range: 0.0-1.0",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "select",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "1"
+                }
+            ]
+        },
+        "fMusicVolume": {
+            "name": "Music Volume",
+            "description": "range: 0.0-1.0",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "select",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "1"
+                }
+            ]
+        },
+        "bSound": {
+            "name": "Sound",
+            "description": "",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bMusic": {
+            "name": "Music",
+            "description": "",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bUseWinmm": {
+            "name": "Use Winmm",
+            "description": "Use Windows Multimedia output.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bDisableFrequencyVariation": {
+            "name": "Disable Frequency Variation",
+            "description": "",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "iMaxNumChannels": {
+            "name": "Max Num Channels",
+            "description": "",
+            "type": "number",
+            "default-value": 64,
+            "inputType": "number"
+        },
+        "iMaxNumVirtualChannels": {
+            "name": "Max Num Virtual Channels",
+            "description": "",
+            "type": "number",
+            "default-value": 200,
+            "inputType": "number"
+        },
+        "bOcclusion": {
+            "name": "Occlusion",
+            "description": "Sound occlusion in games refers to a process that imitates how sounds are perceived in \"closed\" environments, closed meaning that there are barriers close to the sound source or listener. It's can drop performance dramatically with a large number of agents or other sound sources.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bOcclusionFilter": {
+            "name": "Occlusion Filter",
+            "description": "All FMOD_SOFTWARE (and FMOD_HARDWARE on 3DS and NGP) with FMOD_3D based voices will add a software lowpass filter effect into the DSP chain which is automatically used when Channel::set3DOcclusion is used or the geometry API.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bHrtfFilter": {
+            "name": "Hrtf Filter",
+            "description": "All FMOD_SOFTWARE (and FMOD_HARDWARE on 3DS and NGP) with FMOD_3D based voices will add a software lowpass filter effect into the DSP chain which causes sounds to sound duller when the sound goes behind the listener.",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bDistanceFilter": {
+            "name": "Distance Filter",
+            "description": "All FMOD_SOFTWARE with FMOD_3D based voices will add a software lowpass and highpass filter effect into the DSP chain which will act as a distance-automated bandpass filter. ",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bWasapiExclusive": {
+            "name": "Wasapi Exclusive",
+            "description": "Win32 Vista only - for WASAPI output - Enable exclusive access to hardware, lower latency at the expense of excluding other applications from accessing the audio hardware.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "fDistancePriorityFactor": {
+            "name": "Distance Priority Factor",
+            "description": "",
+            "type": "number",
+            "default-value": 0.47,
+            "inputType": "number"
+        }
     },
-    "messages": {
-
+    "ShadowMap": {
+        "bShadowMap": {
+            "name": "Shadow Map",
+            "description": "",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "iShadowMapTextureSize": {
+            "name": "Shadow Map Texture Size",
+            "description": "values: 256, 512, 1024, 2048, 4096, 8192",
+            "type": "number",
+            "default-value": 1024,
+            "inputType": "number"
+        },
+        "fShadowMapDepthBias": {
+            "name": "Shadow Map Depth Bias",
+            "description": "",
+            "type": "number",
+            "default-value": 0.0002,
+            "inputType": "number"
+        },
+        "fShadowMapSlopeScaledDepthBias": {
+            "name": "Shadow Map Slope Scaled Depth Bias",
+            "description": "",
+            "type": "number",
+            "default-value": 2.0,
+            "inputType": "number"
+        },
+        "sShadowMapShader": {
+            "name": "Shadow Map Shader",
+            "description": "",
+            "type": "text",
+            "default-value": "shadow_shader",
+            "inputType": "text"
+        },
+        "iShadowMapNumPasses": {
+            "name": "Shadow Map Num Passes",
+            "description": "",
+            "type": "number",
+            "default-value": 4,
+            "inputType": "number"
+        }
     },
-    "network": {
-
+    "ItemRequirement": {
+        "iAttributeHorse": {
+            "name": "Attribute Horse",
+            "description": "Set difficulty requirement for item types (check attributes in header_troops.py and skills in header_skills.py).",
+            "type": "number",
+            "default-value": -1,
+            "inputType": "number"
+        },
+        "iSkillHorse": {
+            "name": "Skill Horse",
+            "description": "",
+            "type": "number",
+            "default-value": 24,
+            "inputType": "number"
+        },
+        "iAttributeOneHanded": {
+            "name": "Attribute One Handed",
+            "description": "",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "number"
+        },
+        "iSkillOneHanded": {
+            "name": "Skill One Handed",
+            "description": "",
+            "type": "number",
+            "default-value": -1,
+            "inputType": "number"
+        },
+        "iAttributeTwoHanded": {
+            "name": "Attribute Two Handed",
+            "description": "",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "number"
+        },
+        "iSkillTwoHanded": {
+            "name": "Skill Two Handed",
+            "description": "",
+            "type": "number",
+            "default-value": -1,
+            "inputType": "number"
+        },
+        "iAttributePolearm": {
+            "name": "Attribute Polearm",
+            "description": "",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "number"
+        },
+        "iSkillPolearm": {
+            "name": "Skill Polearm",
+            "description": "",
+            "type": "number",
+            "default-value": -1,
+            "inputType": "number"
+        },
+        "iAttributeShield": {
+            "name": "Attribute Shield",
+            "description": "",
+            "type": "number",
+            "default-value": -1,
+            "inputType": "number"
+        },
+        "iSkillShield": {
+            "name": "Skill Shield",
+            "description": "",
+            "type": "number",
+            "default-value": 26,
+            "inputType": "number"
+        },
+        "iAttributeBow": {
+            "name": "Attribute Bow",
+            "description": "",
+            "type": "number",
+            "default-value": -1,
+            "inputType": "number"
+        },
+        "iSkillBow": {
+            "name": "Skill Bow",
+            "description": "",
+            "type": "number",
+            "default-value": 33,
+            "inputType": "number"
+        },
+        "iAttributeCrossbow": {
+            "name": "Attribute Crossbow",
+            "description": "",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "number"
+        },
+        "iSkillCrossbow": {
+            "name": "Skill Crossbow",
+            "description": "",
+            "type": "number",
+            "default-value": -1,
+            "inputType": "number"
+        },
+        "iAttributeThrown": {
+            "name": "Attribute Thrown",
+            "description": "",
+            "type": "number",
+            "default-value": -1,
+            "inputType": "number"
+        },
+        "iSkillThrown": {
+            "name": "Skill Thrown",
+            "description": "",
+            "type": "number",
+            "default-value": 34,
+            "inputType": "number"
+        },
+        "iAttributeHeadArmor": {
+            "name": "Attribute Head Armor",
+            "description": "",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "number"
+        },
+        "iSkillHeadArmor": {
+            "name": "Skill Head Armor",
+            "description": "",
+            "type": "number",
+            "default-value": -1,
+            "inputType": "number"
+        },
+        "iAttributeBodyArmor": {
+            "name": "Attribute Body Armor",
+            "description": "",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "number"
+        },
+        "iSkillBodyArmor": {
+            "name": "Skill Body Armor",
+            "description": "",
+            "type": "number",
+            "default-value": -1,
+            "inputType": "number"
+        },
+        "iAttributeFootArmor": {
+            "name": "Attribute Foot Armor",
+            "description": "",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "number"
+        },
+        "iSkillFootArmor": {
+            "name": "Skill Foot Armor",
+            "description": "",
+            "type": "number",
+            "default-value": -1,
+            "inputType": "number"
+        },
+        "iAttributeHandArmor": {
+            "name": "Attribute Hand Armor",
+            "description": "",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "number"
+        },
+        "iSkillHandArmor": {
+            "name": "Skill Hand Armor",
+            "description": "",
+            "type": "number",
+            "default-value": -1,
+            "inputType": "number"
+        },
+        "iAttributePistol": {
+            "name": "Attribute Pistol",
+            "description": "",
+            "type": "number",
+            "default-value": -1,
+            "inputType": "number"
+        },
+        "iSkillPistol": {
+            "name": "Skill Pistol",
+            "description": "",
+            "type": "number",
+            "default-value": -1,
+            "inputType": "number"
+        },
+        "iAttributeMusket": {
+            "name": "Attribute Musket",
+            "description": "",
+            "type": "number",
+            "default-value": -1,
+            "inputType": "number"
+        },
+        "iSkillMusket": {
+            "name": "Skill Musket",
+            "description": "",
+            "type": "number",
+            "default-value": -1,
+            "inputType": "number"
+        }
     },
-    "particle-systems": {
-
+    "Http": {
+        "sUserAgent": {
+            "name": "User Agent",
+            "description": "Default user agent.",
+            "type": "text",
+            "default-value": "Mount Blade HTTP",
+            "inputType": "text"
+        },
+        "iMaxNumRetries": {
+            "name": "Max Num Retries",
+            "description": "For master server requests.",
+            "type": "number",
+            "default-value": 3,
+            "inputType": "number"
+        },
+        "iResolveTimeout": {
+            "name": "Resolve Timeout",
+            "description": "In milliseconds, to use for name resolution.",
+            "type": "number",
+            "default-value": 10000,
+            "inputType": "number"
+        },
+        "iConnectTimeout": {
+            "name": "Connect Timeout",
+            "description": "In milliseconds, to use for server connection requests.",
+            "type": "number",
+            "default-value": 10000,
+            "inputType": "number"
+        },
+        "iSendTimeout": {
+            "name": "Send Timeout",
+            "description": "In milliseconds, to use for sending requests.",
+            "type": "number",
+            "default-value": 10000,
+            "inputType": "number"
+        },
+        "iReceiveTimeout": {
+            "name": "Receive Timeout",
+            "description": "In milliseconds, to receive a response to a request.",
+            "type": "number",
+            "default-value": 10000,
+            "inputType": "number"
+        }
     },
-    "physics": {
-
+    "CampaignAi": {
+        "iReduceCampaignAi": {
+            "name": "Reduce Campaign Ai",
+            "description": "Deprecated. 0 - good, 1 - average, 2 - poor. Operations: options_get_campaign_ai, options_set_campaign_ai, game_get_reduce_campaign_ai.",
+            "type": "number",
+            "default-value": 2,
+            "inputType": "select",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "Good"
+                },
+                {
+                    "value": 1,
+                    "label": "Average"
+                },
+                {
+                    "value": 2,
+                    "label": "Poor"
+                }
+            ]
+        },
+        "bUseStrictPathfindingForShips": {
+            "name": "Use Strict Pathfinding For Ships",
+            "description": "Keeps ships at sea for sea-to-sea routes.",
+            "type": "checkbox",
+            "default-value": false
+        }
     },
-    "post-fx": {
-
+    "Threads": {
+        "bThreadedRenderer": {
+            "name": "Threaded Renderer",
+            "description": "Executes a task on a separate thread. Solves the cpu bottleneck.",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bThreadedNetwork": {
+            "name": "Threaded Network",
+            "description": "",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bThreadedLogger": {
+            "name": "Threaded Logger",
+            "description": "",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "bThreadedSkeletalAnimation": {
+            "name": "Threaded Skeletal Animation",
+            "description": "",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bThreadedVertexBufferWrites": {
+            "name": "Threaded Vertex Buffer Writes",
+            "description": "",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bThreadedIndexBufferWrites": {
+            "name": "Threaded Index Buffer Writes",
+            "description": "",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "iNumTaskThreads": {
+            "name": "Num Task Threads",
+            "description": "Number threads for async tasks.",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "number"
+        },
+        "iTaskCriticalSectionSpinCount": {
+            "name": "Task Critical Section Spin Count",
+            "description": "Sets the spin count for the specified critical section. Spinning means that when a thread tries to acquire a critical section that is locked, the thread enters a loop, checks to see if the lock is released, and if the lock is not released, the thread goes to sleep.",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "number"
+        },
+        "iRenderBufferCriticalSectionSpinCount": {
+            "name": "Render Buffer Critical Section Spin Count",
+            "description": "",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "number"
+        },
+        "iRenderThreadCriticalSectionSpinCount": {
+            "name": "Render Thread Critical Section Spin Count",
+            "description": "",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "number"
+        },
+        "iAsyncRenderCallsCriticalSectionSpinCount": {
+            "name": "Async Render Calls Critical Section Spin Count",
+            "description": "",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "number"
+        },
+        "iNetworkCriticalSectionSpinCount": {
+            "name": "Network Critical Section Spin Count",
+            "description": "",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "number"
+        },
+        "iTextureLoadCriticalSectionSpinCount": {
+            "name": "Texture Load Critical Section Spin Count",
+            "description": "",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "number"
+        },
+        "iTextureCreateCriticalSectionSpinCount": {
+            "name": "Texture Create Critical Section Spin Count",
+            "description": "",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "number"
+        },
+        "iTextureUseCriticalSectionSpinCount": {
+            "name": "Texture Use Critical Section Spin Count",
+            "description": "",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "number"
+        }
     },
-    "profiling": {
-
+    "Profiling": {
+        "bEnabled": {
+            "name": "Enabled",
+            "description": "Enable the WSE profiler.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "iFlushInterval": {
+            "name": "Flush Interval",
+            "description": "Flushes the profiling file stream every x sec (only flushes on exit if 0).",
+            "type": "number",
+            "default-value": 60,
+            "inputType": "number"
+        }
     },
-    "reflections": {
-
+    "ParticleSystems": {
+        "bParticleSystems": {
+            "name": "Particle Systems",
+            "description": "",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "iParticleSystemMaxNumMeshVertices": {
+            "name": "Particle System Max Num Mesh Vertices",
+            "description": "Limit for particle mesh vertices. range: 0-65536",
+            "type": "number",
+            "default-value": 32000,
+            "inputType": "select",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "65536"
+                }
+            ]
+        },
+        "iParticleSystemMaxNumRenderedParticles": {
+            "name": "Particle System Max Num Rendered Particles",
+            "description": "Limit for particles num.",
+            "type": "number",
+            "default-value": 5000,
+            "inputType": "number"
+        },
+        "fParticleSystemDegradeDistance": {
+            "name": "Particle System Degrade Distance",
+            "description": "The distance at which the number of bursted particles decreases. range: 10.0-60.0",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "select",
+            "options": [
+                {
+                    "value": 0,
+                    "label": "60"
+                }
+            ]
+        },
+        "fParticleSystemUpdateInterval": {
+            "name": "Particle System Update Interval",
+            "description": "The time during which the particles are accumulated (not burst every frame).",
+            "type": "number",
+            "default-value": 0.02,
+            "inputType": "number"
+        },
+        "bHasForcedParticles": {
+            "name": "Has Forced Particles",
+            "description": "Allows the mod to ’force’ particles. Used if the particles are important in the module and the player should not disable them.",
+            "type": "checkbox",
+            "default-value": false
+        }
     },
-    "scene": {
-
+    "Font": {
+        "bFontAnisotropicFiltering": {
+            "name": "Font Anisotropic Filtering",
+            "description": "Use anisotropic instead linear interpolation for min filter. Limit for anisotropic filtering - 4.",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "fScale": {
+            "name": "Scale",
+            "description": "Font scale. Range: 0.5-1.5",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "select",
+            "options": [
+                {
+                    "value": 5,
+                    "label": "1"
+                }
+            ]
+        },
+        "fMessagesScale": {
+            "name": "Messages Scale",
+            "description": "Font scale for messages. Range: 0.5-1.5",
+            "type": "number",
+            "default-value": 0,
+            "inputType": "select",
+            "options": [
+                {
+                    "value": 5,
+                    "label": "1"
+                }
+            ]
+        }
     },
-    "server-list": {
-
-    },
-    "shadow-map": {
-
-    },
-    "sound": {
-
-    },
-    "terrain-generator": {
-
-    },
-    "threads": {
-
+    "Physics": {
+        "bAllBodiesAreMoveable": {
+            "name": "All Bodies Are Moveable",
+            "description": "Moveable physics on all scene props; no sokf_moveable flag will be needed.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bRagdollHeadshots": {
+            "name": "Ragdoll Headshots",
+            "description": "Uses a ragdoll with shot force when killing an agent with a crossbow, musket, or pistol on a non-hand and non-leg hit. Operations - options_get_realistic_headshots, options_set_realistic_headshots.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "fRagdollPurgeTime": {
+            "name": "Ragdoll Purge Time",
+            "description": "End ragdoll, when this time has passed.",
+            "type": "number",
+            "default-value": 30.0,
+            "inputType": "number"
+        },
+        "fRagdollOnGroundPurgeTime": {
+            "name": "Ragdoll On Ground Purge Time",
+            "description": "End ragdoll, when agent on ground and this time has passed.",
+            "type": "number",
+            "default-value": 10.0,
+            "inputType": "number"
+        },
+        "fRagdollInactivePurgeTime": {
+            "name": "Ragdoll Inactive Purge Time",
+            "description": "End ragdoll, when ragdoll inactive and this time has passed.",
+            "type": "number",
+            "default-value": 1.0,
+            "inputType": "number"
+        },
+        "fMaxDeltaTimeStep": {
+            "name": "Max Delta Time Step",
+            "description": "Time step for advancement state of ragdoll simulation. Operation - set_physics_delta_time.",
+            "type": "number",
+            "default-value": 0.025,
+            "inputType": "number"
+        },
+        "fMaxSlowMotionDeltaTimeStep": {
+            "name": "Max Slow Motion Delta Time Step",
+            "description": "Same, if cheat mode slow-motion enabled.",
+            "type": "number",
+            "default-value": 0.005,
+            "inputType": "number"
+        },
+        "bRagdollSoak": {
+            "name": "Ragdoll Soak",
+            "description": "Blows is beaten on corpses and thus prevents an unintentional teamhits.",
+            "type": "checkbox",
+            "default-value": false
+        },
+        "bRagdollSoakApplyForce": {
+            "name": "Ragdoll Soak Apply Force",
+            "description": "Apply blow force to beaten on corpses.",
+            "type": "checkbox",
+            "default-value": false
+        }
     }
 }

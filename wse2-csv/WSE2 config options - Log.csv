@@ -1,0 +1,6 @@
+Name,Default Value,Warband Name,Description
+sLogPath,rgl_log.txt,,
+bAutoFlushLog,TRUE,,Flush ather each commit.
+sStoredLogDirectory,Logs,,
+iMaxNumStoredLogs,50,,The oldest backups are deleted.
+bBackupOnExit,TRUE,,Backup log on game exit.

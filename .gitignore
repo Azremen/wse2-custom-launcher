@@ -1,4 +1,42 @@
-bootstrap-4.6.1-dist/
-font-awesome-4.7.0/
-Modules/
+# Dependencies
 node_modules/
+
+# Build Output
+dist/
+build/
+
+# Logs
+logs/
+*.log
+
+# Temp files
+*.tmp
+*.bak
+*.bak*
+*.old
+*.swp
+*.swo
+
+# OS System Files
+.DS_Store
+Thumbs.db
+
+# IDE Files
+.vscode/
+.idea/
+*.sln
+*.suo
+*.user
+
+# Binary / Compressed Configs
+*.7z
+*.zip
+*.tar.gz
+*.rar
+*.gz
+*.pdb
+*.obj
+*.dll
+*.exe
+*.so
+*.dylib

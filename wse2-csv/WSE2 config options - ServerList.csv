@@ -1,0 +1,4 @@
+Name,Default Value,Warband Name,Description
+iDeadFavoritesPurgeTime,604800,,Remove dead server from favorites after this time.
+iDeadFavoritesPurgeTries,7,,Remove dead server from favorites after this num search tries.
+bHideOtherModServers,FALSE,wse module.ini - hide_other_mod_servers,Hide servers running other mods from the servers list.

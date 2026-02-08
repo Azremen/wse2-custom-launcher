@@ -1,0 +1,9 @@
+Name,Default Value,Warband Name,Description
+iGrassMinFilter,3,,"0 - filtering disabled, 1 - nearest, 2 - linear interpolation, 3 - anisotropic"
+iGrassMagFilter,2,,"0 - filtering disabled, 1 - nearest, 2 - linear interpolation, 3 - anisotropic"
+iGrassMipFilter,2,,"0 - filtering disabled, 1 - nearest, 2 - linear interpolation"
+iGrassMaxAnisotropy,4,,limit for anisotropic filtering
+fGrassDensity,0.5,rgl_config.txt - grass_density,
+fFloraDegradeDistance,100.0,rgl_config.txt - flora_degrade_distance,
+iFloraShadows,2,rgl_config.txt - realistic_shadows_on_plants,"0 - none, 1 - quick, 2 - full"
+iFloraLod,0,rgl_config.txt - flora_lod_detail,"0 - low, 1 - medium, 2 - high, 3 - very high"

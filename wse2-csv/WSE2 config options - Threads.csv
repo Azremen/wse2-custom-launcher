@@ -1,0 +1,16 @@
+Name,Default Value,Warband Name,Description
+bThreadedRenderer,TRUE,,Executes a task on a separate thread. Solves the cpu bottleneck.
+bThreadedNetwork,TRUE,,
+bThreadedLogger,TRUE,,
+bThreadedSkeletalAnimation,FALSE,,
+bThreadedVertexBufferWrites,FALSE,,
+bThreadedIndexBufferWrites,FALSE,,
+iNumTaskThreads,0,,Number threads for async tasks.
+iTaskCriticalSectionSpinCount,0,,"Sets the spin count for the specified critical section. Spinning means that when a thread tries to acquire a critical section that is locked, the thread enters a loop, checks to see if the lock is released, and if the lock is not released, the thread goes to sleep."
+iRenderBufferCriticalSectionSpinCount,0,,
+iRenderThreadCriticalSectionSpinCount,0,,
+iAsyncRenderCallsCriticalSectionSpinCount,0,,
+iNetworkCriticalSectionSpinCount,0,,
+iTextureLoadCriticalSectionSpinCount,0,,
+iTextureCreateCriticalSectionSpinCount,0,,
+iTextureUseCriticalSectionSpinCount,0,,

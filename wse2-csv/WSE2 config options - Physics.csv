@@ -1,0 +1,10 @@
+Name,Default Value,Warband Name,Description
+bAllBodiesAreMoveable,FALSE,module.ini - disable_moveable_flag_optimization,Moveable physics on all scene props; no sokf_moveable flag will be needed.
+bRagdollHeadshots,FALSE,rgl_config.txt - realistic_headshots,"Uses a ragdoll with shot force when killing an agent with a crossbow, musket, or pistol on a non-hand and non-leg hit. Operations - options_get_realistic_headshots, options_set_realistic_headshots."
+fRagdollPurgeTime,30.0,,"End ragdoll, when this time has passed."
+fRagdollOnGroundPurgeTime,10.0,,"End ragdoll, when agent on ground and this time has passed."
+fRagdollInactivePurgeTime,1.0,,"End ragdoll, when ragdoll inactive and this time has passed."
+fMaxDeltaTimeStep,0.025,,Time step for advancement state of ragdoll simulation. Operation - set_physics_delta_time.
+fMaxSlowMotionDeltaTimeStep,0.005,,"Same, if cheat mode slow-motion enabled."
+bRagdollSoak,FALSE,,Blows is beaten on corpses and thus prevents an unintentional teamhits.
+bRagdollSoakApplyForce,FALSE,,Apply blow force to beaten on corpses.

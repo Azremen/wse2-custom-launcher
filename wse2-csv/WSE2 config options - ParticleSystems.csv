@@ -1,0 +1,7 @@
+Name,Default Value,Warband Name,Description
+bParticleSystems,TRUE,rgl_config.txt - enable_particles,
+iParticleSystemMaxNumMeshVertices,32000,,Limit for particle mesh vertices. range: 0-65536
+iParticleSystemMaxNumRenderedParticles,5000,,Limit for particles num.
+fParticleSystemDegradeDistance,50.0,,The distance at which the number of bursted particles decreases. range: 10.0-60.0
+fParticleSystemUpdateInterval,0.02,,The time during which the particles are accumulated (not burst every frame).
+bHasForcedParticles,FALSE,module.ini - has_forced_particles,Allows the mod to ’force’ particles. Used if the particles are important in the module and the player should not disable them.

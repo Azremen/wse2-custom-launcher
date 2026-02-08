@@ -5,65 +5,109 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- CSP -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' http://localhost:*;">
 
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="./bootstrap-4.6.1-dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="./libs/css/bootstrap.min.css">
     <link rel="stylesheet" href="./styles.css" />
-    <link rel="stylesheet" href="./font-awesome-4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="./libs/fontawesome/css/all.min.css">
     <title>WSE2 Launcher</title>
 </head>
 
 <body>
     <div class="container-fluid">
+        <!-- Offline Warning -->
+        <div id="offline-warning" class="alert alert-warning d-none text-center m-0 p-1" role="alert">
+            <i class="fas fa-exclamation-triangle"></i> <span data-i18n="ui_offline">No Internet Connection. Some features may be unavailable.</span>
+        </div>
+
         <div id="top-area" class="pt-3 pb-1">
             <div class="row">
                 <div class="col-3 col-md-4">
-                    <ul class="list-group p-0 mb-0 bg-light text-dark" id="list-pos">
+                    <ul class="list-group p-0 mb-0 rounded-0" id="list-pos">
 
                     </ul>
-                    <div id="buttons" class="pt-1">
-                        <button class="btn btn-primary btn-sm" id="btn-install">Install</button>
-                        <button class="btn btn-primary btn-sm" id="btn-remove">Remove</button>
-                        <button class="btn btn-primary btn-sm" id="btn-configure">Configure</button>
+                    <div id="buttons" class="pt-1 d-flex justify-content-between">
+                        <button class="btn btn-primary btn-sm flex-fill me-1" id="btn-install" disabled data-i18n="ui_install"></button>
+                        <button class="btn btn-danger btn-sm flex-fill me-1" id="btn-remove" disabled data-i18n="ui_remove"></button>
+                        <button class="btn btn-secondary btn-sm flex-fill" id="btn-configure" disabled data-i18n="ui_configure"></button>
                     </div>
                 </div>
                 <div class="col-9 col-md-8">
-                    <img id="module-img">
+                    <img id="module-img" class="d-none img-fluid" style="max-height: 400px;">
                 </div>
             </div>
         </div>
         <div id="footer">
-            <div class="progress" id="prg-bar">
-                <div class="progress-bar" role="progressbar" style="width: 0"></div>
+            <div class="progress" id="prg-bar" style="height: 30px;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated fw-bold fs-6" role="progressbar" style="width: 0;" data-i18n="ui_progress"></div>
             </div>
-            <div class="row">
+            <div class="row align-items-center mt-3">
                 <div class="col-4">
-                    <div class="small text-truncate pt-5" id="version">
-                        <!--<strong>WSE2 Launcher Version</strong>: -->
+                    <div class="small text-truncate" id="version">
+                        <!-- Version info populated by JS -->
                     </div>
                 </div>
-                <div class="col-4 text-center">
-                    <div class="btn btn-primary btn-lg border border-primary rounded-pill rounded-lg" id="play-btn">
-                        <strong>PLAY</strong>
+                <div class="col-4">
+                    <div class="d-flex justify-content-center align-items-center">
+                        <button class="btn text-secondary me-3" id="settings" data-i18n-title="ui_settings">
+                            <i class="fa fa-cog fa-2x"></i>
+                        </button>
+                        <div class="btn btn-primary btn-lg rounded-pill px-5 shadow" id="play-btn">
+                            <strong data-i18n="ui_play">PLAY</strong>
+                        </div>
                     </div>
-                    <button class="btn text-light" id="settings">
-                        <i class="fa fa-cog fa-lg"></i>
-                    </button>
                 </div>
-                <div class="col-4 text-right">
-                    <div id="theme">
-                        <small>Current Theme: <strong id="theme-source"></strong></small>
-                        <br>
-                        <button class="btn btn-primary btn-sm" id="toggle-dark-mode">Toggle Mode</button>
+                <div class="col-4 text-end">
+                    <div class="d-flex justify-content-end align-items-center">
+                        <select class="form-select form-select-sm me-3" id="locale-select" style="width: auto;">
+                            <option value="en">English</option>
+                            <option value="tr">Türkçe</option>
+                            <option value="ru">Русский</option>
+                        </select>
+                        <div id="theme">
+                            <small class="me-1"><span data-i18n="ui_theme">Theme</span>: <strong id="theme-source">Auto</strong></small>
+                            <button class="btn btn-sm btn-outline-secondary" id="toggle-dark-mode">
+                                <i class="fas fa-moon"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="./jquery-3.6.0.min.js"></script>
-    <script src="./bootstrap-4.6.1-dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Scripts -->
+    <script src="./libs/js/jquery.min.js"></script>
+    <script src="./libs/js/bootstrap.bundle.min.js"></script>
     <script src="./renderer.js"></script>
+
+    <!-- Settings Modal -->
+    <div class="modal fade" id="settingsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content text-body">
+                <div class="modal-header">
+                    <h5 class="modal-title" data-i18n="ui_settings">Settings</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-secondary" id="btn-open-folder">
+                            <i class="fas fa-folder-open me-2"></i> <span data-i18n="ui_open_folder">Open Installation Folder</span>
+                        </button>
+                        <!-- Only useful if we implement manual check -->
+                        <!-- <button class="btn btn-outline-primary" id="btn-check-updates">
+                            <i class="fas fa-sync me-2"></i> Check for Updates
+                        </button> --> 
+                    </div>
+                </div>
+                <div class="modal-footer">
+                     <small class="text-muted w-100 text-center">WSE2 Launcher</small>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

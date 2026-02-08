@@ -1,66 +1,91 @@
 {
   "name": "wse2-launcher",
-  "version": "0.0.3",
+  "version": "1.0.0",
   "description": "Warband Script Enhancer 2 Launcher By Azremen",
   "private": true,
   "main": "main.js",
-  "config": {
-    "forge": {
-      "packagerConfig": {
-        "asar": true
-      },
-      "makers": [
-        {
-          "name": "@electron-forge/maker-zip",
-          "config": {
-            "name": "wse2_launcher"
-          }
-        },
-        {
-          "name": "@electron-forge/maker-zip",
-          "platforms": [
-            "darwin"
-          ]
-        },
-        {
-          "name": "@electron-forge/maker-deb",
-          "config": {}
-        },
-        {
-          "name": "@electron-forge/maker-rpm",
-          "config": {}
-        }
-      ]
-    }
-  },
-  "scripts": {
-    "start": "electron-forge start",
-    "app:dir": "electron-builder --dir",
-    "app:dist": "electron-builder",
-    "package": "electron-forge package",
-    "make": "electron-forge make"
-  },
-  "keywords": [
-    "WSE2",
-    "Launcher"
-  ],
   "author": "Azremen <timurid76@gmail.com>",
   "license": "AGPL-3.0-or-later",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "npm run dist:all",
+    "dist:all": "NODE_NO_WARNINGS=1 electron-builder --linux AppImage --win nsis portable --mac zip",
+    "dist:linux": "NODE_NO_WARNINGS=1 electron-builder --linux AppImage",
+    "dist:win": "NODE_NO_WARNINGS=1 electron-builder --win nsis portable",
+    "dist:mac": "NODE_NO_WARNINGS=1 electron-builder --mac zip"
+  },
+  "build": {
+    "appId": "com.azremen.wse2-launcher",
+    "productName": "WSE2 Launcher",
+    "asar": true,
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
+      "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
+      "!**/node_modules/*.d.ts",
+      "!**/node_modules/.bin",
+      "!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp}",
+      "!.vscode/",
+      "!**/*.{ts,tsx,map}",
+      "!Modules/",
+      "!scripts/",
+      "!*.log",
+      "!.git/"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "icons/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "deleteAppDataOnUninstall": true
+    },
+    "portable": {
+      "artifactName": "${productName} ${version} Portable.${ext}"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Game",
+      "icon": "icons/icon.png"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "icons/icon.icns"
+    }
+  },
+  "keywords": [
+    "Mount & Blade",
+    "Warband",
+    "Warband Script Enhancer 2",
+    "Launcher",
+    "Electron",
+    "JavaScript",
+    "Node.js"
+  ],
   "devDependencies": {
-    "@electron-forge/cli": "^6.0.0-beta.63",
-    "@electron-forge/maker-deb": "^6.0.0-beta.63",
-    "@electron-forge/maker-rpm": "^6.0.0-beta.63",
-    "@electron-forge/maker-squirrel": "^6.0.0-beta.63",
-    "@electron-forge/maker-zip": "^6.0.0-beta.63",
-    "electron": "^17.1.2",
-    "webpack": "^5.69.1",
-    "webpack-cli": "^4.9.2"
+    "electron": "^40.2.1",
+    "electron-builder": "^26.7.0"
   },
   "dependencies": {
-    "@electron-forge/plugin-auto-unpack-natives": "^6.0.0-beta.63",
-    "asar": "^3.1.0",
-    "decompress-zip": "^0.3.3",
-    "electron-squirrel-startup": "^1.0.0",
-    "request": "^2.88.2"
+    "@electron/asar": "^4.0.1",
+    "@fortawesome/fontawesome-free": "^7.1.0",
+    "7zip-bin": "^5.2.0",
+    "adm-zip": "^0.5.16",
+    "bootstrap": "^5.3.8",
+    "electron-updater": "^6.1.7",
+    "ini": "^4.1.1",
+    "jquery": "^4.0.0",
+    "node-7z": "^3.0.0"
   }
 }

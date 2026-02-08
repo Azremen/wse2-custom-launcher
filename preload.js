@@ -1,48 +1,31 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
-contextBridge.exposeInMainWorld('darkMode', {
-  toggle: async () => {
-    return ipcRenderer.invoke('dark-mode:toggle').then((result) => {
-      return result;
-    }).catch((error) => {
-      return error;
-    });
-  }
-});
-
-contextBridge.exposeInMainWorld('downloadZipURL', {
-  url: (downloadZipURL) => {
-    ipcRenderer.send('download', {
-      url: downloadZipURL
-    });
-  }
-});
-
-contextBridge.exposeInMainWorld('removeModule', {
-  module: (modulePath) => {
-    ipcRenderer.send('dirRemove', {
-      module: modulePath
-    });
-  }
-});
-
-contextBridge.exposeInMainWorld('openConfig', {
-  config: () => {
-    ipcRenderer.send('configWindow', {
-    });
-  },
-  back: () => {
-    ipcRenderer.send('configWindowBack')
-  }
-});
-
-contextBridge.exposeInMainWorld('getData', {
-  data: () => {
-    return ipcRenderer.sendSync('store-data', {
-    });
-  },
-  launcherVersion: () => {
-    return ipcRenderer.sendSync('sendLauncherVersion', {
-    });
-  }
+contextBridge.exposeInMainWorld('api', {
+    darkMode: {
+        toggle: () => ipcRenderer.invoke('dark-mode:toggle')
+    },
+    launcher: {
+        getVersion: () => ipcRenderer.invoke('get-version'),
+        restart: () => ipcRenderer.send('restart_app'),
+        openFolder: () => ipcRenderer.invoke('open-install-folder'),
+        launch: (moduleName) => ipcRenderer.invoke('launch-game', moduleName)
+    },
+    modules: {
+        list: () => ipcRenderer.invoke('get-modules'),
+        remove: (path) => ipcRenderer.invoke('remove-module', path),
+        download: (url, meta) => ipcRenderer.send('download', url, meta)
+    },
+    config: {
+        open: (path) => ipcRenderer.send('configWindow', path),
+        close: () => ipcRenderer.send('configWindowBack'),
+        get: (modulePath) => ipcRenderer.invoke('get-config-data', modulePath),
+        save: (modulePath, data) => ipcRenderer.invoke('save-config-data', { modulePath, configData: data })
+    },
+    events: {
+        onDownloadProgress: (callback) => ipcRenderer.on('download-progress', (event, value) => callback(value)),
+        onDownloadComplete: (callback) => ipcRenderer.on('download-complete', (event) => callback()),
+        onDownloadError: (callback) => ipcRenderer.on('download-error', (event, error) => callback(error)),
+        onUpdateAvailable: (callback) => ipcRenderer.on('update_available', () => callback()),
+        onUpdateDownloaded: (callback) => ipcRenderer.on('update_downloaded', () => callback())
+    }
 });

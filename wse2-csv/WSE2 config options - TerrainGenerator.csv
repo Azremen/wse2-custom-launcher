@@ -1,0 +1,9 @@
+Name,Default Value,Warband Name,Description
+fOuterTerrainMaxBlendDistance,100.0,,For fit outer terrain mesh.
+fOuterTerrainHeightOffset,1.5,,For fit outer terrain mesh.
+iMaxNumGrassInstances,262144,,
+iMaxNumGrassTypes,32,,
+iMaxNumTreeInstances,2048,,
+iMaxNumTreeTypes,32,,
+iMaxNumFloraInstances,4096,,
+iMaxNumFloraTypes,32,,
