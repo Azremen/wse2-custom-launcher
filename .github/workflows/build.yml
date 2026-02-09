@@ -1,4 +1,4 @@
-name: Build/Release
+name: Build & Publish to Public Repo
 
 on:
   push:
@@ -6,14 +6,14 @@ on:
       - 'v*' # Trigger on tags like v1.0.0
 
 jobs:
-  build:
+  build-and-release:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
-      - name: Check out Git repository
+      - name: Check out Private Source Code
         uses: actions/checkout@v3
 
       - name: Install Node.js
@@ -24,20 +24,47 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Build & Release (Linux)
+      # Build the artifacts but DO NOT public to the private repo automatically (-p never)
+      - name: Build (Linux)
         if: matrix.os == 'ubuntu-latest'
-        run: npm run dist:linux
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run dist:linux -- -p never
 
-      - name: Build & Release (Windows)
+      - name: Build (Windows)
         if: matrix.os == 'windows-latest'
-        run: npm run dist:win
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run dist:win -- -p never
 
-      - name: Build & Release (macOS)
+      - name: Build (macOS)
         if: matrix.os == 'macos-latest'
-        run: npm run dist:mac
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run dist:mac -- -p never
+
+      # 1. Publish to the PRIVATE Repository (Source + Binaries)
+      # Uses the default GITHUB_TOKEN provided by Actions
+      - name: Publish to Private Repository
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          body: "Full release with source code."
+          allowUpdates: true
+          artifacts: "dist/*.exe,dist/*.zip,dist/*.AppImage,dist/*.dmg,dist/*.snap"
+          makeLatest: true
+
+      # 2. Publish to the PUBLIC Repository (Binaries Only)
+      # Note: 'commit: main' ensures the tag is created on the Public repo's history (just README),
+      # avoiding errors since the Private repo's commit SHA doesn't exist there.
+      - name: Publish to Public Repository
+        uses: ncipollo/release-action@v1
+        with:
+          # -------------------------------------------------------------
+          owner: Azremen  # GitHub Username
+          repo: wse2-custom-launcher  # Name of your PUBLIC repository
+          # -------------------------------------------------------------
+          token: ${{ secrets.PUBLIC_REPO_TOKEN }}
+          tag: ${{ github.ref_name }}
+          commit: "main" # Targets the public repo's main branch for the tag
+          name: Release ${{ github.ref_name }}
+          body: "Automated release build."
+          allowUpdates: true 
+          artifacts: "dist/*.exe,dist/*.zip,dist/*.AppImage,dist/*.dmg,dist/*.snap"
+          makeLatest: true
