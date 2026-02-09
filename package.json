@@ -10,10 +10,10 @@
     "start": "electron .",
     "pack": "electron-builder --dir",
     "dist": "npm run dist:all",
-    "dist:all": "NODE_NO_WARNINGS=1 electron-builder --linux --win --mac",
-    "dist:linux": "NODE_NO_WARNINGS=1 electron-builder --linux",
-    "dist:win": "NODE_NO_WARNINGS=1 electron-builder --win",
-    "dist:mac": "NODE_NO_WARNINGS=1 electron-builder --mac"
+    "dist:all": "electron-builder --linux --win --mac",
+    "dist:linux": "electron-builder --linux",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac"
   },
   "build": {
     "appId": "com.azremen.wse2-launcher",
