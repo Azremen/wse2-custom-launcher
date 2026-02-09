@@ -1,44 +1,97 @@
-name: Build & Publish to Public Repo
+name: Build & Release
 
 on:
   push:
     tags:
-      - 'v*' # Trigger on tags like v1.0.0
+      - 'v*'
 
 jobs:
-  build-and-release:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-
+  # -------------------------------------------------------------------------
+  # 1. BUILD JOBS (Validation & Compilation)
+  # -------------------------------------------------------------------------
+  build-linux:
+    runs-on: ubuntu-latest
     steps:
-      - name: Check out Private Source Code
-        uses: actions/checkout@v3
-
-      - name: Install Node.js
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
           node-version: 16
-
-      - name: Install Dependencies
-        run: npm ci
-
-      # Build the artifacts but DO NOT public to the private repo automatically (-p never)
-      - name: Build (Linux)
-        if: matrix.os == 'ubuntu-latest'
+      - run: npm ci
+      - name: Build Linux
         run: npm run dist:linux -- -p never
+      - name: Upload Linux Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts-linux
+          path: |
+            dist/*.AppImage
+            dist/*.snap
+            dist/*.deb
+            dist/*.rpm
+            dist/*.zip
+          if-no-files-found: ignore
 
-      - name: Build (Windows)
-        if: matrix.os == 'windows-latest'
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - run: npm ci
+      - name: Build Windows
         run: npm run dist:win -- -p never
+      - name: Upload Windows Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts-windows
+          path: |
+            dist/*.exe
+          if-no-files-found: ignore
 
-      - name: Build (macOS)
-        if: matrix.os == 'macos-latest'
+  build-mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - run: npm ci
+      - name: Build macOS
         run: npm run dist:mac -- -p never
+      - name: Upload Mac Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts-mac
+          path: |
+            dist/*.dmg
+            dist/*.zip
+          if-no-files-found: ignore
 
-      # 1. Publish to the PRIVATE Repository (Source + Binaries)
-      # Uses the default GITHUB_TOKEN provided by Actions
+  # -------------------------------------------------------------------------
+  # 2. RELEASE JOB (Runs only after ALL builds succeed)
+  # -------------------------------------------------------------------------
+  publish-release:
+    needs: [build-linux, build-windows, build-mac]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Download all artifacts from previous jobs into one folder
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./release_assets
+          pattern: artifacts-*
+          merge-multiple: true
+
+      - name: List Files (Debug)
+        run: ls -R ./release_assets
+
+      # -----------------------------------------------------------------------
+      # A. Publish to PRIVATE Repo (Source + Binaries)
+      # -----------------------------------------------------------------------
       - name: Publish to Private Repository
         uses: ncipollo/release-action@v1
         with:
@@ -47,24 +100,23 @@ jobs:
           name: Release ${{ github.ref_name }}
           body: "Full release with source code."
           allowUpdates: true
-          artifacts: "dist/*.exe,dist/*.zip,dist/*.AppImage,dist/*.dmg,dist/*.snap"
+          artifacts: "release_assets/*"
           makeLatest: true
 
-      # 2. Publish to the PUBLIC Repository (Binaries Only)
-      # Note: 'commit: main' ensures the tag is created on the Public repo's history (just README),
-      # avoiding errors since the Private repo's commit SHA doesn't exist there.
+      # -----------------------------------------------------------------------
+      # B. Publish to PUBLIC Repo (Binaries Only)
+      # -----------------------------------------------------------------------
       - name: Publish to Public Repository
         uses: ncipollo/release-action@v1
         with:
-          # -------------------------------------------------------------
-          owner: Azremen  # GitHub Username
-          repo: wse2-custom-launcher  # Name of your PUBLIC repository
-          # -------------------------------------------------------------
+          # TODO: Double check your owner/repo name below
+          owner: Azremen
+          repo: wse2-custom-launcher 
           token: ${{ secrets.PUBLIC_REPO_TOKEN }}
           tag: ${{ github.ref_name }}
-          commit: "main" # Targets the public repo's main branch for the tag
+          commit: "main"
           name: Release ${{ github.ref_name }}
           body: "Automated release build."
-          allowUpdates: true 
-          artifacts: "dist/*.exe,dist/*.zip,dist/*.AppImage,dist/*.dmg,dist/*.snap"
+          allowUpdates: true
+          artifacts: "release_assets/*"
           makeLatest: true
