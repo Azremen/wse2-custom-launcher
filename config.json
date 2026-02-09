@@ -4,7 +4,7 @@
             "name": "Reduce Battle Ai",
             "description": "Affects agent's ai. 0 - good, 1 - average, 2 - poor.  Operations: options_get_combat_ai, options_set_combat_ai.",
             "type": "number",
-            "default-value": 2,
+            "default-value": 0,
             "inputType": "select",
             "options": [
                 {
@@ -19,14 +19,16 @@
                     "value": 2,
                     "label": "Poor"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iMinNumAgentsForNavMeshReuse": {
             "name": "Min Num Agents For Nav Mesh Reuse",
             "description": "Used for ai agent compute path.",
             "type": "number",
             "default-value": 12,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "bUseAdvancedFormation": {
             "name": "Use Advanced Formation",
@@ -71,7 +73,8 @@
                     "value": 3,
                     "label": "High"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iPostProcess": {
             "name": "Post Process",
@@ -96,13 +99,14 @@
                     "value": 3,
                     "label": "MAKE MY EYES BLEED"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iHighDynamicRange": {
             "name": "High Dynamic Range",
             "description": "High dynamic range (HDR) is a technique that produces images with a greater dynamic range of luminosity than standard dynamic range (SDR) images, allowing for realistic depictions of color and brightness. 0 - off, 1 - low, 2 - high",
             "type": "number",
-            "default-value": 0,
+            "default-value": 1,
             "inputType": "select",
             "options": [
                 {
@@ -117,7 +121,8 @@
                     "value": 2,
                     "label": "High"
                 }
-            ]
+            ],
+            "step": 1
         },
         "bDepthEffects": {
             "name": "Depth Effects",
@@ -143,7 +148,7 @@
             "name": "Grass Min Filter",
             "description": "0 - filtering disabled, 1 - nearest, 2 - linear interpolation, 3 - anisotropic",
             "type": "number",
-            "default-value": 0,
+            "default-value": 3,
             "inputType": "combobox",
             "options": [
                 {
@@ -162,13 +167,14 @@
                     "value": 3,
                     "label": "Anisotropic"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iGrassMagFilter": {
             "name": "Grass Mag Filter",
             "description": "0 - filtering disabled, 1 - nearest, 2 - linear interpolation, 3 - anisotropic",
             "type": "number",
-            "default-value": 0,
+            "default-value": 2,
             "inputType": "combobox",
             "options": [
                 {
@@ -187,13 +193,14 @@
                     "value": 3,
                     "label": "Anisotropic"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iGrassMipFilter": {
             "name": "Grass Mip Filter",
             "description": "0 - filtering disabled, 1 - nearest, 2 - linear interpolation",
             "type": "number",
-            "default-value": 0,
+            "default-value": 2,
             "inputType": "select",
             "options": [
                 {
@@ -208,34 +215,40 @@
                     "value": 2,
                     "label": "Linear Interpolation"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iGrassMaxAnisotropy": {
             "name": "Grass Max Anisotropy",
             "description": "limit for anisotropic filtering",
             "type": "number",
-            "default-value": 4.0,
-            "inputType": "number"
+            "default-value": 4,
+            "inputType": "number",
+            "step": 1
         },
         "fGrassDensity": {
             "name": "Grass Density",
-            "description": "",
+            "description": "Configures the Grass Density setting.",
             "type": "number",
             "default-value": 0.5,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fFloraDegradeDistance": {
             "name": "Flora Degrade Distance",
-            "description": "",
+            "description": "Configures the Flora Degrade Distance setting.",
             "type": "number",
             "default-value": 100.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "iFloraShadows": {
             "name": "Flora Shadows",
             "description": "0 - none, 1 - quick, 2 - full",
             "type": "number",
-            "default-value": 0,
+            "default-value": 2,
             "inputType": "select",
             "options": [
                 {
@@ -250,13 +263,14 @@
                     "value": 2,
                     "label": "Full"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iFloraLod": {
             "name": "Flora Lod",
             "description": "0 - low, 1 - medium, 2 - high, 3 - very high",
             "type": "number",
-            "default-value": 0,
+            "default-value": 2,
             "inputType": "combobox",
             "options": [
                 {
@@ -275,7 +289,8 @@
                     "value": 3,
                     "label": "Very High"
                 }
-            ]
+            ],
+            "step": 1
         }
     },
     "General": {
@@ -283,7 +298,7 @@
             "name": "First Run",
             "description": "When you first start the game sets certain settings depending on the configuration of the PC.",
             "type": "checkbox",
-            "default-value": true
+            "default-value": false
         },
         "sCoreResources": {
             "name": "Core Resources",
@@ -301,16 +316,17 @@
         },
         "iMaxFrameRate": {
             "name": "Max Frame Rate",
-            "description": "",
+            "description": "Configures the Max Frame Rate setting.",
             "type": "number",
-            "default-value": 90,
-            "inputType": "number"
+            "default-value": 240,
+            "inputType": "number",
+            "step": 1
         },
         "bShowFrameRate": {
             "name": "Show Frame Rate",
-            "description": "",
+            "description": "Configures the Show Frame Rate setting.",
             "type": "checkbox",
-            "default-value": false
+            "default-value": true
         },
         "bPauseWhenMinimized": {
             "name": "Pause When Minimized",
@@ -320,19 +336,19 @@
         },
         "bSuppressPerformanceWarnings": {
             "name": "Suppress Performance Warnings",
-            "description": "",
+            "description": "Configures the Suppress Performance Warnings setting.",
             "type": "checkbox",
             "default-value": false
         },
         "bSuppressWarnings": {
             "name": "Suppress Warnings",
-            "description": "",
+            "description": "Configures the Suppress Warnings setting.",
             "type": "checkbox",
             "default-value": false
         },
         "bSuppressScriptErrors": {
             "name": "Suppress Script Errors",
-            "description": "",
+            "description": "Configures the Suppress Script Errors setting.",
             "type": "checkbox",
             "default-value": false
         },
@@ -341,7 +357,8 @@
             "description": "0=JPG,1=PNG,2=BMP,3=TGA",
             "type": "number",
             "default-value": 1,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "bHasTutorial": {
             "name": "Has Tutorial",
@@ -372,7 +389,8 @@
             "description": "Total number of hints visible on the secondary loading screen.",
             "type": "number",
             "default-value": 0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "bHasOneHanded": {
             "name": "Has One Handed",
@@ -445,14 +463,14 @@
             "name": "Storage Path",
             "description": "Path where WSE created files are stored (empty for default).",
             "type": "text",
-            "default-value": "nan",
+            "default-value": "",
             "inputType": "text"
         },
         "bLuaDisableGameConstWarnings": {
             "name": "Lua Disable Game Const Warnings",
             "description": "Mutes warnings during msfiles folder scanning for lua.",
             "type": "checkbox",
-            "default-value": false
+            "default-value": true
         },
         "bCheatMode": {
             "name": "Cheat Mode",
@@ -477,7 +495,8 @@
             "description": "Limit for troop attributes.",
             "type": "number",
             "default-value": 64,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "bAllowDuplicateMeshes": {
             "name": "Allow Duplicate Meshes",
@@ -509,59 +528,63 @@
             "name": "Max Num Corpses",
             "description": "range: 0-2000",
             "type": "number",
-            "default-value": 50,
+            "default-value": 20,
             "inputType": "select",
             "options": [
                 {
                     "value": 0,
                     "label": "2000"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iMaxNumRagdolls": {
             "name": "Max Num Ragdolls",
             "description": "range: 0-100",
             "type": "number",
-            "default-value": 10,
+            "default-value": 5,
             "inputType": "select",
             "options": [
                 {
                     "value": 0,
                     "label": "100"
                 }
-            ]
+            ],
+            "step": 1
         },
         "fFirstPersonFieldOfView": {
             "name": "First Person Field Of View",
             "description": "Extent of the observable game world that is seen on the display at any given moment for first person. Range: 55.0-100.0",
             "type": "number",
-            "default-value": 0,
+            "default-value": 75.0,
             "inputType": "select",
             "options": [
                 {
                     "value": 0,
                     "label": "100"
                 }
-            ]
+            ],
+            "step": 0.1
         },
         "fThirdPersonFieldOfView": {
             "name": "Third Person Field Of View",
             "description": "Extent of the observable game world that is seen on the display at any given moment for third person. Range: 55.0-100.0",
             "type": "number",
-            "default-value": 0,
+            "default-value": 75.0,
             "inputType": "select",
             "options": [
                 {
                     "value": 0,
                     "label": "100"
                 }
-            ]
+            ],
+            "step": 0.1
         },
         "iBloodStains": {
             "name": "Blood Stains",
             "description": "0 - off, 1 - near player only, 2 - on",
             "type": "number",
-            "default-value": 2,
+            "default-value": 1,
             "inputType": "select",
             "options": [
                 {
@@ -576,11 +599,12 @@
                     "value": 2,
                     "label": "On"
                 }
-            ]
+            ],
+            "step": 1
         },
         "bBlood": {
             "name": "Blood",
-            "description": "",
+            "description": "Configures the Blood setting.",
             "type": "checkbox",
             "default-value": true
         },
@@ -589,33 +613,40 @@
             "description": "Determines the amount and velocity of blood particle effects.",
             "type": "number",
             "default-value": 2.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "fDamageToSelf": {
             "name": "Damage To Self",
             "description": "Range: 0.1-1.0. Operations: options_get_damage_to_player, options_set_damage_to_player.",
             "type": "number",
-            "default-value": 0,
+            "default-value": 1.0,
             "inputType": "select",
             "options": [
                 {
                     "value": 1,
                     "label": "1"
                 }
-            ]
+            ],
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fDamageToFriends": {
             "name": "Damage To Friends",
             "description": "Range: 0.1-1.0. Operations: options_get_damage_to_friends, options_set_damage_to_friends.",
             "type": "number",
-            "default-value": 0,
+            "default-value": 1.0,
             "inputType": "select",
             "options": [
                 {
                     "value": 1,
                     "label": "1"
                 }
-            ]
+            ],
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "iBannerMode": {
             "name": "Banner Mode",
@@ -640,7 +671,8 @@
                     "value": 3,
                     "label": "On Everyone"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iBannerOutlineMode": {
             "name": "Banner Outline Mode",
@@ -665,42 +697,45 @@
                     "value": 3,
                     "label": "On Everyone"
                 }
-            ]
+            ],
+            "step": 1
         },
         "uBannerOutlineColorFriendly": {
             "name": "Banner Outline Color Friendly",
-            "description": "",
+            "description": "Configures the Banner Outline Color Friendly setting.",
             "type": "text",
-            "default-value": "0xFF00",
+            "default-value": "0xff00",
             "inputType": "color"
         },
         "uBannerOutlineColorEnemy": {
             "name": "Banner Outline Color Enemy",
-            "description": "",
+            "description": "Configures the Banner Outline Color Enemy setting.",
             "type": "text",
-            "default-value": "0xFF0000",
+            "default-value": "0xff0000",
             "inputType": "color"
         },
         "uBannerOutlineColorNeutral": {
             "name": "Banner Outline Color Neutral",
-            "description": "",
+            "description": "Configures the Banner Outline Color Neutral setting.",
             "type": "text",
-            "default-value": "0xFF",
+            "default-value": "0xff",
             "inputType": "color"
         },
         "fDynamicBannerTransparencyMinDistance": {
             "name": "Dynamic Banner Transparency Min Distance",
-            "description": "",
+            "description": "Configures the Dynamic Banner Transparency Min Distance setting.",
             "type": "number",
             "default-value": 400.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "fDynamicBannerTransparencyMaxDistance": {
             "name": "Dynamic Banner Transparency Max Distance",
-            "description": "",
+            "description": "Configures the Dynamic Banner Transparency Max Distance setting.",
             "type": "number",
             "default-value": 600.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "iFloraShadows": {
             "name": "Flora Shadows",
@@ -711,24 +746,27 @@
         },
         "iDynamicBannerTransparencyMaxAlpha": {
             "name": "Dynamic Banner Transparency Max Alpha",
-            "description": "",
+            "description": "Configures the Dynamic Banner Transparency Max Alpha setting.",
             "type": "number",
             "default-value": 255,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iFixedBannerTransparencyAlpha": {
             "name": "Fixed Banner Transparency Alpha",
-            "description": "",
+            "description": "Configures the Fixed Banner Transparency Alpha setting.",
             "type": "number",
             "default-value": 215,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iFixedBannerTransparencyOutlineAlpha": {
             "name": "Fixed Banner Transparency Outline Alpha",
-            "description": "",
+            "description": "Configures the Fixed Banner Transparency Outline Alpha setting.",
             "type": "number",
             "default-value": 205,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "bDynamicBannerTransparency": {
             "name": "Dynamic Banner Transparency",
@@ -738,13 +776,13 @@
         },
         "bShowReticle": {
             "name": "Show Reticle",
-            "description": "",
+            "description": "Configures the Show Reticle setting.",
             "type": "checkbox",
             "default-value": true
         },
         "bShowAttackDirection": {
             "name": "Show Attack Direction",
-            "description": "",
+            "description": "Configures the Show Attack Direction setting.",
             "type": "checkbox",
             "default-value": true
         },
@@ -771,7 +809,8 @@
                     "value": 3,
                     "label": "By Movement Keys"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iMountedAttackControl": {
             "name": "Mounted Attack Control",
@@ -796,13 +835,14 @@
                     "value": 3,
                     "label": "By Movement Keys"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iDefendControl": {
             "name": "Defend Control",
             "description": "0 - automatic, 1 - by mouse movement, 2 - by movement keys, 3 - by inverse mouse movement",
             "type": "number",
-            "default-value": 0,
+            "default-value": 1,
             "inputType": "combobox",
             "options": [
                 {
@@ -821,13 +861,14 @@
                     "value": 3,
                     "label": "By Inverse Mouse Movement"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iMountedDefendControl": {
             "name": "Mounted Defend Control",
             "description": "0 - automatic, 1 - by mouse movement, 2 - by movement keys, 3 - by inverse mouse movement",
             "type": "number",
-            "default-value": 0,
+            "default-value": 1,
             "inputType": "combobox",
             "options": [
                 {
@@ -846,13 +887,14 @@
                     "value": 3,
                     "label": "By Inverse Mouse Movement"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iLanceControl": {
             "name": "Lance Control",
             "description": "0 - automatic, 1 - manual (easy), 2 - manual (hard)",
             "type": "number",
-            "default-value": 0,
+            "default-value": 2,
             "inputType": "select",
             "options": [
                 {
@@ -867,7 +909,8 @@
                     "value": 2,
                     "label": "Manual (hard)"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iHorseCameraMode": {
             "name": "Horse Camera Mode",
@@ -892,7 +935,8 @@
                     "value": 3,
                     "label": "Always"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iCombatSpeed": {
             "name": "Combat Speed",
@@ -921,62 +965,72 @@
                     "value": 5,
                     "label": "Fastest"
                 }
-            ]
+            ],
+            "step": 1
         },
         "fBattleSize": {
             "name": "Battle Size",
             "description": "Range: 0.0-10.0. Operations: options_get_battle_size, options_set_battle_size.",
             "type": "number",
-            "default-value": 0,
+            "default-value": 10.0,
             "inputType": "select",
             "options": [
                 {
                     "value": 0,
                     "label": "10"
                 }
-            ]
+            ],
+            "step": 0.1
         },
         "iBattleSizeMin": {
             "name": "Battle Size Min",
             "description": "The minimum value for a visual display of the size of the battle, depending on fBattleSize.",
             "type": "number",
             "default-value": 30,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iBattleSizeMax": {
             "name": "Battle Size Max",
             "description": "The maximum value for a visual display of the size of the battle, depending on fBattleSize.",
             "type": "number",
             "default-value": 150,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iNumWalkSamplePoints": {
             "name": "Num Walk Sample Points",
             "description": "Used for animation progress with arf_use_inv_walk_progress or arf_use_walk_progress flags.",
             "type": "number",
             "default-value": 8,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "fStrafeCooldown": {
             "name": "Strafe Cooldown",
             "description": "Cooldown for walking action strafe.",
             "type": "number",
             "default-value": 0.45,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fMinInflictedDamageForHighDamageHit": {
             "name": "Min Inflicted Damage For High Damage Hit",
             "description": "Affects hit sound for melee weapon.",
             "type": "number",
             "default-value": 9.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "iMinSoakedDamageForHighArmorHit": {
             "name": "Min Soaked Damage For High Armor Hit",
             "description": "Affects hit sound for melee weapon.",
             "type": "number",
             "default-value": 14,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "bWeaponsCollideWithGround": {
             "name": "Weapons Collide With Ground",
@@ -986,24 +1040,27 @@
         },
         "fKickCooldown": {
             "name": "Kick Cooldown",
-            "description": "",
+            "description": "Configures the Kick Cooldown setting.",
             "type": "number",
             "default-value": 1.8,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "fJumpCooldown": {
             "name": "Jump Cooldown",
-            "description": "",
+            "description": "Configures the Jump Cooldown setting.",
             "type": "number",
             "default-value": 2.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "fHorseJumpCooldown": {
             "name": "Horse Jump Cooldown",
-            "description": "",
+            "description": "Configures the Horse Jump Cooldown setting.",
             "type": "number",
             "default-value": 4.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "bNoJumpingWhileAttackingMelee": {
             "name": "No Jumping While Attacking Melee",
@@ -1043,37 +1100,41 @@
         },
         "fGhostModeCameraAcceleration": {
             "name": "Ghost Mode Camera Acceleration",
-            "description": "",
+            "description": "Configures the Ghost Mode Camera Acceleration setting.",
             "type": "number",
             "default-value": 25.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "fGhostModeCameraMaxSpeed": {
             "name": "Ghost Mode Camera Max Speed",
-            "description": "",
+            "description": "Configures the Ghost Mode Camera Max Speed setting.",
             "type": "number",
             "default-value": 10.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "fGhostModeCameraDamping": {
             "name": "Ghost Mode Camera Damping",
-            "description": "",
+            "description": "Configures the Ghost Mode Camera Damping setting.",
             "type": "number",
             "default-value": 5.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "iMaxNumPrunableMissionObjects": {
             "name": "Max Num Prunable Mission Objects",
             "description": "When this limit is reached, deletes the oldest prunable mission object.",
             "type": "number",
             "default-value": 500,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "vStickItemToLeftHandOffset": {
             "name": "Stick Item To Left Hand Offset",
             "description": "Used for flag arf_stick_item_to_left_hand.",
             "type": "text",
-            "default-value": "0.0,-0.37,-0.04",
+            "default-value": "0.000000,-0.370000,-0.040000",
             "inputType": "text"
         },
         "fMinActionProgressForAllyCollision": {
@@ -1081,264 +1142,352 @@
             "description": "Operation: set_ally_collision_threshold.",
             "type": "number",
             "default-value": 0.45,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fMaxActionProgressForAllyCollision": {
             "name": "Max Action Progress For Ally Collision",
             "description": "Operation: set_ally_collision_threshold.",
             "type": "number",
             "default-value": 0.6,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fMinActionProgressForPropCollisionThrust": {
             "name": "Min Action Progress For Prop Collision Thrust",
             "description": "Operation: set_prop_collision_threshold.",
             "type": "number",
             "default-value": 0.4,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fMinActionProgressForPropCollisionSwingRight": {
             "name": "Min Action Progress For Prop Collision Swing Right",
             "description": "Operation: set_prop_collision_threshold.",
             "type": "number",
             "default-value": 0.4,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fMinActionProgressForPropCollisionSwingLeft": {
             "name": "Min Action Progress For Prop Collision Swing Left",
             "description": "Operation: set_prop_collision_threshold.",
             "type": "number",
             "default-value": 0.4,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fMinActionProgressForPropCollisionOverswing": {
             "name": "Min Action Progress For Prop Collision Overswing",
             "description": "Operation: set_prop_collision_threshold.",
             "type": "number",
             "default-value": 0.4,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fMaxActionProgressForPropCollisionThrust": {
             "name": "Max Action Progress For Prop Collision Thrust",
             "description": "Operation: set_prop_collision_threshold.",
             "type": "number",
             "default-value": 0.8,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fMaxActionProgressForPropCollisionSwingRight": {
             "name": "Max Action Progress For Prop Collision Swing Right",
             "description": "Operation: set_prop_collision_threshold.",
             "type": "number",
             "default-value": 0.8,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fMaxActionProgressForPropCollisionSwingLeft": {
             "name": "Max Action Progress For Prop Collision Swing Left",
             "description": "Operation: set_prop_collision_threshold.",
             "type": "number",
             "default-value": 0.8,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fMaxActionProgressForPropCollisionOverswing": {
             "name": "Max Action Progress For Prop Collision Overswing",
             "description": "Operation: set_prop_collision_threshold.",
             "type": "number",
             "default-value": 0.75,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fRangedDamageToPropsFactor": {
             "name": "Ranged Damage To Props Factor",
             "description": "Damage multiplier to props for ranged weapon.",
             "type": "number",
             "default-value": 0.1,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fCouchedDamageToPropsFactor": {
             "name": "Couched Damage To Props Factor",
             "description": "Damage multiplier to props for couched attack.",
             "type": "number",
             "default-value": 0.2,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fBonusDamageToPropsFactor": {
             "name": "Bonus Damage To Props Factor",
             "description": "Damage multiplier to props if the weapon has a flag itp_bonus_against_shield.",
             "type": "number",
             "default-value": 1.1,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "fFallDamageMultiplier": {
             "name": "Fall Damage Multiplier",
             "description": "Scale fall damage.",
             "type": "number",
             "default-value": 1.0,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fHorseChargeDamageMultiplier": {
             "name": "Horse Charge Damage Multiplier",
             "description": "Scale charge damage inflicted by horses when ramming into human agents.",
             "type": "number",
             "default-value": 1.0,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fCouchedLanceDamageMultiplier": {
             "name": "Couched Lance Damage Multiplier",
             "description": "Scale couched lance damage.",
             "type": "number",
             "default-value": 0.65,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fMissileDamageSpeedPower": {
             "name": "Missile Damage Speed Power",
             "description": "Range: 1.0-2.0. Setting speed_power to 2.0 makes damage scale with the square of missile’s speed. You can set it to 1.0 to make it scale linearly.",
             "type": "number",
-            "default-value": 0,
+            "default-value": 1.9,
             "inputType": "select",
             "options": [
                 {
                     "value": 0,
                     "label": "2"
                 }
-            ]
+            ],
+            "step": 0.1
         },
         "fMeleeDamageSpeedPower": {
             "name": "Melee Damage Speed Power",
             "description": "Range: 1.0-2.0. Setting speed_power to 2.0 makes damage scale with the square of weapon’s speed. You can set it to 1.0 to make it scale linearly.",
             "type": "number",
-            "default-value": 0,
+            "default-value": 2.0,
             "inputType": "select",
             "options": [
                 {
                     "value": 0,
                     "label": "2"
                 }
-            ]
+            ],
+            "step": 0.1
         },
         "fShieldPenetrationOffset": {
             "name": "Shield Penetration Offset",
             "description": "Missiles with (damage > shield_penetration_offset + shield_penetration_factor * shield) will penetrate a shield and cause damage to the wielder.",
             "type": "number",
             "default-value": 30.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "fShieldPenetrationFactor": {
             "name": "Shield Penetration Factor",
             "description": "Used in conjunction with shield_penetration_offset to determine if a missile can penetrate a shield.",
             "type": "number",
             "default-value": 3.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "fAirFrictionArrow": {
             "name": "Air Friction Arrow",
             "description": "Set the drag coefficient.",
             "type": "number",
             "default-value": 0.002,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fAirFrictionBullet": {
             "name": "Air Friction Bullet",
             "description": "Set the drag coefficient for bullets.",
             "type": "number",
             "default-value": 0.002,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fExtraSoakFactor": {
             "name": "Extra Soak Factor",
             "description": "Used in conjunction with itp_extra_penetration to determine at what level extra penetration is soaked by armor.",
             "type": "number",
             "default-value": 1.0,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fExtraReduceFactor": {
             "name": "Extra Reduce Factor",
             "description": "Used in conjunction with itp_extra_penetration to determine at what level extra penetration is reduced by armor.",
             "type": "number",
             "default-value": 1.0,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fCutSoakFactor": {
             "name": "Cut Soak Factor",
             "description": "Determines the amount which will be directly subtracted from cut damage due to armor.",
             "type": "number",
             "default-value": 0.8,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fCutReduceFactor": {
             "name": "Cut Reduce Factor",
             "description": "Determines the percentage reduction from the cut damage.",
             "type": "number",
             "default-value": 1.0,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fBluntSoakFactor": {
             "name": "Blunt Soak Factor",
             "description": "Determines the amount which will be directly subtracted from blunt damage due to armor.",
             "type": "number",
             "default-value": 0.5,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fBluntReduceFactor": {
             "name": "Blunt Reduce Factor",
             "description": "Determines the percentage reduction from the blunt damage.",
             "type": "number",
             "default-value": 0.75,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fPierceSoakFactor": {
             "name": "Pierce Soak Factor",
             "description": "Determines the amount which will be directly subtracted from pierce damage due to armor.",
             "type": "number",
             "default-value": 0.65,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fPierceReduceFactor": {
             "name": "Pierce Reduce Factor",
             "description": "Determines the percentage reduction from the pierce damage.",
             "type": "number",
             "default-value": 0.5,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fCrushthroughThreshold": {
             "name": "Crushthrough Threshold",
             "description": "Determines how much damage is required to crush through overhead blocks on weapons with the appropriate flag itp_crush_through.",
             "type": "number",
             "default-value": 2.4,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "fInterruptThreshold": {
             "name": "Interrupt Threshold",
             "description": "Damage below this will not interrupt melee attacks.",
             "type": "number",
             "default-value": 3.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "fInterruptThresholdMultiplayer": {
             "name": "Interrupt Threshold Multiplayer",
             "description": "Damage below this will not interrupt melee attacks in multiplayer.",
             "type": "number",
             "default-value": 1.0,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fBrokenShieldPruneTime": {
             "name": "Broken Shield Prune Time",
             "description": "Seconds required before a broken shield is removed from the scene. Setting it to 0 will prevent the items from despawning during a mission.",
             "type": "number",
             "default-value": 180.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "fDroppedItemPruneTime": {
             "name": "Dropped Item Prune Time",
             "description": "Seconds required before a dropped item is removed from the scene. Setting it to 0 will prevent the items from despawning during a mission.",
             "type": "number",
             "default-value": 180.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "fMissileItemPruneTime": {
             "name": "Missile Item Prune Time",
             "description": "Seconds required before a fired arrow is removed from the scene. Setting it to 0 will prevent the items from despawning during a mission.",
             "type": "number",
             "default-value": 180.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "iWeaponTrails": {
             "name": "Weapon Trails",
@@ -1359,7 +1508,8 @@
                     "value": 2,
                     "label": "Full"
                 }
-            ]
+            ],
+            "step": 1
         },
         "bDismountHorseOnUse": {
             "name": "Dismount Horse On Use",
@@ -1414,7 +1564,8 @@
             "description": "Amount of units (in centimeters) that the render plane extends out from the camera inside of scenes.",
             "type": "number",
             "default-value": 1250.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "bCanRunFasterWithSkills": {
             "name": "Can Run Faster With Skills",
@@ -1463,21 +1614,26 @@
             "description": "Determines the necessary speed of the horse at which the polearm causes horses rear.",
             "type": "number",
             "default-value": 3.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "fLancePikeEffectMinLength": {
             "name": "Lance Pike Effect Min Length",
             "description": "Determines minimum lenght for polearm causes horses rear.",
             "type": "number",
             "default-value": 1.3,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "fLancePikeEffectMinDamage": {
             "name": "Lance Pike Effect Min Damage",
             "description": "Determines minimum inflicted damage at which the polearm causes horses rear.",
             "type": "number",
             "default-value": 0.0,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "bCanUseScenePropsInSinglePlayer": {
             "name": "Can Use Scene Props In Single Player",
@@ -1490,14 +1646,16 @@
             "description": "Speed modifier for the horses that have the imod_timid modifier.",
             "type": "number",
             "default-value": 0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iTimidModifierSpeedBonus": {
             "name": "Timid Modifier Speed Bonus",
             "description": "Speed modifier for the horses that have the imod_meek modifier",
             "type": "number",
             "default-value": 0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "bShorterPistolAiming": {
             "name": "Shorter Pistol Aiming",
@@ -1534,7 +1692,10 @@
             "description": "Affects items with the flag itp_is_pike and is used for rotation speed limiting while bracing spears (e.g. in NW). If the turning acceleration is less than 0.01 or the set value (whichever is higher) the game engine plays the pike crouch animation (anim_crouch_pike) and otherwise the crouch staff animation (anim_crouch_staff). You can obviously not give a value below the default one of 0.01 and if you provide a big value (it seems like 0.5 is enough) you can completely override the canceling effect.",
             "type": "number",
             "default-value": 0.01,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "bUseHorseSlopeForRiderPosition": {
             "name": "Use Horse Slope For Rider Position",
@@ -1655,14 +1816,18 @@
             "description": "Squared range for kick, so 0.16 means 0.4 meters.",
             "type": "number",
             "default-value": 0.16,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fHorseBumpMinSpeed": {
             "name": "Horse Bump Min Speed",
             "description": "Minimum speed for horse charge.",
             "type": "number",
             "default-value": 3.5,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "bAllowKickDuringMeleeAttacks": {
             "name": "Allow Kick During Melee Attacks",
@@ -1696,31 +1861,43 @@
         },
         "fToggleItemModeCooldown": {
             "name": "Toggle Item Mode Cooldown",
-            "description": "",
+            "description": "Configures the Toggle Item Mode Cooldown setting.",
             "type": "number",
             "default-value": 1.0,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fPowerDrawSkillDamageBonus": {
             "name": "Power Draw Skill Damage Bonus",
-            "description": "",
+            "description": "Configures the Power Draw Skill Damage Bonus setting.",
             "type": "number",
             "default-value": 0.14,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fPowerThrowSkillDamageBonus": {
             "name": "Power Throw Skill Damage Bonus",
-            "description": "",
+            "description": "Configures the Power Throw Skill Damage Bonus setting.",
             "type": "number",
             "default-value": 0.1,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fPowerStrikeSkillDamageBonus": {
             "name": "Power Strike Skill Damage Bonus",
-            "description": "",
+            "description": "Configures the Power Strike Skill Damage Bonus setting.",
             "type": "number",
             "default-value": 0.08,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "bShieldSkillAffectsProtectionArea": {
             "name": "Shield Skill Affects Protection Area",
@@ -1730,83 +1907,115 @@
         },
         "fSpeedPenaltyForTwoHandedAndPolearmWithShield": {
             "name": "Speed Penalty For Two Handed And Polearm With Shield",
-            "description": "",
+            "description": "Configures the Speed Penalty For Two Handed And Polearm With Shield setting.",
             "type": "number",
             "default-value": 0.15,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fAdditionalSpeedPenaltyForTwoHandedPropertyWithShield": {
             "name": "Additional Speed Penalty For Two Handed Property With Shield",
-            "description": "",
+            "description": "Configures the Additional Speed Penalty For Two Handed Property With Shield setting.",
             "type": "number",
             "default-value": 0.05,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fDamagePenaltyMultiplierForTwoHandedAndPolearmWithShield": {
             "name": "Damage Penalty Multiplier For Two Handed And Polearm With Shield",
-            "description": "",
+            "description": "Configures the Damage Penalty Multiplier For Two Handed And Polearm With Shield setting.",
             "type": "number",
             "default-value": 0.85,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fAdditionalDamagePenaltyMultiplierForPolearmWithShield": {
             "name": "Additional Damage Penalty Multiplier For Polearm With Shield",
-            "description": "",
+            "description": "Configures the Additional Damage Penalty Multiplier For Polearm With Shield setting.",
             "type": "number",
             "default-value": 0.85,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fAdditionalDamagePenaltyMultiplierForTwoHandedPropertyWithShield": {
             "name": "Additional Damage Penalty Multiplier For Two Handed Property With Shield",
-            "description": "",
+            "description": "Configures the Additional Damage Penalty Multiplier For Two Handed Property With Shield setting.",
             "type": "number",
             "default-value": 0.9,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fDamagePenaltyMultiplierForTwoHandedAndPolearmWithMount": {
             "name": "Damage Penalty Multiplier For Two Handed And Polearm With Mount",
-            "description": "",
+            "description": "Configures the Damage Penalty Multiplier For Two Handed And Polearm With Mount setting.",
             "type": "number",
             "default-value": 0.85,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fAdditionalDamagePenaltyMultiplierForPolearmWithMount": {
             "name": "Additional Damage Penalty Multiplier For Polearm With Mount",
-            "description": "",
+            "description": "Configures the Additional Damage Penalty Multiplier For Polearm With Mount setting.",
             "type": "number",
             "default-value": 0.85,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fAdditionalDamagePenaltyMultiplierForTwoHandedPropertyWithMount": {
             "name": "Additional Damage Penalty Multiplier For Two Handed Property With Mount",
-            "description": "",
+            "description": "Configures the Additional Damage Penalty Multiplier For Two Handed Property With Mount setting.",
             "type": "number",
             "default-value": 0.9,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "bOverswingAndThrustMusketUsableOnHorseback": {
             "name": "Overswing And Thrust Musket Usable On Horseback",
-            "description": "",
+            "description": "Configures the Overswing And Thrust Musket Usable On Horseback setting.",
             "type": "checkbox",
             "default-value": false
         },
         "bOverswingSpearUsableOnHorseback": {
             "name": "Overswing Spear Usable On Horseback",
-            "description": "",
+            "description": "Configures the Overswing Spear Usable On Horseback setting.",
             "type": "checkbox",
             "default-value": false
         },
         "bHorsebackSlashPolearmUsableOnlyWithoutShield": {
             "name": "Horseback Slash Polearm Usable Only Without Shield",
-            "description": "",
+            "description": "Configures the Horseback Slash Polearm Usable Only Without Shield setting.",
             "type": "checkbox",
             "default-value": false
         },
         "bThrustMusketUsableOnlyWithoutShield": {
             "name": "Thrust Musket Usable Only Without Shield",
-            "description": "",
+            "description": "Configures the Thrust Musket Usable Only Without Shield setting.",
             "type": "checkbox",
             "default-value": false
+        },
+        "iDynamicBannerTransparencyMinAlpha": {
+            "name": "Dynamic Banner Transparency Min Alpha",
+            "description": "Configures the Dynamic Banner Transparency Min Alpha setting.",
+            "type": "number",
+            "default-value": 165,
+            "inputType": "number",
+            "step": 1
         }
     },
     "FaceGenerator": {
@@ -1833,7 +2042,8 @@
             "description": "Num skins for multiplayer profile.",
             "type": "number",
             "default-value": 2,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "bLimitHairColors": {
             "name": "Limit Hair Colors",
@@ -1848,56 +2058,64 @@
             "description": "For fit outer terrain mesh.",
             "type": "number",
             "default-value": 100.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "fOuterTerrainHeightOffset": {
             "name": "Outer Terrain Height Offset",
             "description": "For fit outer terrain mesh.",
             "type": "number",
             "default-value": 1.5,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "iMaxNumGrassInstances": {
             "name": "Max Num Grass Instances",
-            "description": "",
+            "description": "Configures the Max Num Grass Instances setting.",
             "type": "number",
-            "default-value": 262144.0,
-            "inputType": "number"
+            "default-value": 262144,
+            "inputType": "number",
+            "step": 1
         },
         "iMaxNumGrassTypes": {
             "name": "Max Num Grass Types",
-            "description": "",
+            "description": "Configures the Max Num Grass Types setting.",
             "type": "number",
-            "default-value": 32.0,
-            "inputType": "number"
+            "default-value": 32,
+            "inputType": "number",
+            "step": 1
         },
         "iMaxNumTreeInstances": {
             "name": "Max Num Tree Instances",
-            "description": "",
+            "description": "Configures the Max Num Tree Instances setting.",
             "type": "number",
-            "default-value": 2048.0,
-            "inputType": "number"
+            "default-value": 2048,
+            "inputType": "number",
+            "step": 1
         },
         "iMaxNumTreeTypes": {
             "name": "Max Num Tree Types",
-            "description": "",
+            "description": "Configures the Max Num Tree Types setting.",
             "type": "number",
-            "default-value": 32.0,
-            "inputType": "number"
+            "default-value": 32,
+            "inputType": "number",
+            "step": 1
         },
         "iMaxNumFloraInstances": {
             "name": "Max Num Flora Instances",
-            "description": "",
+            "description": "Configures the Max Num Flora Instances setting.",
             "type": "number",
-            "default-value": 4096.0,
-            "inputType": "number"
+            "default-value": 4096,
+            "inputType": "number",
+            "step": 1
         },
         "iMaxNumFloraTypes": {
             "name": "Max Num Flora Types",
-            "description": "",
+            "description": "Configures the Max Num Flora Types setting.",
             "type": "number",
-            "default-value": 32.0,
-            "inputType": "number"
+            "default-value": 32,
+            "inputType": "number",
+            "step": 1
         }
     },
     "ServerList": {
@@ -1906,14 +2124,16 @@
             "description": "Remove dead server from favorites after this time.",
             "type": "number",
             "default-value": 604800,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iDeadFavoritesPurgeTries": {
             "name": "Dead Favorites Purge Tries",
             "description": "Remove dead server from favorites after this num search tries.",
             "type": "number",
             "default-value": 7,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "bHideOtherModServers": {
             "name": "Hide Other Mod Servers",
@@ -1925,19 +2145,19 @@
     "Messages": {
         "bShowDamage": {
             "name": "Show Damage",
-            "description": "",
+            "description": "Configures the Show Damage setting.",
             "type": "checkbox",
             "default-value": true
         },
         "bShowCasualties": {
             "name": "Show Casualties",
-            "description": "",
+            "description": "Configures the Show Casualties setting.",
             "type": "checkbox",
             "default-value": true
         },
         "bShowShotDifficulty": {
             "name": "Show Shot Difficulty",
-            "description": "",
+            "description": "Configures the Show Shot Difficulty setting.",
             "type": "checkbox",
             "default-value": true
         },
@@ -1949,25 +2169,25 @@
         },
         "bShowProficiencyGain": {
             "name": "Show Proficiency Gain",
-            "description": "",
+            "description": "Configures the Show Proficiency Gain setting.",
             "type": "checkbox",
             "default-value": true
         },
         "bShowScreenshotPath": {
             "name": "Show Screenshot Path",
-            "description": "",
+            "description": "Configures the Show Screenshot Path setting.",
             "type": "checkbox",
             "default-value": true
         },
         "bShowMultiplayerChat": {
             "name": "Show Multiplayer Chat",
-            "description": "",
+            "description": "Configures the Show Multiplayer Chat setting.",
             "type": "checkbox",
             "default-value": true
         },
         "bShowMultiplayerTeamChat": {
             "name": "Show Multiplayer Team Chat",
-            "description": "",
+            "description": "Configures the Show Multiplayer Team Chat setting.",
             "type": "checkbox",
             "default-value": true
         },
@@ -1998,20 +2218,21 @@
                     "value": 4,
                     "label": "Own Kills And Player Deaths"
                 }
-            ]
+            ],
+            "step": 1
         },
         "uMultiplayerChatColor": {
             "name": "Multiplayer Chat Color",
-            "description": "",
+            "description": "Configures the Multiplayer Chat Color setting.",
             "type": "text",
-            "default-value": "0xFFCCCCCC",
+            "default-value": "0xffcccccc",
             "inputType": "color"
         },
         "uMultiplayerTeamChatColor": {
             "name": "Multiplayer Team Chat Color",
-            "description": "",
+            "description": "Configures the Multiplayer Team Chat Color setting.",
             "type": "text",
-            "default-value": "0xFF8888CC",
+            "default-value": "0xff8888cc",
             "inputType": "color"
         },
         "iMaxNumNotificationMessages": {
@@ -2025,7 +2246,8 @@
                     "value": 4,
                     "label": "About 10 Messages"
                 }
-            ]
+            ],
+            "step": 1
         },
         "bFixNotificationMessages": {
             "name": "Fix Notification Messages",
@@ -2053,97 +2275,119 @@
             "description": "Multiplier of the wound treatment skill for player.",
             "type": "number",
             "default-value": 1.0,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fMainPartyHeroHealingFactor": {
             "name": "Main Party Hero Healing Factor",
             "description": "Multiplier of the wound treatment skill for main party hero.",
             "type": "number",
             "default-value": 1.0,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fMainPartyRegularHealingFactor": {
             "name": "Main Party Regular Healing Factor",
             "description": "Multiplier of the wound treatment skill for main party regular troops.",
             "type": "number",
             "default-value": 1.0,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fHeroHealingFactor": {
             "name": "Hero Healing Factor",
             "description": "Multiplier of the wound treatment skill for hero.",
             "type": "number",
             "default-value": 1.0,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fRegularHealingFactor": {
             "name": "Regular Healing Factor",
             "description": "Multiplier of the wound treatment skill for regular troops.",
             "type": "number",
             "default-value": 1.0,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fPlayerExperienceMultiplier": {
             "name": "Player Experience Multiplier",
             "description": "Sets the xp multiplier the player gains by killing an enemy.",
             "type": "number",
             "default-value": 2.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "fHeroExperienceMultiplier": {
             "name": "Hero Experience Multiplier",
             "description": "Sets the xp multiplier heroes gain by killing an enemy.",
             "type": "number",
             "default-value": 2.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "fRegularExperienceMultiplier": {
             "name": "Regular Experience Multiplier",
             "description": "Sets the xp multiplier regular troops gain by killing an enemy.",
             "type": "number",
             "default-value": 3.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "fPlayerWoundedThreshold": {
             "name": "Player Wounded Threshold",
             "description": "Determines the minimum number of hitpoints a player must have to appear in battles and contribute to party skills.",
             "type": "number",
             "default-value": 5.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "fHeroWoundedThreshold": {
             "name": "Hero Wounded Threshold",
             "description": "Determines the minimum hitpoints needed for heroes to appear in battles and contribute to party skills.",
             "type": "number",
             "default-value": 15.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "fDayStartHour": {
             "name": "Day Start Hour",
             "description": "Defines the boundaries of day and night time.",
             "type": "number",
             "default-value": 4.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "fDayEndHour": {
             "name": "Day End Hour",
             "description": "Defines the boundaries of day and night time.",
             "type": "number",
             "default-value": 20.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "vMapCameraMinPosition": {
             "name": "Map Camera Min Position",
             "description": "Determines the eastern and northern bounds of the world map. The map can continue past this, but parties will not be able to travel past this boundary.",
             "type": "text",
-            "default-value": "-50.0,-50.0",
+            "default-value": "-180.000000,-145.000000",
             "inputType": "text"
         },
         "vMapCameraMaxPosition": {
             "name": "Map Camera Max Position",
             "description": "Determines the western and southern bounds of the world map. The map can continue past this, but parties will not be able to travel past this boundary.",
             "type": "text",
-            "default-value": "50.0,50.0",
+            "default-value": "180.000000,145.000000",
             "inputType": "text"
         },
         "fMapCameraMinZoom": {
@@ -2151,20 +2395,22 @@
             "description": "Minimum amount of zoom out on the world map.",
             "type": "number",
             "default-value": 3.5,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "fMapCameraMaxZoom": {
             "name": "Map Camera Max Zoom",
             "description": "Maximum amount of zoom out on the world map.",
             "type": "number",
             "default-value": 175.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "vMapSeaSpeed": {
             "name": "Map Sea Speed",
             "description": "Used to determine the flow speed of the ocean shader for the world map.",
             "type": "text",
-            "default-value": "0.02,-0.02",
+            "default-value": "0.020000,-0.020000",
             "inputType": "text"
         },
         "fMapSeaDirection": {
@@ -2172,20 +2418,22 @@
             "description": "Angle, sea wave foam direction.",
             "type": "number",
             "default-value": -40.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "fMapSeaWaveRotation": {
             "name": "Map Sea Wave Rotation",
             "description": "Angle, this is where the tear artefact is visible on the sea.",
             "type": "number",
             "default-value": 300.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "vMapRiverSpeed": {
             "name": "Map River Speed",
             "description": "Used to determine the flow speed of the river shader for the world map.",
             "type": "text",
-            "default-value": "0.01,-0.01",
+            "default-value": "0.010000,-0.010000",
             "inputType": "text"
         },
         "fMapRiverDirection": {
@@ -2193,49 +2441,60 @@
             "description": "Angle used to determine the flow direction of the river shader for the world map.",
             "type": "number",
             "default-value": 140.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "fSpottingMultiplier": {
             "name": "Spotting Multiplier",
             "description": "Multiplier of the spotting skill, affects the visibility radius.",
             "type": "number",
             "default-value": 6.5,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "fTrackSpottingMultiplier": {
             "name": "Track Spotting Multiplier",
             "description": "Multiplier of the tracking skill. If set to 0 no tracking marks will appear at the world map no matter the skill.",
             "type": "number",
             "default-value": 0.8,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "iLeadershipSkillBonus": {
             "name": "Leadership Skill Bonus",
             "description": "Sets how many additional troops per leadership skill point the player can have in his party.",
             "type": "number",
             "default-value": 3,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iPrisonerManagementSkillBonus": {
             "name": "Prisoner Management Skill Bonus",
             "description": "Sets how many additional prisoners per prisoner management skill point the player can have in his party.",
             "type": "number",
             "default-value": 5,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iBaseCompanionLimit": {
             "name": "Base Companion Limit",
             "description": "Maximum amount of companions in the player party without leadership skill.",
             "type": "number",
             "default-value": 20,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "fTimeMultiplier": {
             "name": "Time Multiplier",
             "description": "Speed with which time passes on the map screen. With 0.25 as default value 1 GAME hour is 4 seconds of REAL time.",
             "type": "number",
             "default-value": 0.25,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "bShowPartyIdsInsteadOfNames": {
             "name": "Show Party Ids Instead Of Names",
@@ -2272,42 +2531,54 @@
             "description": "Sets how many skill points are gained per level.",
             "type": "number",
             "default-value": 1.0,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fAttributePointsPerLevel": {
             "name": "Attribute Points Per Level",
             "description": "Sets how many attribute points are gained per level.",
             "type": "number",
             "default-value": 1.0,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fWeaponPointsPerLevel": {
             "name": "Weapon Points Per Level",
             "description": "Sets how many weapon proficiency points are gained per level.",
             "type": "number",
             "default-value": 10.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "fLevelBoundaryMultiplier": {
             "name": "Level Boundary Multiplier",
             "description": "Sets the multiplier for EXP needed for troop to upgrade.",
             "type": "number",
             "default-value": 1.0,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "iAttributeRequiredPerSkillLevel": {
             "name": "Attribute Required Per Skill Level",
             "description": "Sets how many attribute points are required per skill level.",
             "type": "number",
             "default-value": 3,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iDisableDisbandOnTerrainType": {
             "name": "Disable Disband On Terrain Type",
             "description": "Used to insure parties cannot disband on certain tiles (Like passable water).",
             "type": "number",
             "default-value": -1,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "bDisableForceLeavingConversations": {
             "name": "Disable Force Leaving Conversations",
@@ -2320,14 +2591,18 @@
             "description": "Sets the minimum distance the camera can be from the terrain in the world map.",
             "type": "number",
             "default-value": 0.1,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fMapCameraMaxElevation": {
             "name": "Map Camera Max Elevation",
             "description": "Sets the maximum distance the camera can be from the terrain in the world map.",
             "type": "number",
             "default-value": 1.570796,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "bAutoComputePartyRadius": {
             "name": "Auto Compute Party Radius",
@@ -2340,14 +2615,16 @@
             "description": "Minimum value for battle advantage.",
             "type": "number",
             "default-value": -32,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iMaxBattleAdvantage": {
             "name": "Max Battle Advantage",
             "description": "Maximum value for battle advantage.",
             "type": "number",
             "default-value": 6,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         }
     },
     "Graphics": {
@@ -2362,7 +2639,8 @@
             "description": "Works only if Direct3D9Ex is enabled. The maximum number of back buffer frames that a driver can queue. The value defaults to 3, but can range from 1 to 16. A value of 0 will reset latency to the default. ",
             "type": "number",
             "default-value": 0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iPreset": {
             "name": "Preset",
@@ -2391,86 +2669,96 @@
                     "value": 4,
                     "label": "Very High"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iWindowedDisplayX": {
             "name": "Windowed Display X",
-            "description": "",
+            "description": "Configures the Windowed Display X setting.",
             "type": "number",
-            "default-value": 0,
-            "inputType": "number"
+            "default-value": 1408,
+            "inputType": "number",
+            "step": 1
         },
         "iWindowedDisplayY": {
             "name": "Windowed Display Y",
-            "description": "",
+            "description": "Configures the Windowed Display Y setting.",
             "type": "number",
-            "default-value": 0,
-            "inputType": "number"
+            "default-value": 812,
+            "inputType": "number",
+            "step": 1
         },
         "iWindowedDisplayWidth": {
             "name": "Windowed Display Width",
-            "description": "",
+            "description": "Configures the Windowed Display Width setting.",
             "type": "number",
-            "default-value": 0,
-            "inputType": "number"
+            "default-value": 1032,
+            "inputType": "number",
+            "step": 1
         },
         "iWindowedDisplayHeight": {
             "name": "Windowed Display Height",
-            "description": "",
+            "description": "Configures the Windowed Display Height setting.",
             "type": "number",
-            "default-value": 0,
-            "inputType": "number"
+            "default-value": 814,
+            "inputType": "number",
+            "step": 1
         },
         "iFullscreenDisplayWidth": {
             "name": "Fullscreen Display Width",
-            "description": "",
+            "description": "Configures the Fullscreen Display Width setting.",
             "type": "number",
             "default-value": 0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iFullscreenDisplayHeight": {
             "name": "Fullscreen Display Height",
-            "description": "",
+            "description": "Configures the Fullscreen Display Height setting.",
             "type": "number",
             "default-value": 0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iFullscreenDisplayDepth": {
             "name": "Fullscreen Display Depth",
-            "description": "",
+            "description": "Configures the Fullscreen Display Depth setting.",
             "type": "number",
             "default-value": 0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iFullscreenDisplayRefreshRate": {
             "name": "Fullscreen Display Refresh Rate",
-            "description": "",
+            "description": "Configures the Fullscreen Display Refresh Rate setting.",
             "type": "number",
             "default-value": 0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "bWindowed": {
             "name": "Windowed",
-            "description": "",
+            "description": "Configures the Windowed setting.",
             "type": "checkbox",
-            "default-value": true
+            "default-value": false
         },
         "bMaximized": {
             "name": "Maximized",
-            "description": "",
+            "description": "Configures the Maximized setting.",
             "type": "checkbox",
             "default-value": false
         },
         "iGraphicsBufferLockFailThreshold": {
             "name": "Graphics Buffer Lock Fail Threshold",
-            "description": "",
+            "description": "Configures the Graphics Buffer Lock Fail Threshold setting.",
             "type": "number",
             "default-value": 100,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "bAutoAdjustAspectRatio": {
             "name": "Auto Adjust Aspect Ratio",
-            "description": "",
+            "description": "Configures the Auto Adjust Aspect Ratio setting.",
             "type": "checkbox",
             "default-value": true
         },
@@ -2484,27 +2772,29 @@
             "name": "Anisotropic Filtering",
             "description": "Reduces blur on distant surfaces. Values: 0, 2, 4, 8, 16.",
             "type": "number",
-            "default-value": 4,
-            "inputType": "number"
+            "default-value": 16,
+            "inputType": "number",
+            "step": 1
         },
         "bInstancing": {
             "name": "Instancing",
             "description": "Method that renders multiple copies of a mesh with the same material in a single draw call. Each copy of the mesh is called an instance. This is useful for drawing things that appear multiple times in a scene, for example, trees or bushes.",
             "type": "checkbox",
-            "default-value": false
+            "default-value": true
         },
         "iMultisampleType": {
             "name": "Multisample Type",
             "description": "Antialiasing (MSAA). Smooths out jagged edges on solid objects.",
             "type": "number",
-            "default-value": 0,
-            "inputType": "number"
+            "default-value": 8,
+            "inputType": "number",
+            "step": 1
         },
         "bAlphaToCoverage": {
             "name": "Alpha To Coverage",
             "description": "Transparency Antialiasing (MSAA). Smooths out jagged edges on semi-transparent objects.",
             "type": "checkbox",
-            "default-value": false
+            "default-value": true
         },
         "iShaderQuality": {
             "name": "Shader Quality",
@@ -2529,11 +2819,12 @@
                     "value": 3,
                     "label": "High"
                 }
-            ]
+            ],
+            "step": 1
         },
         "bDynamicLighting": {
             "name": "Dynamic Lighting",
-            "description": "",
+            "description": "Configures the Dynamic Lighting setting.",
             "type": "checkbox",
             "default-value": true
         },
@@ -2548,61 +2839,68 @@
             "description": "Vertices limit for collection size.",
             "type": "number",
             "default-value": 1000,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iMaxNumAutoBatchMeshVertices": {
             "name": "Max Num Auto Batch Mesh Vertices",
             "description": "Vertices limit for mesh with \"Combine low-poly meshes\" material flag.",
             "type": "number",
             "default-value": 30,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "bOnDemandTextures": {
             "name": "On Demand Textures",
-            "description": "",
+            "description": "Configures the On Demand Textures setting.",
             "type": "checkbox",
-            "default-value": false
+            "default-value": true
         },
         "iOnDemandTextureCheckThreshold": {
             "name": "On Demand Texture Check Threshold",
-            "description": "",
+            "description": "Configures the On Demand Texture Check Threshold setting.",
             "type": "number",
             "default-value": 100,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "fOnDemandTextureCheckPeriod": {
             "name": "On Demand Texture Check Period",
-            "description": "",
+            "description": "Configures the On Demand Texture Check Period setting.",
             "type": "number",
             "default-value": 10.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "fOnDemandTextureForceCheckPeriod": {
             "name": "On Demand Texture Force Check Period",
-            "description": "",
+            "description": "Configures the On Demand Texture Force Check Period setting.",
             "type": "number",
             "default-value": 60.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "iOnDemandTextureTimeout": {
             "name": "On Demand Texture Timeout",
-            "description": "",
+            "description": "Configures the On Demand Texture Timeout setting.",
             "type": "number",
             "default-value": 12000000,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "fGamma": {
             "name": "Gamma",
             "description": "range: 1.5-2.5",
             "type": "number",
-            "default-value": 0,
+            "default-value": 2.008517,
             "inputType": "select",
             "options": [
                 {
                     "value": 5,
                     "label": "2"
                 }
-            ]
+            ],
+            "step": 0.1
         },
         "iTextureQuality": {
             "name": "Texture Quality",
@@ -2627,105 +2925,120 @@
                     "value": 3,
                     "label": "High"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iInitialNumBufferedInstances": {
             "name": "Initial Num Buffered Instances",
-            "description": "",
+            "description": "Configures the Initial Num Buffered Instances setting.",
             "type": "number",
             "default-value": 1024,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iMaxNumBufferedInstances": {
             "name": "Max Num Buffered Instances",
-            "description": "",
+            "description": "Configures the Max Num Buffered Instances setting.",
             "type": "number",
             "default-value": 32768,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iIndexBufferSizeStatic": {
             "name": "Index Buffer Size Static",
-            "description": "",
+            "description": "Configures the Index Buffer Size Static setting.",
             "type": "number",
             "default-value": 131072,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iIndexBufferSizeDynamic": {
             "name": "Index Buffer Size Dynamic",
-            "description": "",
+            "description": "Configures the Index Buffer Size Dynamic setting.",
             "type": "number",
             "default-value": 262144,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iVertexBufferSizeRegularStatic": {
             "name": "Vertex Buffer Size Regular Static",
             "description": "Modders may adjust these large enough so that the game will not need to restore buffers during the game. However keeping them excessively large will reduce performance in most systems.",
             "type": "number",
             "default-value": 131072,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iVertexBufferSizeRegularDynamic": {
             "name": "Vertex Buffer Size Regular Dynamic",
-            "description": "",
+            "description": "Configures the Vertex Buffer Size Regular Dynamic setting.",
             "type": "number",
             "default-value": 65536,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iVertexBufferSizeNormalMapStatic": {
             "name": "Vertex Buffer Size Normal Map Static",
-            "description": "",
+            "description": "Configures the Vertex Buffer Size Normal Map Static setting.",
             "type": "number",
             "default-value": 131072,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iVertexBufferSizeNormalMapDynamic": {
             "name": "Vertex Buffer Size Normal Map Dynamic",
-            "description": "",
+            "description": "Configures the Vertex Buffer Size Normal Map Dynamic setting.",
             "type": "number",
             "default-value": 65536,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iVertexBufferSizeSkinningStatic": {
             "name": "Vertex Buffer Size Skinning Static",
-            "description": "",
+            "description": "Configures the Vertex Buffer Size Skinning Static setting.",
             "type": "number",
             "default-value": 131072,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iVertexBufferSizeSkinningDynamic": {
             "name": "Vertex Buffer Size Skinning Dynamic",
-            "description": "",
+            "description": "Configures the Vertex Buffer Size Skinning Dynamic setting.",
             "type": "number",
             "default-value": 65536,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iVertexBufferSizeNormalMapSkinningStatic": {
             "name": "Vertex Buffer Size Normal Map Skinning Static",
-            "description": "",
+            "description": "Configures the Vertex Buffer Size Normal Map Skinning Static setting.",
             "type": "number",
             "default-value": 131072,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iVertexBufferSizeNormalMapSkinningDynamic": {
             "name": "Vertex Buffer Size Normal Map Skinning Dynamic",
-            "description": "",
+            "description": "Configures the Vertex Buffer Size Normal Map Skinning Dynamic setting.",
             "type": "number",
             "default-value": 65536,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iVertexBufferSizeSpecialStatic": {
             "name": "Vertex Buffer Size Special Static",
-            "description": "",
+            "description": "Configures the Vertex Buffer Size Special Static setting.",
             "type": "number",
             "default-value": 65536,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iVertexBufferSizeSpecialDynamic": {
             "name": "Vertex Buffer Size Special Dynamic",
-            "description": "",
+            "description": "Configures the Vertex Buffer Size Special Dynamic setting.",
             "type": "number",
             "default-value": 32768,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iDiffuseMapMinFilter": {
             "name": "Diffuse Map Min Filter",
@@ -2750,7 +3063,8 @@
                     "value": 3,
                     "label": "Anisotropic"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iDiffuseMapMagFilter": {
             "name": "Diffuse Map Mag Filter",
@@ -2775,7 +3089,8 @@
                     "value": 3,
                     "label": "Anisotropic"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iDiffuseMapMipFilter": {
             "name": "Diffuse Map Mip Filter",
@@ -2796,14 +3111,16 @@
                     "value": 2,
                     "label": "Linear Interpolation"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iDiffuseMapMaxAnisotropy": {
             "name": "Diffuse Map Max Anisotropy",
             "description": "limit for anisotropic filtering",
             "type": "number",
             "default-value": 16,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iNormalMapMinFilter": {
             "name": "Normal Map Min Filter",
@@ -2828,7 +3145,8 @@
                     "value": 3,
                     "label": "Anisotropic"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iNormalMapMagFilter": {
             "name": "Normal Map Mag Filter",
@@ -2853,7 +3171,8 @@
                     "value": 3,
                     "label": "Anisotropic"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iNormalMapMipFilter": {
             "name": "Normal Map Mip Filter",
@@ -2874,14 +3193,16 @@
                     "value": 2,
                     "label": "Linear Interpolation"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iNormalMapMaxAnisotropy": {
             "name": "Normal Map Max Anisotropy",
             "description": "limit for anisotropic filtering",
             "type": "number",
             "default-value": 4,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iSpecularMapMinFilter": {
             "name": "Specular Map Min Filter",
@@ -2906,7 +3227,8 @@
                     "value": 3,
                     "label": "Anisotropic"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iSpecularMapMagFilter": {
             "name": "Specular Map Mag Filter",
@@ -2931,7 +3253,8 @@
                     "value": 3,
                     "label": "Anisotropic"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iSpecularMapMipFilter": {
             "name": "Specular Map Mip Filter",
@@ -2952,14 +3275,16 @@
                     "value": 2,
                     "label": "Linear Interpolation"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iSpecularMapMaxAnisotropy": {
             "name": "Specular Map Max Anisotropy",
             "description": "limit for anisotropic filtering",
             "type": "number",
             "default-value": 0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iEnvironmentMapMinFilter": {
             "name": "Environment Map Min Filter",
@@ -2984,7 +3309,8 @@
                     "value": 3,
                     "label": "Anisotropic"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iEnvironmentMapMagFilter": {
             "name": "Environment Map Mag Filter",
@@ -3009,7 +3335,8 @@
                     "value": 3,
                     "label": "Anisotropic"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iEnvironmentMapMipFilter": {
             "name": "Environment Map Mip Filter",
@@ -3030,14 +3357,16 @@
                     "value": 2,
                     "label": "Linear Interpolation"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iEnvironmentMapMaxAnisotropy": {
             "name": "Environment Map Max Anisotropy",
             "description": "limit for anisotropic filtering",
             "type": "number",
             "default-value": 0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iCubeMapMinFilter": {
             "name": "Cube Map Min Filter",
@@ -3062,7 +3391,8 @@
                     "value": 3,
                     "label": "Anisotropic"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iCubeMapMagFilter": {
             "name": "Cube Map Mag Filter",
@@ -3087,7 +3417,8 @@
                     "value": 3,
                     "label": "Anisotropic"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iCubeMapMipFilter": {
             "name": "Cube Map Mip Filter",
@@ -3108,14 +3439,16 @@
                     "value": 2,
                     "label": "Linear Interpolation"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iCubeMapMaxAnisotropy": {
             "name": "Cube Map Max Anisotropy",
             "description": "limit for anisotropic filtering",
             "type": "number",
             "default-value": 0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "bUseBorderedShadowSampler": {
             "name": "Use Bordered Shadow Sampler",
@@ -3129,38 +3462,45 @@
             "name": "Mouse Sensitivity",
             "description": "range: 0.0-1.0",
             "type": "number",
-            "default-value": 0,
+            "default-value": 0.5,
             "inputType": "select",
             "options": [
                 {
                     "value": 0,
                     "label": "1"
                 }
-            ]
+            ],
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fMouseXScale": {
             "name": "Mouse X Scale",
-            "description": "",
+            "description": "Configures the Mouse X Scale setting.",
             "type": "number",
             "default-value": 1.0,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fMouseYScale": {
             "name": "Mouse Y Scale",
-            "description": "",
+            "description": "Configures the Mouse Y Scale setting.",
             "type": "number",
             "default-value": 1.5,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "bInvertMouseX": {
             "name": "Invert Mouse X",
-            "description": "",
+            "description": "Configures the Invert Mouse X setting.",
             "type": "checkbox",
             "default-value": false
         },
         "bInvertMouseY": {
             "name": "Invert Mouse Y",
-            "description": "",
+            "description": "Configures the Invert Mouse Y setting.",
             "type": "checkbox",
             "default-value": false
         },
@@ -3169,13 +3509,46 @@
             "description": "For key_mouse_scroll_down and key_mouse_scroll_up keys.",
             "type": "number",
             "default-value": 0.5,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
+        },
+        "bEnableGamepadVibration": {
+            "name": "Enable Gamepad Vibration",
+            "description": "Configures the Enable Gamepad Vibration setting.",
+            "type": "checkbox",
+            "default-value": true
+        },
+        "iGamepadLeftThumbDeadzone": {
+            "name": "Gamepad Left Thumb Deadzone",
+            "description": "Configures the Gamepad Left Thumb Deadzone setting.",
+            "type": "number",
+            "default-value": 10000,
+            "inputType": "number",
+            "step": 1
+        },
+        "iGamepadRightThumbDeadzone": {
+            "name": "Gamepad Right Thumb Deadzone",
+            "description": "Configures the Gamepad Right Thumb Deadzone setting.",
+            "type": "number",
+            "default-value": 10000,
+            "inputType": "number",
+            "step": 1
+        },
+        "iGamepadTriggerThreshold": {
+            "name": "Gamepad Trigger Threshold",
+            "description": "Configures the Gamepad Trigger Threshold setting.",
+            "type": "number",
+            "default-value": 128,
+            "inputType": "number",
+            "step": 1
         }
     },
     "Log": {
         "sLogPath": {
             "name": "Log Path",
-            "description": "",
+            "description": "Configures the Log Path setting.",
             "type": "text",
             "default-value": "rgl_log.txt",
             "inputType": "text"
@@ -3188,7 +3561,7 @@
         },
         "sStoredLogDirectory": {
             "name": "Stored Log Directory",
-            "description": "",
+            "description": "Configures the Stored Log Directory setting.",
             "type": "text",
             "default-value": "Logs",
             "inputType": "text"
@@ -3198,7 +3571,8 @@
             "description": "The oldest backups are deleted.",
             "type": "number",
             "default-value": 50,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "bBackupOnExit": {
             "name": "Backup On Exit",
@@ -3216,14 +3590,14 @@
         },
         "sSunFlareMesh": {
             "name": "Sun Flare Mesh",
-            "description": "",
+            "description": "Configures the Sun Flare Mesh setting.",
             "type": "text",
             "default-value": "sample_flare",
             "inputType": "text"
         },
         "sSunFlareMaterial": {
             "name": "Sun Flare Material",
-            "description": "",
+            "description": "Configures the Sun Flare Material setting.",
             "type": "text",
             "default-value": "flare",
             "inputType": "text"
@@ -3232,14 +3606,17 @@
             "name": "Character Detail",
             "description": "Used to select a entity lod depending on distance. Range: 0.0-1.0.",
             "type": "number",
-            "default-value": 0,
+            "default-value": 0.7,
             "inputType": "select",
             "options": [
                 {
                     "value": 0,
                     "label": "1"
                 }
-            ]
+            ],
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "bUseSceneUnloading": {
             "name": "Use Scene Unloading",
@@ -3254,21 +3631,24 @@
             "description": "Size of a socket's receive buffer.",
             "type": "number",
             "default-value": 262144,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iUdpSendBufferSize": {
             "name": "Udp Send Buffer Size",
             "description": "Size of a socket's send buffer.",
             "type": "number",
             "default-value": 262144,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iMaxNumServerSearchConnections": {
             "name": "Max Num Server Search Connections",
-            "description": "",
+            "description": "Configures the Max Num Server Search Connections setting.",
             "type": "number",
             "default-value": 16,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "bSecureMasterServerConnection": {
             "name": "Secure Master Server Connection",
@@ -3278,7 +3658,7 @@
         },
         "bLoopbackServer": {
             "name": "Loopback Server",
-            "description": "",
+            "description": "Configures the Loopback Server setting.",
             "type": "checkbox",
             "default-value": false
         },
@@ -3286,63 +3666,69 @@
             "name": "Server Address",
             "description": "empty for ANY",
             "type": "text",
-            "default-value": "nan",
+            "default-value": "",
             "inputType": "text"
         },
         "iServerPort": {
             "name": "Server Port",
-            "description": "",
+            "description": "Configures the Server Port setting.",
             "type": "number",
             "default-value": 7240,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "sClientAddress": {
             "name": "Client Address",
             "description": "empty for ANY",
             "type": "text",
-            "default-value": "nan",
+            "default-value": "",
             "inputType": "text"
         },
         "iClientPort": {
             "name": "Client Port",
-            "description": "",
+            "description": "Configures the Client Port setting.",
             "type": "number",
             "default-value": 0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "bAutoSelectClientPort": {
             "name": "Auto Select Client Port",
-            "description": "",
+            "description": "Configures the Auto Select Client Port setting.",
             "type": "checkbox",
             "default-value": true
         },
         "fServerActivityTimeout": {
             "name": "Server Activity Timeout",
-            "description": "",
+            "description": "Configures the Server Activity Timeout setting.",
             "type": "number",
             "default-value": 20.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "fClientActivityTimeout": {
             "name": "Client Activity Timeout",
-            "description": "",
+            "description": "Configures the Client Activity Timeout setting.",
             "type": "number",
             "default-value": 20.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "fServerInfoRequestActivityTimeout": {
             "name": "Server Info Request Activity Timeout",
-            "description": "",
+            "description": "Configures the Server Info Request Activity Timeout setting.",
             "type": "number",
             "default-value": 3.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "fPlayerInfoRequestActivityTimeout": {
             "name": "Player Info Request Activity Timeout",
-            "description": "",
+            "description": "Configures the Player Info Request Activity Timeout setting.",
             "type": "number",
             "default-value": 3.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "bHttpServerQueries": {
             "name": "Http Server Queries",
@@ -3367,7 +3753,8 @@
             "description": "UDP",
             "type": "number",
             "default-value": 22222,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "bRCONServer": {
             "name": "R C O N Server",
@@ -3380,11 +3767,12 @@
             "description": "TCP",
             "type": "number",
             "default-value": 22222,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "sRCONServerPassword": {
             "name": "R C O N Server Password",
-            "description": "",
+            "description": "Configures the R C O N Server Password setting.",
             "type": "text",
             "default-value": "qwerty",
             "inputType": "text"
@@ -3400,14 +3788,16 @@
                     "value": 2,
                     "label": "1000"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iMultiplayerEventForAnnounce": {
             "name": "Multiplayer Event For Announce",
             "description": "Used for announce console command and other WSE2 server notifications since Warband doesn't have a hardcoded event for that purpose. 111 for Native and VC, 105 for NW. For other modules check header_common.py and search multiplayer_event_show_server_message or similar.",
             "type": "number",
             "default-value": 111,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "bServerLockFov": {
             "name": "Server Lock Fov",
@@ -3425,7 +3815,7 @@
             "name": "Fast D L Url",
             "description": "Supports http, https, ftp.",
             "type": "checkbox",
-            "default-value": false
+            "default-value": ""
         }
     },
     "Reflections": {
@@ -3433,7 +3823,7 @@
             "name": "Reflections Mode",
             "description": "Water reflections mode. Full reflections are performance heavy. Disable them if you are experiencing low frame rates. 0 - disable, 1 - sky, 2 - sky and landscape objects, 3 - full (perfomance heavy)",
             "type": "number",
-            "default-value": 2,
+            "default-value": 3,
             "inputType": "combobox",
             "options": [
                 {
@@ -3452,14 +3842,16 @@
                     "value": 3,
                     "label": "Full (perfomance Heavy)"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iReflectionsTextureSize": {
             "name": "Reflections Texture Size",
             "description": "values: 128, 256, 512, 1024, 2048, 4096",
             "type": "number",
-            "default-value": 256,
-            "inputType": "number"
+            "default-value": 2048,
+            "inputType": "number",
+            "step": 1
         },
         "iReflectionsMinFilter": {
             "name": "Reflections Min Filter",
@@ -3484,7 +3876,8 @@
                     "value": 3,
                     "label": "Anisotropic"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iReflectionsMagFilter": {
             "name": "Reflections Mag Filter",
@@ -3509,7 +3902,8 @@
                     "value": 3,
                     "label": "Anisotropic"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iReflectionsMipFilter": {
             "name": "Reflections Mip Filter",
@@ -3530,20 +3924,22 @@
                     "value": 2,
                     "label": "Linear Interpolation"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iReflectionsMaxAnisotropy": {
             "name": "Reflections Max Anisotropy",
             "description": "limit for anisotropic filtering",
             "type": "number",
             "default-value": 0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         }
     },
     "DedicatedServer": {
         "bAutoRestartOnCrash": {
             "name": "Auto Restart On Crash",
-            "description": "",
+            "description": "Configures the Auto Restart On Crash setting.",
             "type": "checkbox",
             "default-value": true
         },
@@ -3552,48 +3948,50 @@
             "description": "Prevents a restart loop if the server crashes on startup.",
             "type": "number",
             "default-value": 5,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "fMinTimeForSuccessfulAutoRestart": {
             "name": "Min Time For Successful Auto Restart",
             "description": "The minimum server uptime at which a restart is considered successful and the restart counter is reset.",
             "type": "number",
             "default-value": 120.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "bLogConnects": {
             "name": "Log Connects",
-            "description": "",
+            "description": "Configures the Log Connects setting.",
             "type": "checkbox",
             "default-value": true
         },
         "bLogDisconnects": {
             "name": "Log Disconnects",
-            "description": "",
+            "description": "Configures the Log Disconnects setting.",
             "type": "checkbox",
             "default-value": true
         },
         "bLogKills": {
             "name": "Log Kills",
-            "description": "",
+            "description": "Configures the Log Kills setting.",
             "type": "checkbox",
             "default-value": true
         },
         "bLogChat": {
             "name": "Log Chat",
-            "description": "",
+            "description": "Configures the Log Chat setting.",
             "type": "checkbox",
             "default-value": true
         },
         "bLogTeamChat": {
             "name": "Log Team Chat",
-            "description": "",
+            "description": "Configures the Log Team Chat setting.",
             "type": "checkbox",
             "default-value": true
         },
         "bLogBans": {
             "name": "Log Bans",
-            "description": "",
+            "description": "Configures the Log Bans setting.",
             "type": "checkbox",
             "default-value": true
         },
@@ -3612,20 +4010,20 @@
         },
         "bStoreConsolePlacement": {
             "name": "Store Console Placement",
-            "description": "",
+            "description": "Configures the Store Console Placement setting.",
             "type": "checkbox",
-            "default-value": true
+            "default-value": false
         },
         "vConsoleWindowPosition": {
             "name": "Console Window Position",
-            "description": "",
+            "description": "Configures the Console Window Position setting.",
             "type": "text",
             "default-value": "-1,-1",
             "inputType": "text"
         },
         "vConsoleWindowSize": {
             "name": "Console Window Size",
-            "description": "",
+            "description": "Configures the Console Window Size setting.",
             "type": "text",
             "default-value": "-1,-1",
             "inputType": "text"
@@ -3660,56 +4058,64 @@
             "name": "Fake Character Shadow Detail",
             "description": "range: 0.0-1.0",
             "type": "number",
-            "default-value": 0,
+            "default-value": 0.7,
             "inputType": "select",
             "options": [
                 {
                     "value": 0,
                     "label": "1"
                 }
-            ]
+            ],
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "iFakeCharacterShadowTextureSize": {
             "name": "Fake Character Shadow Texture Size",
             "description": "values: 64, 128, 256, 512, 1024, 2048",
             "type": "number",
             "default-value": 256,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "sFakeCharacterShadowShader": {
             "name": "Fake Character Shadow Shader",
-            "description": "",
+            "description": "Configures the Fake Character Shadow Shader setting.",
             "type": "text",
             "default-value": "shadow_shader",
             "inputType": "text"
         },
         "sFakeCharacterShadowShaderHighQuality": {
             "name": "Fake Character Shadow Shader High Quality",
-            "description": "",
+            "description": "Configures the Fake Character Shadow Shader High Quality setting.",
             "type": "text",
             "default-value": "shadow_shader_new",
             "inputType": "text"
         },
         "uFakeCharacterShadowColor": {
             "name": "Fake Character Shadow Color",
-            "description": "",
+            "description": "Configures the Fake Character Shadow Color setting.",
             "type": "text",
             "default-value": "0xff000915",
             "inputType": "color"
         },
         "fFakeCharacterShadowDepthBias": {
             "name": "Fake Character Shadow Depth Bias",
-            "description": "",
+            "description": "Configures the Fake Character Shadow Depth Bias setting.",
             "type": "number",
             "default-value": 0.0002,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fFakeCharacterShadowSlopeScaledDepthBias": {
             "name": "Fake Character Shadow Slope Scaled Depth Bias",
-            "description": "",
+            "description": "Configures the Fake Character Shadow Slope Scaled Depth Bias setting.",
             "type": "number",
             "default-value": 2.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         }
     },
     "Sound": {
@@ -3717,37 +4123,43 @@
             "name": "Sound Volume",
             "description": "range: 0.0-1.0",
             "type": "number",
-            "default-value": 0,
+            "default-value": 0.263429,
             "inputType": "select",
             "options": [
                 {
                     "value": 0,
                     "label": "1"
                 }
-            ]
+            ],
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fMusicVolume": {
             "name": "Music Volume",
             "description": "range: 0.0-1.0",
             "type": "number",
-            "default-value": 0,
+            "default-value": 0.015319,
             "inputType": "select",
             "options": [
                 {
                     "value": 0,
                     "label": "1"
                 }
-            ]
+            ],
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "bSound": {
             "name": "Sound",
-            "description": "",
+            "description": "Configures the Sound setting.",
             "type": "checkbox",
             "default-value": true
         },
         "bMusic": {
             "name": "Music",
-            "description": "",
+            "description": "Configures the Music setting.",
             "type": "checkbox",
             "default-value": true
         },
@@ -3759,29 +4171,31 @@
         },
         "bDisableFrequencyVariation": {
             "name": "Disable Frequency Variation",
-            "description": "",
+            "description": "Configures the Disable Frequency Variation setting.",
             "type": "checkbox",
             "default-value": false
         },
         "iMaxNumChannels": {
             "name": "Max Num Channels",
-            "description": "",
+            "description": "Configures the Max Num Channels setting.",
             "type": "number",
             "default-value": 64,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iMaxNumVirtualChannels": {
             "name": "Max Num Virtual Channels",
-            "description": "",
+            "description": "Configures the Max Num Virtual Channels setting.",
             "type": "number",
             "default-value": 200,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "bOcclusion": {
             "name": "Occlusion",
             "description": "Sound occlusion in games refers to a process that imitates how sounds are perceived in \"closed\" environments, closed meaning that there are barriers close to the sound source or listener. It's can drop performance dramatically with a large number of agents or other sound sources.",
             "type": "checkbox",
-            "default-value": false
+            "default-value": true
         },
         "bOcclusionFilter": {
             "name": "Occlusion Filter",
@@ -3793,13 +4207,13 @@
             "name": "Hrtf Filter",
             "description": "All FMOD_SOFTWARE (and FMOD_HARDWARE on 3DS and NGP) with FMOD_3D based voices will add a software lowpass filter effect into the DSP chain which causes sounds to sound duller when the sound goes behind the listener.",
             "type": "checkbox",
-            "default-value": true
+            "default-value": false
         },
         "bDistanceFilter": {
             "name": "Distance Filter",
             "description": "All FMOD_SOFTWARE with FMOD_3D based voices will add a software lowpass and highpass filter effect into the DSP chain which will act as a distance-automated bandpass filter. ",
             "type": "checkbox",
-            "default-value": true
+            "default-value": false
         },
         "bWasapiExclusive": {
             "name": "Wasapi Exclusive",
@@ -3809,16 +4223,19 @@
         },
         "fDistancePriorityFactor": {
             "name": "Distance Priority Factor",
-            "description": "",
+            "description": "Configures the Distance Priority Factor setting.",
             "type": "number",
             "default-value": 0.47,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         }
     },
     "ShadowMap": {
         "bShadowMap": {
             "name": "Shadow Map",
-            "description": "",
+            "description": "Configures the Shadow Map setting.",
             "type": "checkbox",
             "default-value": true
         },
@@ -3826,36 +4243,42 @@
             "name": "Shadow Map Texture Size",
             "description": "values: 256, 512, 1024, 2048, 4096, 8192",
             "type": "number",
-            "default-value": 1024,
-            "inputType": "number"
+            "default-value": 2048,
+            "inputType": "number",
+            "step": 1
         },
         "fShadowMapDepthBias": {
             "name": "Shadow Map Depth Bias",
-            "description": "",
+            "description": "Configures the Shadow Map Depth Bias setting.",
             "type": "number",
             "default-value": 0.0002,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fShadowMapSlopeScaledDepthBias": {
             "name": "Shadow Map Slope Scaled Depth Bias",
-            "description": "",
+            "description": "Configures the Shadow Map Slope Scaled Depth Bias setting.",
             "type": "number",
             "default-value": 2.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "sShadowMapShader": {
             "name": "Shadow Map Shader",
-            "description": "",
+            "description": "Configures the Shadow Map Shader setting.",
             "type": "text",
             "default-value": "shadow_shader",
             "inputType": "text"
         },
         "iShadowMapNumPasses": {
             "name": "Shadow Map Num Passes",
-            "description": "",
+            "description": "Configures the Shadow Map Num Passes setting.",
             "type": "number",
             "default-value": 4,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         }
     },
     "ItemRequirement": {
@@ -3864,196 +4287,224 @@
             "description": "Set difficulty requirement for item types (check attributes in header_troops.py and skills in header_skills.py).",
             "type": "number",
             "default-value": -1,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iSkillHorse": {
             "name": "Skill Horse",
-            "description": "",
+            "description": "Configures the Skill Horse setting.",
             "type": "number",
             "default-value": 24,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iAttributeOneHanded": {
             "name": "Attribute One Handed",
-            "description": "",
+            "description": "Configures the Attribute One Handed setting.",
             "type": "number",
             "default-value": 0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iSkillOneHanded": {
             "name": "Skill One Handed",
-            "description": "",
+            "description": "Configures the Skill One Handed setting.",
             "type": "number",
             "default-value": -1,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iAttributeTwoHanded": {
             "name": "Attribute Two Handed",
-            "description": "",
+            "description": "Configures the Attribute Two Handed setting.",
             "type": "number",
             "default-value": 0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iSkillTwoHanded": {
             "name": "Skill Two Handed",
-            "description": "",
+            "description": "Configures the Skill Two Handed setting.",
             "type": "number",
             "default-value": -1,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iAttributePolearm": {
             "name": "Attribute Polearm",
-            "description": "",
+            "description": "Configures the Attribute Polearm setting.",
             "type": "number",
             "default-value": 0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iSkillPolearm": {
             "name": "Skill Polearm",
-            "description": "",
+            "description": "Configures the Skill Polearm setting.",
             "type": "number",
             "default-value": -1,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iAttributeShield": {
             "name": "Attribute Shield",
-            "description": "",
+            "description": "Configures the Attribute Shield setting.",
             "type": "number",
             "default-value": -1,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iSkillShield": {
             "name": "Skill Shield",
-            "description": "",
+            "description": "Configures the Skill Shield setting.",
             "type": "number",
             "default-value": 26,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iAttributeBow": {
             "name": "Attribute Bow",
-            "description": "",
+            "description": "Configures the Attribute Bow setting.",
             "type": "number",
             "default-value": -1,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iSkillBow": {
             "name": "Skill Bow",
-            "description": "",
+            "description": "Configures the Skill Bow setting.",
             "type": "number",
             "default-value": 33,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iAttributeCrossbow": {
             "name": "Attribute Crossbow",
-            "description": "",
+            "description": "Configures the Attribute Crossbow setting.",
             "type": "number",
             "default-value": 0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iSkillCrossbow": {
             "name": "Skill Crossbow",
-            "description": "",
+            "description": "Configures the Skill Crossbow setting.",
             "type": "number",
             "default-value": -1,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iAttributeThrown": {
             "name": "Attribute Thrown",
-            "description": "",
+            "description": "Configures the Attribute Thrown setting.",
             "type": "number",
             "default-value": -1,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iSkillThrown": {
             "name": "Skill Thrown",
-            "description": "",
+            "description": "Configures the Skill Thrown setting.",
             "type": "number",
             "default-value": 34,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iAttributeHeadArmor": {
             "name": "Attribute Head Armor",
-            "description": "",
+            "description": "Configures the Attribute Head Armor setting.",
             "type": "number",
             "default-value": 0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iSkillHeadArmor": {
             "name": "Skill Head Armor",
-            "description": "",
+            "description": "Configures the Skill Head Armor setting.",
             "type": "number",
             "default-value": -1,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iAttributeBodyArmor": {
             "name": "Attribute Body Armor",
-            "description": "",
+            "description": "Configures the Attribute Body Armor setting.",
             "type": "number",
             "default-value": 0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iSkillBodyArmor": {
             "name": "Skill Body Armor",
-            "description": "",
+            "description": "Configures the Skill Body Armor setting.",
             "type": "number",
             "default-value": -1,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iAttributeFootArmor": {
             "name": "Attribute Foot Armor",
-            "description": "",
+            "description": "Configures the Attribute Foot Armor setting.",
             "type": "number",
             "default-value": 0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iSkillFootArmor": {
             "name": "Skill Foot Armor",
-            "description": "",
+            "description": "Configures the Skill Foot Armor setting.",
             "type": "number",
             "default-value": -1,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iAttributeHandArmor": {
             "name": "Attribute Hand Armor",
-            "description": "",
+            "description": "Configures the Attribute Hand Armor setting.",
             "type": "number",
             "default-value": 0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iSkillHandArmor": {
             "name": "Skill Hand Armor",
-            "description": "",
+            "description": "Configures the Skill Hand Armor setting.",
             "type": "number",
             "default-value": -1,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iAttributePistol": {
             "name": "Attribute Pistol",
-            "description": "",
+            "description": "Configures the Attribute Pistol setting.",
             "type": "number",
             "default-value": -1,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iSkillPistol": {
             "name": "Skill Pistol",
-            "description": "",
+            "description": "Configures the Skill Pistol setting.",
             "type": "number",
             "default-value": -1,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iAttributeMusket": {
             "name": "Attribute Musket",
-            "description": "",
+            "description": "Configures the Attribute Musket setting.",
             "type": "number",
             "default-value": -1,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iSkillMusket": {
             "name": "Skill Musket",
-            "description": "",
+            "description": "Configures the Skill Musket setting.",
             "type": "number",
             "default-value": -1,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         }
     },
     "Http": {
@@ -4069,35 +4520,40 @@
             "description": "For master server requests.",
             "type": "number",
             "default-value": 3,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iResolveTimeout": {
             "name": "Resolve Timeout",
             "description": "In milliseconds, to use for name resolution.",
             "type": "number",
             "default-value": 10000,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iConnectTimeout": {
             "name": "Connect Timeout",
             "description": "In milliseconds, to use for server connection requests.",
             "type": "number",
             "default-value": 10000,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iSendTimeout": {
             "name": "Send Timeout",
             "description": "In milliseconds, to use for sending requests.",
             "type": "number",
             "default-value": 10000,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iReceiveTimeout": {
             "name": "Receive Timeout",
             "description": "In milliseconds, to receive a response to a request.",
             "type": "number",
             "default-value": 10000,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         }
     },
     "CampaignAi": {
@@ -4105,7 +4561,7 @@
             "name": "Reduce Campaign Ai",
             "description": "Deprecated. 0 - good, 1 - average, 2 - poor. Operations: options_get_campaign_ai, options_set_campaign_ai, game_get_reduce_campaign_ai.",
             "type": "number",
-            "default-value": 2,
+            "default-value": 0,
             "inputType": "select",
             "options": [
                 {
@@ -4120,7 +4576,8 @@
                     "value": 2,
                     "label": "Poor"
                 }
-            ]
+            ],
+            "step": 1
         },
         "bUseStrictPathfindingForShips": {
             "name": "Use Strict Pathfinding For Ships",
@@ -4138,31 +4595,31 @@
         },
         "bThreadedNetwork": {
             "name": "Threaded Network",
-            "description": "",
+            "description": "Configures the Threaded Network setting.",
             "type": "checkbox",
             "default-value": true
         },
         "bThreadedLogger": {
             "name": "Threaded Logger",
-            "description": "",
+            "description": "Configures the Threaded Logger setting.",
             "type": "checkbox",
             "default-value": true
         },
         "bThreadedSkeletalAnimation": {
             "name": "Threaded Skeletal Animation",
-            "description": "",
+            "description": "Configures the Threaded Skeletal Animation setting.",
             "type": "checkbox",
-            "default-value": false
+            "default-value": true
         },
         "bThreadedVertexBufferWrites": {
             "name": "Threaded Vertex Buffer Writes",
-            "description": "",
+            "description": "Configures the Threaded Vertex Buffer Writes setting.",
             "type": "checkbox",
             "default-value": false
         },
         "bThreadedIndexBufferWrites": {
             "name": "Threaded Index Buffer Writes",
-            "description": "",
+            "description": "Configures the Threaded Index Buffer Writes setting.",
             "type": "checkbox",
             "default-value": false
         },
@@ -4170,64 +4627,73 @@
             "name": "Num Task Threads",
             "description": "Number threads for async tasks.",
             "type": "number",
-            "default-value": 0,
-            "inputType": "number"
+            "default-value": 11,
+            "inputType": "number",
+            "step": 1
         },
         "iTaskCriticalSectionSpinCount": {
             "name": "Task Critical Section Spin Count",
             "description": "Sets the spin count for the specified critical section. Spinning means that when a thread tries to acquire a critical section that is locked, the thread enters a loop, checks to see if the lock is released, and if the lock is not released, the thread goes to sleep.",
             "type": "number",
             "default-value": 0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iRenderBufferCriticalSectionSpinCount": {
             "name": "Render Buffer Critical Section Spin Count",
-            "description": "",
+            "description": "Configures the Render Buffer Critical Section Spin Count setting.",
             "type": "number",
             "default-value": 0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iRenderThreadCriticalSectionSpinCount": {
             "name": "Render Thread Critical Section Spin Count",
-            "description": "",
+            "description": "Configures the Render Thread Critical Section Spin Count setting.",
             "type": "number",
             "default-value": 0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iAsyncRenderCallsCriticalSectionSpinCount": {
             "name": "Async Render Calls Critical Section Spin Count",
-            "description": "",
+            "description": "Configures the Async Render Calls Critical Section Spin Count setting.",
             "type": "number",
             "default-value": 0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iNetworkCriticalSectionSpinCount": {
             "name": "Network Critical Section Spin Count",
-            "description": "",
+            "description": "Configures the Network Critical Section Spin Count setting.",
             "type": "number",
             "default-value": 0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iTextureLoadCriticalSectionSpinCount": {
             "name": "Texture Load Critical Section Spin Count",
-            "description": "",
+            "description": "Configures the Texture Load Critical Section Spin Count setting.",
             "type": "number",
             "default-value": 0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iTextureCreateCriticalSectionSpinCount": {
             "name": "Texture Create Critical Section Spin Count",
-            "description": "",
+            "description": "Configures the Texture Create Critical Section Spin Count setting.",
             "type": "number",
             "default-value": 0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "iTextureUseCriticalSectionSpinCount": {
             "name": "Texture Use Critical Section Spin Count",
-            "description": "",
+            "description": "Configures the Texture Use Critical Section Spin Count setting.",
             "type": "number",
             "default-value": 0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         }
     },
     "Profiling": {
@@ -4242,13 +4708,14 @@
             "description": "Flushes the profiling file stream every x sec (only flushes on exit if 0).",
             "type": "number",
             "default-value": 60,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         }
     },
     "ParticleSystems": {
         "bParticleSystems": {
             "name": "Particle Systems",
-            "description": "",
+            "description": "Configures the Particle Systems setting.",
             "type": "checkbox",
             "default-value": true
         },
@@ -4263,34 +4730,40 @@
                     "value": 0,
                     "label": "65536"
                 }
-            ]
+            ],
+            "step": 1
         },
         "iParticleSystemMaxNumRenderedParticles": {
             "name": "Particle System Max Num Rendered Particles",
             "description": "Limit for particles num.",
             "type": "number",
             "default-value": 5000,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 1
         },
         "fParticleSystemDegradeDistance": {
             "name": "Particle System Degrade Distance",
             "description": "The distance at which the number of bursted particles decreases. range: 10.0-60.0",
             "type": "number",
-            "default-value": 0,
+            "default-value": 15.0,
             "inputType": "select",
             "options": [
                 {
                     "value": 0,
                     "label": "60"
                 }
-            ]
+            ],
+            "step": 0.1
         },
         "fParticleSystemUpdateInterval": {
             "name": "Particle System Update Interval",
             "description": "The time during which the particles are accumulated (not burst every frame).",
             "type": "number",
             "default-value": 0.02,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "bHasForcedParticles": {
             "name": "Has Forced Particles",
@@ -4310,27 +4783,33 @@
             "name": "Scale",
             "description": "Font scale. Range: 0.5-1.5",
             "type": "number",
-            "default-value": 0,
+            "default-value": 1.0,
             "inputType": "select",
             "options": [
                 {
                     "value": 5,
                     "label": "1"
                 }
-            ]
+            ],
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fMessagesScale": {
             "name": "Messages Scale",
             "description": "Font scale for messages. Range: 0.5-1.5",
             "type": "number",
-            "default-value": 0,
+            "default-value": 1.0,
             "inputType": "select",
             "options": [
                 {
                     "value": 5,
                     "label": "1"
                 }
-            ]
+            ],
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         }
     },
     "Physics": {
@@ -4351,47 +4830,58 @@
             "description": "End ragdoll, when this time has passed.",
             "type": "number",
             "default-value": 30.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "fRagdollOnGroundPurgeTime": {
             "name": "Ragdoll On Ground Purge Time",
             "description": "End ragdoll, when agent on ground and this time has passed.",
             "type": "number",
             "default-value": 10.0,
-            "inputType": "number"
+            "inputType": "number",
+            "step": 0.1
         },
         "fRagdollInactivePurgeTime": {
             "name": "Ragdoll Inactive Purge Time",
             "description": "End ragdoll, when ragdoll inactive and this time has passed.",
             "type": "number",
             "default-value": 1.0,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fMaxDeltaTimeStep": {
             "name": "Max Delta Time Step",
             "description": "Time step for advancement state of ragdoll simulation. Operation - set_physics_delta_time.",
             "type": "number",
             "default-value": 0.025,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "fMaxSlowMotionDeltaTimeStep": {
             "name": "Max Slow Motion Delta Time Step",
             "description": "Same, if cheat mode slow-motion enabled.",
             "type": "number",
             "default-value": 0.005,
-            "inputType": "number"
+            "inputType": "number",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
         },
         "bRagdollSoak": {
             "name": "Ragdoll Soak",
             "description": "Blows is beaten on corpses and thus prevents an unintentional teamhits.",
             "type": "checkbox",
-            "default-value": false
+            "default-value": true
         },
         "bRagdollSoakApplyForce": {
             "name": "Ragdoll Soak Apply Force",
             "description": "Apply blow force to beaten on corpses.",
             "type": "checkbox",
-            "default-value": false
+            "default-value": true
         }
     }
 }
