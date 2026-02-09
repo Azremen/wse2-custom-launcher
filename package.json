@@ -1,6 +1,6 @@
 {
   "name": "wse2-launcher",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Warband Script Enhancer 2 Launcher By Azremen",
   "private": true,
   "main": "main.js",
