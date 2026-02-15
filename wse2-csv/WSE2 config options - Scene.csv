@@ -1,6 +1,0 @@
-Name,Default Value,Warband Name,Description
-bSunFlare,TRUE,,Display sun flare mesh.
-sSunFlareMesh,sample_flare,,
-sSunFlareMaterial,flare,,
-fCharacterDetail,0.5,rgl_config.txt - character_detail,Used to select a entity lod depending on distance. Range: 0.0-1.0.
-bUseSceneUnloading,FALSE,module.ini - use_scene_unloading,"Once you start mission, it’s unload all scenes from RAM."

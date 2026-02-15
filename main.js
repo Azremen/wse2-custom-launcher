@@ -4,6 +4,7 @@ const path = require("path");
 const fs = require('fs');
 const AdmZip = require('adm-zip');
 const ini = require('ini');
+const crypto = require('crypto'); // Built-in Node.js crypto for hashing
 
 // Azremen: Simple File Logger implementation to catch startup errors
 // Try standard location first, fallback to temp on Linux for visibility
@@ -42,6 +43,15 @@ console.error = (...args) => {
     logToFile('ERROR', args);
     originalError.apply(console, args);
 };
+
+// Catch crashes and async errors
+process.on('uncaughtException', (error) => {
+    console.error('CRITICAL: Uncaught Exception:', error);
+});
+
+process.on('unhandledRejection', (reason) => {
+    console.error('CRITICAL: Unhandled Rejection:', reason);
+});
 
 console.log(`Launcher starting... Log file path: ${logPath}`);
 
@@ -154,7 +164,7 @@ try {
 
 let mainWindow = null;
 let cfgWindow = null;
-let pendingModuleMeta = null;
+const pendingDownloads = new Map();
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -196,6 +206,23 @@ function createWindow() {
         console.log("AutoUpdate check failed (expected if private repo or no releases):", err.message);
     });
     */
+
+    // Fail-safe Update Logic
+    // 1. Silent error handler to prevent dialog popups on network failure
+    autoUpdater.on('error', (error) => {
+         // Log for debugging, but do not alert the user
+         console.log(`Auto-updater error: ${error.message}`);
+    });
+
+    // 2. Non-blocking check
+    try {
+        // Fire and forget - don't await this, let it run in background
+        autoUpdater.checkForUpdatesAndNotify().catch(err => {
+             console.log("AutoUpdate check failed (network/repo issue):", err.message);
+        });
+    } catch (err) {
+        console.log("AutoUpdate sync error:", err.message);
+    }
     
     autoUpdater.on('update-available', () => {
         if(mainWindow) mainWindow.webContents.send('update_available');
@@ -205,13 +232,36 @@ function createWindow() {
         if(mainWindow) mainWindow.webContents.send('update_downloaded');
     });
 
-    // Download Handler
+    // Download Handler - UPDATED for Concurrency & Redirects
     mainWindow.webContents.session.on('will-download', (event, item, webContents) => {
-        item.setSavePath(tempZipPath);
+        // Check URL chain to support redirects (GitHub releases -> AWS S3 etc)
+        const chain = item.getURLChain();
+        let meta = null;
+        let matchedUrl = null;
+
+        for (const u of chain) {
+            if (pendingDownloads.has(u)) {
+                meta = pendingDownloads.get(u);
+                matchedUrl = u;
+                break;
+            }
+        }
+        
+        if (!meta) {
+            // Not one of our managed downloads
+            return;
+        }
+
+        // Unique temp path
+        const uniqueTempName = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.zip`;
+        const downloadPath = path.join(modulesPath, uniqueTempName);
+        
+        console.log(`[Download] Saving ${meta.name} to ${downloadPath}`);
+        item.setSavePath(downloadPath);
 
         item.on('updated', (event, state) => {
             if (state === 'interrupted') {
-                console.log('Download is interrupted but can be resumed');
+                console.log(`[Download] Interrupted: ${meta.name}`);
             } else if (state === 'progressing') {
                 if (!item.isPaused()) {
                     const perc = item.getReceivedBytes() / item.getTotalBytes() * 100;
@@ -221,46 +271,19 @@ function createWindow() {
         });
 
         item.once('done', (event, state) => {
-            if (state === 'completed') {
-                try {
-                    console.log('Download completed, extracting...');
-                    const zip = new AdmZip(tempZipPath);
-                    zip.extractAllTo(modulesPath, true);
-                    
-                    // Write version.json if metadata exists
-                    if (pendingModuleMeta && pendingModuleMeta.name && pendingModuleMeta.version) {
-                        try {
-                            const modDir = path.join(modulesPath, pendingModuleMeta.name);
-                            if (fs.existsSync(modDir)) {
-                                const vFile = path.join(modDir, 'version.json');
-                                fs.writeFileSync(vFile, JSON.stringify({ version: pendingModuleMeta.version }, null, 4));
-                            }
-                        } catch(e) { console.error("Failed to write version.json", e); }
-                    }
-                    pendingModuleMeta = null;
-
-                    // Refresh UI
-                    mainWindow.webContents.send('download-complete');
-                } catch (err) {
-                    console.error("Extraction failed:", err);
-                    mainWindow.webContents.send('download-error', err.message);
-                }
-            } else {
-                console.log(`Download failed: ${state}`);
-                mainWindow.webContents.send('download-error', state);
-            }
+            // Clean up using the URL we matched
+            if (matchedUrl) pendingDownloads.delete(matchedUrl);
             
-            // Allow file release before unlink
-            setTimeout(() => {
+            if (state === 'completed') {
+                // Defer processing to helper function
+                processDownloadedModule(downloadPath, meta);
+            } else {
+                console.log(`[Download] Failed: ${state}`);
+                mainWindow.webContents.send('download-error', `Download failed: ${state}`);
                 try { 
-                    if (fs.existsSync(tempZipPath)) {
-                        fs.unlinkSync(tempZipPath); 
-                        console.log("Cleanup successful");
-                    }
-                } catch(e) {
-                    console.error("Cleanup failed:", e);
-                }
-            }, 1000); // 1 second buffer
+                    if (fs.existsSync(downloadPath)) fs.unlinkSync(downloadPath); 
+                } catch(e) {}
+            }
         });
     });
 }
@@ -329,7 +352,7 @@ ipcMain.handle('launch-game', (event, moduleName) => {
     // Check if executable exists
     const winExeName = 'mb_warband_wse2.exe';
 
-    // The user specified WSE2 is a 32-bit Windows app.
+    // WSE2 is a 32-bit Windows app.
     // On Linux/Mac, we must use Wine (or similar compatibility layer) to launch it.
     const isWindows = process.platform === 'win32';
     
@@ -401,15 +424,25 @@ ipcMain.handle('launch-game', (event, moduleName) => {
              env.LC_ALL = "C";
         }
         
-        // Log output to a file for debugging "Black Screen" issues
-        const outLog = fs.openSync(path.join(installPath, 'wse2_launch_out.log'), 'w');
-        const errLog = fs.openSync(path.join(installPath, 'wse2_launch_err.log'), 'w');
-
+        // Azremen: Pipe game output to main logger instead of separate files
+        // This prevents permission errors in read-only directories and keeps logs unified.
+        
         const gameProcess = spawn(command, finalArgs, {
             cwd: workingDir, // Important: Run from game directory (where EXE is)
             detached: true,
             env: env, 
-            stdio: ['ignore', outLog, errLog]
+            stdio: ['ignore', 'pipe', 'pipe'] // Pipe stdout/stderr back to parent
+        });
+
+        // Redirect game output to main log
+        gameProcess.stdout.on('data', (data) => {
+            const lines = data.toString().trim().split('\n');
+            lines.forEach(line => console.log(`[GAME/OUT] ${line}`));
+        });
+
+        gameProcess.stderr.on('data', (data) => {
+            const lines = data.toString().trim().split('\n');
+            lines.forEach(line => console.error(`[GAME/ERR] ${line}`));
         });
 
         gameProcess.on('error', (err) => {
@@ -420,30 +453,29 @@ ipcMain.handle('launch-game', (event, moduleName) => {
         // Azremen: Monitor for early exit (crash on startup)
         const checkTimer = setTimeout(() => {
             // Assume stable after 5 seconds, unref to allow independent running
-            if (!gameProcess.killed) {
+            if (gameProcess && !gameProcess.killed) {
                 gameProcess.unref();
+
+                // If using 'pipe', we must unpipe or destroy streams if we want to detach fully
+                // Otherwise the parent process keeps waiting for output
+                // But since we want logs, we keep listening? 
+                // Actually if we want to DETACH, we should stop listening eventually or let it run.
+                // For now, let's keep listening until the game closes or until the user closes the launcher.
             }
         }, 5000);
+
+        gameProcess.on('headers', (d) => {/*ignore*/}); // invalid event for child_process, removing just in case
 
         gameProcess.on('exit', (code, signal) => {
             clearTimeout(checkTimer);
             console.log(`[Launch] Process exited with code ${code} signal ${signal}`);
             
             if (code !== 0) {
-                // Read error log to give a hint
-                let errDetails = "";
-                try {
-                    const errLogPath = path.join(installPath, 'wse2_launch_err.log');
-                    if (fs.existsSync(errLogPath)) {
-                        const logs = fs.readFileSync(errLogPath, 'utf-8');
-                        // Take last 3 lines
-                        errDetails = logs.split('\n').slice(-3).join('\n');
-                    }
-                } catch(e) {}
-                
-                const msg = `Game exited immediately (Code: ${code}).\n\nDetails:\n${errDetails}`;
+                const msg = `Game exited immediately (Code: ${code}). Check wse2-launcher.log for details.`;
                 console.error(msg);
-                mainWindow.webContents.send('download-error', msg); // Show alert to user
+                if (mainWindow && !mainWindow.isDestroyed()) {
+                     mainWindow.webContents.send('download-error', msg); // Show alert to user
+                }
             }
         });
 
@@ -504,7 +536,7 @@ ipcMain.on('configWindowBack', () => {
 
 // Download Trigger
 ipcMain.on("download", (event, url, meta) => {
-    pendingModuleMeta = meta; // Store metadata for post-download processing
+    pendingDownloads.set(url, meta); // Store metadata for post-download processing
     if (mainWindow) {
         mainWindow.webContents.downloadURL(url);
     }
@@ -662,7 +694,7 @@ ipcMain.handle('save-config-data', (event, { modulePath, configData }) => {
         console.log(`[Save Config] Writing to: ${iniPath}`);
         
         // Convert to INI
-        // The user mentioned underscores. If they strictly want snake_case keys (e.g. iMaxNumCorpses -> max_num_corpses),
+        // iMaxNumCorpses -> max_num_corpses
         // we would need a converter here. For now, we stick to the schema names from CSV.
         const iniString = ini.stringify(configData);
         
@@ -684,3 +716,130 @@ ipcMain.handle('save-config-data', (event, { modulePath, configData }) => {
 ipcMain.on('restart_app', () => {
     autoUpdater.quitAndInstall();
 });
+
+async function processDownloadedModule(tempZipPath, meta) {
+    try {
+        console.log(`[Install] Processing ${meta.name}...`);
+        
+        // INTEGRITY CHECK
+        if (meta.md5) {
+            console.log('[Install] Verifying integrity...');
+            if (mainWindow) mainWindow.webContents.send('download-progress', 100);
+            
+            try {
+                const hash = crypto.createHash('md5');
+                const stream = fs.createReadStream(tempZipPath);
+                
+                await new Promise((resolve, reject) => {
+                    stream.on('data', chunk => hash.update(chunk));
+                    stream.on('end', resolve);
+                    stream.on('error', reject);
+                });
+                
+                const downloadHash = hash.digest('hex');
+                console.log(`[Install] Hash Check: Server[${meta.md5}] vs Local[${downloadHash}]`);
+                
+                if (downloadHash !== meta.md5) {
+                    throw new Error("Integrity Check Failed! File corrupted.");
+                }
+            } catch (hashErr) {
+                console.error("[Install] Integrity check error:", hashErr);
+                throw hashErr; 
+            }
+        }
+
+        // CLEAN INSTALL LOGIC
+        if (meta.cleanInstall) {
+            const targetDir = path.join(modulesPath, meta.name);
+            console.log(`[Clean Install] Removing: ${targetDir}`);
+            try {
+                if (fs.existsSync(targetDir)) {
+                    fs.rmSync(targetDir, { recursive: true, force: true });
+                }
+            } catch (cleanErr) {
+                console.error("[Install] Clean install removal failed:", cleanErr);
+            }
+        }
+
+        console.log('[Install] Extracting...');
+        const zip = new AdmZip(tempZipPath);
+        
+        // Smart Extraction Logic
+        const entries = zip.getEntries();
+        let hasRootFolder = false;
+        let rootFolderName = "";
+        
+        if (entries.length > 0) {
+            const firstEntry = entries[0];
+            const firstPath = firstEntry.entryName;
+            const parts = firstPath.split('/');
+            
+            if (parts.length > 1 && parts[0]) {
+                const potentialRoot = parts[0] + '/';
+                const allMatch = entries.every(e => e.entryName.startsWith(potentialRoot) || (e.isDirectory && e.entryName === potentialRoot));
+                if (allMatch) {
+                    hasRootFolder = true;
+                    rootFolderName = parts[0];
+                }
+            }
+        }
+
+        const targetModuleDir = path.join(modulesPath, meta.name);
+
+        if (hasRootFolder) {
+            if (rootFolderName === meta.name) {
+                zip.extractAllTo(modulesPath, true);
+            } else {
+                // Rename scenario
+                const tempExtractDir = path.join(modulesPath, `_temp_${Date.now()}_extract`);
+                zip.extractAllTo(tempExtractDir, true);
+                
+                const extractedRoot = path.join(tempExtractDir, rootFolderName);
+                
+                if (!fs.existsSync(targetModuleDir)) {
+                     fs.renameSync(extractedRoot, targetModuleDir);
+                } else {
+                     // Merge
+                     if(fs.existsSync(extractedRoot)) {
+                         const files = fs.readdirSync(extractedRoot);
+                         files.forEach(file => {
+                             const src = path.join(extractedRoot, file);
+                             const dest = path.join(targetModuleDir, file);
+                             fs.cpSync(src, dest, { recursive: true, force: true }); 
+                         });
+                     }
+                }
+                fs.rmSync(tempExtractDir, { recursive: true, force: true });
+            }
+        } else {
+            console.log(`[Install] Extracting flat zip to ${targetModuleDir}`);
+             if (!fs.existsSync(targetModuleDir)) {
+                fs.mkdirSync(targetModuleDir, { recursive: true });
+            }
+            zip.extractAllTo(targetModuleDir, true);
+        }
+        
+        // Write version.json
+        if (meta.name && meta.version) {
+            try {
+                const modDir = path.join(modulesPath, meta.name);
+                if (fs.existsSync(modDir)) {
+                    const vFile = path.join(modDir, 'version.json');
+                    fs.writeFileSync(vFile, JSON.stringify({ version: meta.version }, null, 4));
+                }
+            } catch(e) { console.error("Failed to write version.json", e); }
+        }
+        
+        if (mainWindow) mainWindow.webContents.send('download-complete');
+        
+    } catch (err) {
+        console.error("Installation failed:", err);
+        if (mainWindow) mainWindow.webContents.send('download-error', err.message);
+    } finally {
+        setTimeout(() => {
+            try { 
+                if (fs.existsSync(tempZipPath)) fs.unlinkSync(tempZipPath); 
+            } catch(e) {}
+        }, 1000); 
+    }
+}

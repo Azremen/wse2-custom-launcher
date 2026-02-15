@@ -1,3 +1,0 @@
-Name,Default Value,Warband Name,Description
-bEnabled,FALSE,wse_settings.ini - profiling enabled,Enable the WSE profiler.
-iFlushInterval,60,wse_settings.ini - profiling flush_interval,Flushes the profiling file stream every x sec (only flushes on exit if 0).

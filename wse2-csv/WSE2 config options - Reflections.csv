@@ -1,7 +1,0 @@
-Name,Default Value,Warband Name,Description
-iReflectionsMode,2,rgl_config.txt - fake_reflections,"Water reflections mode. Full reflections are performance heavy. Disable them if you are experiencing low frame rates. 0 - disable, 1 - sky, 2 - sky and landscape objects, 3 - full (perfomance heavy)"
-iReflectionsTextureSize,256,,"values: 128, 256, 512, 1024, 2048, 4096"
-iReflectionsMinFilter,2,,"0 - filtering disabled, 1 - nearest, 2 - linear interpolation, 3 - anisotropic"
-iReflectionsMagFilter,2,,"0 - filtering disabled, 1 - nearest, 2 - linear interpolation, 3 - anisotropic"
-iReflectionsMipFilter,2,,"0 - filtering disabled, 1 - nearest, 2 - linear interpolation"
-iReflectionsMaxAnisotropy,0,,limit for anisotropic filtering

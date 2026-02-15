@@ -1,6 +1,0 @@
-Name,Default Value,Warband Name,Description
-bUseLowVariationCache,FALSE,,"Reduces variation of cached meshes (possibly improving performance) in modules with two skins (male, female) only."
-bHasAccessoriesForFemale,FALSE,module.ini - has_accessories_for_female,Changed beard caption for female skin (1) from ui_change_beard to ui_change_accessories.
-bMoreSkinsSupportForMultiplayerProfile,FALSE,wse module.ini - more_skins_support_for_multiplayer_profile,Enable support for more than two multiplayer skins for profile.
-iNumSkinsForMultiplayerProfile,2,wse module.ini - num_skins_for_multiplayer_profile,Num skins for multiplayer profile.
-bLimitHairColors,TRUE,module.ini - limit_hair_colors,"Set to true if you don’t have extra hair textures. Each human skin definition in Native uses hair_blonde along with vertex coloring. If you set the value to false the game expects to find for example a material and texture named hair_red, beard_black, etc."

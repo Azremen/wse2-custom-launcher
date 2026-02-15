@@ -3,6 +3,10 @@
   "version": "1.0.1",
   "description": "Warband Script Enhancer 2 Launcher By Azremen",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Azremen/wse2-custom-launcher.git"
+  },
   "main": "main.js",
   "author": "Azremen <timurid76@gmail.com>",
   "license": "AGPL-3.0-or-later",
@@ -38,6 +42,7 @@
     ],
     "win": {
       "target": [
+        "nsis",
         "portable",
         "zip"
       ],

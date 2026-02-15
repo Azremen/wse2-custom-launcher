@@ -1,4 +1,0 @@
-Name,Default Value,Warband Name,Description
-bFontAnisotropicFiltering,TRUE,,Use anisotropic instead linear interpolation for min filter. Limit for anisotropic filtering - 4.
-fScale,1.0,,Font scale. Range: 0.5-1.5
-fMessagesScale,1.0,,Font scale for messages. Range: 0.5-1.5

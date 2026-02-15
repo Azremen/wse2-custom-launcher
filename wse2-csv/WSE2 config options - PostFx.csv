@@ -1,7 +1,0 @@
-Name,Default Value,Warband Name,Description
-iFxaa,0,,"Antialiasing (FXAA). Smooths out jagged edges, significantly blurs the screen. 0 - none, 1 - low, 2 - medium, 3 - high."
-iPostProcess,0,,"Post Processing Filter. 0 - none, 1 - Light Sharpen, 2 - Strong Sharpen, 3 - MAKE MY EYES BLEED"
-iHighDynamicRange,0,rgl_config.txt - postfx_hdr,"High dynamic range (HDR) is a technique that produces images with a greater dynamic range of luminosity than standard dynamic range (SDR) images, allowing for realistic depictions of color and brightness. 0 - off, 1 - low, 2 - high"
-bDepthEffects,FALSE,rgl_config.txt - postfx_dof,Depth of Field is a post-processing effect that simulates the focus properties of a camera lens.
-bAutoExposure,FALSE,rgl_config.txt - postfx_autoexp,Auto Exposure mimics how the human eye adjusts in varying levels of darkness.
-bDisableHighHDR,FALSE,rgl_config.txt - disable_high_hdr,Disable High HDR setting

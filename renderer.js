@@ -1,5 +1,5 @@
 // Constants - Azremen's Configuration
-const REMOTE_URL = 'http://localhost/'; // Change this to your actual server URL
+const REMOTE_URL = 'http://localhost/wse2-launcher/'; // Change this to your VPS URL (e.g., http://your-vps-ip/launcher/)
 const PLAY_BUTTON_ID = 'play-btn';
 
 // Azremen's Global State Variables
@@ -159,21 +159,21 @@ function applyTranslations() {
     // Text and Placeholder
     $('[data-i18n]').each(function() {
         const key = $(this).data('i18n');
-        if (translations[key]) {
-            if ($(this).is('input') || $(this).is('textarea')) {
-                $(this).attr('placeholder', translations[key]);
-            } else {
-                $(this).text(translations[key]);
-            }
+        // Always try to translate or fallback to key (mostly english)
+        const text = translations[key] || key;
+        
+        if ($(this).is('input') || $(this).is('textarea')) {
+            $(this).attr('placeholder', text);
+        } else {
+            $(this).text(text);
         }
     });
     
     // Tooltips / Titles
     $('[data-i18n-title]').each(function() {
         const key = $(this).data('i18n-title');
-        if (translations[key]) {
-            $(this).attr('title', translations[key]);
-        }
+        const text = translations[key] || key;
+        $(this).attr('title', text);
     });
 
     // Explicitly update version translation if it exists
@@ -257,7 +257,11 @@ async function initMainWindow() {
     });
 
     window.api.events.onDownloadComplete(async () => {
-        updateProgressBar(100);
+        // Now it is truly complete
+        $('.progress-bar').addClass('bg-success').text(t("ui_done") || "Done");
+        $('.progress-bar').removeClass('progress-bar-striped progress-bar-animated');
+        $('#download-status').text(t("msg_download_success") || "Installed Successfully!");
+        
         setTimeout(() => {
             updateProgressBar(0);
             alert(t("msg_download_complete"));
@@ -302,9 +306,10 @@ async function refreshModuleList() {
     try {
         remoteModules = await $.ajax({
             dataType: "json",
-            url: REMOTE_URL + 'index.php',
+            url: REMOTE_URL + 'index.php', // Use the dynamic index.php from VPS
             timeout: 5000 // Timeout configuration
         });
+        if (!Array.isArray(remoteModules)) remoteModules = [];
     } catch (e) {
         console.warn("Could not fetch remote modules", e);
         remoteModules = [];
@@ -324,12 +329,27 @@ function renderList() {
     if (remoteModules && Array.isArray(remoteModules)) {
         remoteModules.forEach(rm => {
             const installed = localModules.find(lm => lm.name === rm.name);
+            
+            // Azremen: Allow absolute URLs for mods hosted on other servers (MediaFire, VPS, etc.)
+            let modUrl = null;
+            if (rm.url) {
+                if (rm.url.startsWith('http://') || rm.url.startsWith('https://')) {
+                    modUrl = rm.url;
+                } else {
+                    // Relative URL - append to base config
+                    // For now, if you use relative paths, they must be relative to the specific REMOTE_URL set above.
+                    // If you want to host files elsewhere, put the FULL URL in modules.json
+                    modUrl = REMOTE_URL + rm.url;
+                }
+            }
+
             displayList.push({
                 name: rm.name,
                 remoteVersion: rm.version,
                 localVersion: installed ? installed.version : null,
                 path: installed ? installed.path : null,
-                url: rm.url ? REMOTE_URL + rm.url : null,
+                url: modUrl,
+                md5: rm.md5 || null, // Capture checksum from index.php
                 img: installed ? installed.imagePath : null,
                 configExists: installed ? installed.configExists : false,
                 isInstalled: !!installed
@@ -386,6 +406,18 @@ function selectModule(mod, $btn) {
     activeModule = mod;
     $('#list-pos .active').removeClass('active');
     $btn.addClass('active');
+
+    // Smart Default for Clean Install
+    // If installed and URL suggests patch -> Default OFF
+    // If installed and URL suggests full -> Default ON (safer to wipe old version usually)
+    // If not installed -> Default OFF (doesn't matter)
+    let defaultClean = false;
+    if (mod.isInstalled && mod.url) {
+        const urlLower = mod.url.toLowerCase();
+        const isPatch = urlLower.includes('update') || urlLower.includes('patch');
+        defaultClean = !isPatch;
+    }
+    $('#chk-clean-install').prop('checked', defaultClean);
     
     // Update Image
     if (mod.img) {
@@ -413,21 +445,17 @@ function selectModule(mod, $btn) {
 
         // Can update?
         if (mod.remoteVersion && mod.localVersion && mod.remoteVersion !== mod.localVersion) {
-             installBtn.text(t("ui_update"));
+             installBtn.text(t("ui_update") || "Update");
              installBtn.prop('disabled', false);
              installBtn.removeClass('btn-primary').addClass('btn-success');
         } else {
-             // Installed and up to date or unknown state -> Play or Reinstall?
-             // Usually "Play" if it's a launcher, allowing launch of mod?
-             // Assuming this launcher launches the game with the mod.
-             // If not, maybe just "In Library"
-             installBtn.text(t("ui_in_library")); 
-             // Or "Play" if we had a play button. The user mentioned "Play Button ID" separate.
-             // But existing code reused #btn-install for install/update.
+             // Installed and up to date or unknown state -> Reinstall option
+             // We allow Re-Install for repair purposes
+             installBtn.text(t("ui_reinstall") || "Reinstall"); 
              
              // If this button is ONLY for install/update, disable it.
-             installBtn.prop('disabled', true);
-             installBtn.removeClass('btn-success').addClass('btn-primary');
+             installBtn.prop('disabled', false); // Allow user to force re-install
+             installBtn.removeClass('btn-primary').removeClass('btn-success').addClass('btn-secondary');
         }
     } else {
         removeBtn.prop('disabled', true);
@@ -450,22 +478,66 @@ function selectModule(mod, $btn) {
 
 function startDownload(url) {
     if(!activeModule) return;
+    
+    // Check user preference first
+    const userCleanInstall = $('#chk-clean-install').is(':checked');
+    
+    // Check if this is a "Full Install" or "Clean Update" vs a "Patch"
+    // By default, if the URL ends in a pattern like "Update.zip" or "Patch.zip", we assume patch.
+    // Otherwise, for main files (e.g. "Native.zip"), we default to clean install to avoid conflicts.
+    const isPatch = url.toLowerCase().includes('update') || url.toLowerCase().includes('patch');
+    
+    // Priority: User Checkbox > Auto-Detection
+    // If user explicitly requests clean install, we do it.
+    // If user unchecks it, we respect that (overlay install).
+    // If user hasn't touched it (implementation detail: we treat unchecked as "auto" or "overlay"? 
+    // The user requirement is "add an option", so the checkbox should control it.
+    
+    let isCleanInstall = userCleanInstall;
+
+    // Safety fallback: If user DID NOT check clean install, but it looks like a full installer (not patch),
+    // we might warn or just proceed with overlay. 
+    // However, specifically for the request "don't revert back but add an option", 
+    // let's make the checkbox the authority.
+    
     window.api.modules.download(url, { 
         name: activeModule.name, 
-        version: activeModule.remoteVersion 
+        version: activeModule.remoteVersion,
+        md5: activeModule.md5 || null,
+        cleanInstall: isCleanInstall
     });
 }
 
 function updateProgressBar(perc) {
     const $bar = $('.progress-bar');
-    if (perc >= 100) {
-        $bar.addClass('bg-success');
-        $bar.css('width', '100%');
-        $bar.text("Done");
+    let $status = $('#download-status');
+
+    // Create status element if it doesn't exist under parent of progress bar
+    if ($status.length === 0) {
+        $status = $('<div id="download-status" class="text-center small text-muted mt-1"></div>');
+        $bar.parent().after($status);
+    }
+    
+    // Explicitly handle Reset (0) or Start
+    if (perc === 0) {
+        $bar.css('width', '0%').text('');
+        $bar.removeClass('bg-success progress-bar-striped progress-bar-animated');
+        $status.text('');
+        return;
+    }
+
+    $bar.addClass('progress-bar-striped progress-bar-animated');
+    $bar.removeClass('bg-success');
+
+    if (perc >= 99.9) {
+         // Download finished, now main process is working
+         $bar.css('width', '100%').text('100%');
+         const verText = t("ui_verifying_extracting");
+         $status.text(verText || "Verifying Integrity & Extracting...");
     } else {
-        $bar.removeClass('bg-success');
-        $bar.css('width', perc + '%');
-        $bar.text(Math.round(perc) + '%');
+        $bar.css('width', perc + '%').text(Math.round(perc) + '%');
+        const dlText = t("msg_downloading");
+        $status.text(dlText || "Downloading...");
     }
 }
 
@@ -574,14 +646,17 @@ function renderConfigForm(schema, values) {
             }
             
             const $group = $('<div class="row mb-3">'); // BS5 mb-3
-            const labelText = t(fieldDef.name || key);
-            const $label = $(`<label class="col-sm-4 col-form-label">${labelText}</label>`);
+            const labelKey = fieldDef.name || key;
+            const labelText = t(labelKey);
+            const $label = $(`<label class="col-sm-4 col-form-label" data-i18n="${labelKey}">${labelText}</label>`);
             
             // Set title (tooltip)
             if (fieldDef.description) {
                  $label.attr('title', t(fieldDef.description));
+                 $label.attr('data-i18n-title', fieldDef.description);
             } else {
                  $label.attr('title', t("no_description"));
+                 $label.attr('data-i18n-title', "no_description");
             }
             
             const $col = $('<div class="col-sm-8">');
@@ -811,22 +886,37 @@ function collectFormData(schema) {
                  } else {
                      val = hex;
                  }
-            } else if ($el.attr('type') === 'number' || $el.is('select')) {
-                 const rawVal = $el.val();
-                 
-                 // Azremen: Force float parsing if schema defines it as float
-                 if (fieldDef && fieldDef.inputType === 'float') {
-                     val = parseFloat(rawVal);
-                 } else {
-                     // Heuristic for others
-                     if (rawVal.indexOf && rawVal.indexOf('.') !== -1) {
-                         val = parseFloat(rawVal);
-                     } else {
-                         val = parseInt(rawVal);
-                     }
-                 }
-                 
-                 if (isNaN(val)) val = rawVal; // fallback
+            } else if ($el.attr('type') === 'number' || $el.is('select') || $el.attr('type') === 'range') {
+                let rawVal = $el.val();
+                
+                // Azremen: Force float parsing if schema defines it as float
+                if (fieldDef && (fieldDef.inputType === 'float' || fieldDef.step && fieldDef.step % 1 !== 0)) {
+                    val = parseFloat(rawVal);
+                } else if (fieldDef && (fieldDef.type === 'number' || fieldDef.inputType === 'number')) {
+                    // Try to respect the type in schema
+                    if (rawVal.indexOf('.') !== -1) {
+                        val = parseFloat(rawVal);
+                    } else {
+                        val = parseInt(rawVal, 10);
+                    }
+                } else {
+                    // Fallback Heuristic
+                    if (typeof rawVal === 'string' && rawVal.indexOf('.') !== -1) {
+                        val = parseFloat(rawVal);
+                    } else {
+                        // Check if it's purely numeric
+                        const num = Number(rawVal);
+                        if (!isNaN(num)) {
+                           val = num;
+                        } else {
+                           val = rawVal;
+                        }
+                    }
+                }
+                // Ensure we don't save NaN if user cleared input
+                if (typeof val === 'number' && isNaN(val)) {
+                    val = fieldDef ? (fieldDef['default-value'] || 0) : 0;
+                }
             } else {
                 val = $el.val();
             }

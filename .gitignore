@@ -1,3 +1,7 @@
+# Modules to ignore
+Modules/*
+!Modules/Native/
+
 # Dependencies
 node_modules/
 

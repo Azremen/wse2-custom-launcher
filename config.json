@@ -32,19 +32,19 @@
         },
         "bUseAdvancedFormation": {
             "name": "Use Advanced Formation",
-            "description": "Determines if the module uses Native’s advanced formations. Those add extensions to the order menus related to formations and weapon usage.\nPlayers can then let the troops line up from one row to five rows and order their archers to fire at their command. Some lines need to be added to ui.csv for this.",
+            "description": "Determines if the module uses Native\u2019s advanced formations. Those add extensions to the order menus related to formations and weapon usage.\nPlayers can then let the troops line up from one row to five rows and order their archers to fire at their command. Some lines need to be added to ui.csv for this.",
             "type": "checkbox",
             "default-value": false
         },
         "bAiDecideDirectionAccordingToDamage": {
             "name": "Ai Decide Direction According To Damage",
-            "description": "AI will take into consideration what each directional attack’s damage will be when deciding what attack to use.",
+            "description": "AI will take into consideration what each directional attack\u2019s damage will be when deciding what attack to use.",
             "type": "checkbox",
             "default-value": false
         },
         "bConsiderWeaponLengthForWeaponQuality": {
             "name": "Consider Weapon Length For Weapon Quality",
-            "description": "Makes agents take into account a weapon’s length when choosing a weapon at their inventory.",
+            "description": "Makes agents take into account a weapon\u2019s length when choosing a weapon at their inventory.",
             "type": "checkbox",
             "default-value": false
         }
@@ -320,7 +320,9 @@
             "type": "number",
             "default-value": 240,
             "inputType": "number",
-            "step": 1
+            "step": 1,
+            "min": 0,
+            "max": 1000
         },
         "bShowFrameRate": {
             "name": "Show Frame Rate",
@@ -529,56 +531,40 @@
             "description": "range: 0-2000",
             "type": "number",
             "default-value": 20,
-            "inputType": "select",
-            "options": [
-                {
-                    "value": 0,
-                    "label": "2000"
-                }
-            ],
-            "step": 1
+            "inputType": "number",
+            "step": 1,
+            "min": 0.0,
+            "max": 2000.0
         },
         "iMaxNumRagdolls": {
             "name": "Max Num Ragdolls",
             "description": "range: 0-100",
             "type": "number",
             "default-value": 5,
-            "inputType": "select",
-            "options": [
-                {
-                    "value": 0,
-                    "label": "100"
-                }
-            ],
-            "step": 1
+            "inputType": "number",
+            "step": 1,
+            "min": 0.0,
+            "max": 100.0
         },
         "fFirstPersonFieldOfView": {
             "name": "First Person Field Of View",
             "description": "Extent of the observable game world that is seen on the display at any given moment for first person. Range: 55.0-100.0",
             "type": "number",
             "default-value": 75.0,
-            "inputType": "select",
-            "options": [
-                {
-                    "value": 0,
-                    "label": "100"
-                }
-            ],
-            "step": 0.1
+            "inputType": "number",
+            "step": 0.1,
+            "min": 55.0,
+            "max": 100.0
         },
         "fThirdPersonFieldOfView": {
             "name": "Third Person Field Of View",
             "description": "Extent of the observable game world that is seen on the display at any given moment for third person. Range: 55.0-100.0",
             "type": "number",
             "default-value": 75.0,
-            "inputType": "select",
-            "options": [
-                {
-                    "value": 0,
-                    "label": "100"
-                }
-            ],
-            "step": 0.1
+            "inputType": "number",
+            "step": 0.1,
+            "min": 55.0,
+            "max": 100.0
         },
         "iBloodStains": {
             "name": "Blood Stains",
@@ -973,14 +959,10 @@
             "description": "Range: 0.0-10.0. Operations: options_get_battle_size, options_set_battle_size.",
             "type": "number",
             "default-value": 10.0,
-            "inputType": "select",
-            "options": [
-                {
-                    "value": 0,
-                    "label": "10"
-                }
-            ],
-            "step": 0.1
+            "inputType": "number",
+            "step": 0.1,
+            "min": 0.0,
+            "max": 10.0
         },
         "iBattleSizeMin": {
             "name": "Battle Size Min",
@@ -988,7 +970,9 @@
             "type": "number",
             "default-value": 30,
             "inputType": "number",
-            "step": 1
+            "step": 1,
+            "min": 0,
+            "max": 1000
         },
         "iBattleSizeMax": {
             "name": "Battle Size Max",
@@ -996,7 +980,9 @@
             "type": "number",
             "default-value": 150,
             "inputType": "number",
-            "step": 1
+            "step": 1,
+            "min": 0,
+            "max": 1000
         },
         "iNumWalkSamplePoints": {
             "name": "Num Walk Sample Points",
@@ -1297,7 +1283,7 @@
         },
         "fMissileDamageSpeedPower": {
             "name": "Missile Damage Speed Power",
-            "description": "Range: 1.0-2.0. Setting speed_power to 2.0 makes damage scale with the square of missile’s speed. You can set it to 1.0 to make it scale linearly.",
+            "description": "Range: 1.0-2.0. Setting speed_power to 2.0 makes damage scale with the square of missile\u2019s speed. You can set it to 1.0 to make it scale linearly.",
             "type": "number",
             "default-value": 1.9,
             "inputType": "select",
@@ -1307,11 +1293,13 @@
                     "label": "2"
                 }
             ],
-            "step": 0.1
+            "step": 0.1,
+            "min": 1.0,
+            "max": 2.0
         },
         "fMeleeDamageSpeedPower": {
             "name": "Melee Damage Speed Power",
-            "description": "Range: 1.0-2.0. Setting speed_power to 2.0 makes damage scale with the square of weapon’s speed. You can set it to 1.0 to make it scale linearly.",
+            "description": "Range: 1.0-2.0. Setting speed_power to 2.0 makes damage scale with the square of weapon\u2019s speed. You can set it to 1.0 to make it scale linearly.",
             "type": "number",
             "default-value": 2.0,
             "inputType": "select",
@@ -1321,7 +1309,9 @@
                     "label": "2"
                 }
             ],
-            "step": 0.1
+            "step": 0.1,
+            "min": 1.0,
+            "max": 2.0
         },
         "fShieldPenetrationOffset": {
             "name": "Shield Penetration Offset",
@@ -1519,7 +1509,7 @@
         },
         "bShowMultiplayerGold": {
             "name": "Show Multiplayer Gold",
-            "description": "Determines if the player’s gold is shown in multiplayer.",
+            "description": "Determines if the player\u2019s gold is shown in multiplayer.",
             "type": "checkbox",
             "default-value": true
         },
@@ -1537,7 +1527,7 @@
         },
         "bDisableZoom": {
             "name": "Disable Zoom",
-            "description": "Determines whether or not the player can use gk_zoom to narrow the camera’s field of vision. Operation: is_zoom_disabled.",
+            "description": "Determines whether or not the player can use gk_zoom to narrow the camera\u2019s field of vision. Operation: is_zoom_disabled.",
             "type": "checkbox",
             "default-value": false
         },
@@ -1671,7 +1661,7 @@
         },
         "bUsePhasedReload": {
             "name": "Use Phased Reload",
-            "description": "Determines if reloading can be done in steps. That means if your reload has been interrupted, you’ll start from the begining of the phase at which the reload was stopped. Phased reload works if you use itcf_reload_musket or itcf_reload_pistol for the ranged weapon.",
+            "description": "Determines if reloading can be done in steps. That means if your reload has been interrupted, you\u2019ll start from the begining of the phase at which the reload was stopped. Phased reload works if you use itcf_reload_musket or itcf_reload_pistol for the ranged weapon.",
             "type": "checkbox",
             "default-value": false
         },
@@ -1699,7 +1689,7 @@
         },
         "bUseHorseSlopeForRiderPosition": {
             "name": "Use Horse Slope For Rider Position",
-            "description": "Сorrect legs position for riders on steep slopes.",
+            "description": "\u0421orrect legs position for riders on steep slopes.",
             "type": "checkbox",
             "default-value": false
         },
@@ -2047,7 +2037,7 @@
         },
         "bLimitHairColors": {
             "name": "Limit Hair Colors",
-            "description": "Set to true if you don’t have extra hair textures. Each human skin definition in Native uses hair_blonde along with vertex coloring. If you set the value to false the game expects to find for example a material and texture named hair_red, beard_black, etc.",
+            "description": "Set to true if you don\u2019t have extra hair textures. Each human skin definition in Native uses hair_blonde along with vertex coloring. If you set the value to false the game expects to find for example a material and texture named hair_red, beard_black, etc.",
             "type": "checkbox",
             "default-value": true
         }
@@ -2498,7 +2488,7 @@
         },
         "bShowPartyIdsInsteadOfNames": {
             "name": "Show Party Ids Instead Of Names",
-            "description": "Determines if a party’s id value is show above them instead of their name. Change to true for ease in module development.",
+            "description": "Determines if a party\u2019s id value is show above them instead of their name. Change to true for ease in module development.",
             "type": "checkbox",
             "default-value": false
         },
@@ -2893,14 +2883,10 @@
             "description": "range: 1.5-2.5",
             "type": "number",
             "default-value": 2.008517,
-            "inputType": "select",
-            "options": [
-                {
-                    "value": 5,
-                    "label": "2"
-                }
-            ],
-            "step": 0.1
+            "inputType": "number",
+            "step": 0.1,
+            "min": 1.5,
+            "max": 2.5
         },
         "iTextureQuality": {
             "name": "Texture Quality",
@@ -3620,7 +3606,7 @@
         },
         "bUseSceneUnloading": {
             "name": "Use Scene Unloading",
-            "description": "Once you start mission, it’s unload all scenes from RAM.",
+            "description": "Once you start mission, it\u2019s unload all scenes from RAM.",
             "type": "checkbox",
             "default-value": false
         }
@@ -3789,7 +3775,9 @@
                     "label": "1000"
                 }
             ],
-            "step": 1
+            "step": 1,
+            "min": 2.0,
+            "max": 1000.0
         },
         "iMultiplayerEventForAnnounce": {
             "name": "Multiplayer Event For Announce",
@@ -4731,7 +4719,9 @@
                     "label": "65536"
                 }
             ],
-            "step": 1
+            "step": 1,
+            "min": 0.0,
+            "max": 65536.0
         },
         "iParticleSystemMaxNumRenderedParticles": {
             "name": "Particle System Max Num Rendered Particles",
@@ -4753,7 +4743,9 @@
                     "label": "60"
                 }
             ],
-            "step": 0.1
+            "step": 0.1,
+            "min": 10.0,
+            "max": 60.0
         },
         "fParticleSystemUpdateInterval": {
             "name": "Particle System Update Interval",
@@ -4767,7 +4759,7 @@
         },
         "bHasForcedParticles": {
             "name": "Has Forced Particles",
-            "description": "Allows the mod to ’force’ particles. Used if the particles are important in the module and the player should not disable them.",
+            "description": "Allows the mod to \u2019force\u2019 particles. Used if the particles are important in the module and the player should not disable them.",
             "type": "checkbox",
             "default-value": false
         }

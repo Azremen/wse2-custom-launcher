@@ -1,7 +1,0 @@
-Name,Default Value,Warband Name,Description
-fMouseSensitivity,0.5,rgl_config.txt - mouse_sensitivity,range: 0.0-1.0
-fMouseXScale,1.0,,
-fMouseYScale,1.5,rgl_config.txt - control_mouse_movement_y_scale,
-bInvertMouseX,FALSE,,
-bInvertMouseY,FALSE,rgl_config.txt - invert_mouse,
-fMouseScrollTime,0.5,,For key_mouse_scroll_down and key_mouse_scroll_up keys.

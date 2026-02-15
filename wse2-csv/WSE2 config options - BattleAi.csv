@@ -1,7 +1,0 @@
-Name,Default Value,Warband Name,Description
-iReduceBattleAi,2,rgl_config.txt - reduce_combat_ai,"Affects agent's ai. 0 - good, 1 - average, 2 - poor.  Operations: options_get_combat_ai, options_set_combat_ai."
-iMinNumAgentsForNavMeshReuse,12,,Used for ai agent compute path.
-bUseAdvancedFormation,FALSE,module.ini - use_advanced_formation,"Determines if the module uses Native’s advanced formations. Those add extensions to the order menus related to formations and weapon usage.
-Players can then let the troops line up from one row to five rows and order their archers to fire at their command. Some lines need to be added to ui.csv for this."
-bAiDecideDirectionAccordingToDamage,FALSE,module.ini - ai_decide_direction_according_to_damage,AI will take into consideration what each directional attack’s damage will be when deciding what attack to use.
-bConsiderWeaponLengthForWeaponQuality,FALSE,module.ini - consider_weapon_length_for_weapon_quality,Makes agents take into account a weapon’s length when choosing a weapon at their inventory.
