@@ -23,7 +23,7 @@
   },
   "build": {
     "appId": "com.azremen.wse2-launcher",
-    "productName": "WSE2 Launcher",
+    "productName": "wse2-launcher",
     "asar": true,
     "directories": {
       "output": "dist"
