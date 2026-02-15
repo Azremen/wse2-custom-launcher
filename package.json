@@ -14,7 +14,7 @@
     "start": "electron .",
     "pack": "electron-builder --dir",
     "dist": "npm run dist:all",
-    "dist:all": "dotenv -e .env -- electron-builder --linux --win --mac",
+    "dist:all": "dotenv -e .env -- electron-builder --linux --win --mac -p always",
     "dist:linux": "electron-builder --linux",
     "dist:win": "dotenv -e .env -- electron-builder --win",
     "dist:mac": "electron-builder --mac"
@@ -43,8 +43,7 @@
     "win": {
       "target": [
         "nsis",
-        "portable",
-        "zip"
+        "portable"
       ],
       "icon": "icons/icon.ico",
       "cscLink": "wse2-cert.pfx",
@@ -61,13 +60,19 @@
     },
     "linux": {
       "target": [
-        "AppImage",
-        "zip"
+        "AppImage"
       ],
       "artifactName": "${productName} ${version} Linux.${ext}",
       "category": "Game",
       "icon": "icons/icon.png"
     },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Azremen",
+        "repo": "wse2-custom-launcher"
+      }
+    ],
     "mac": {
       "target": "zip",
       "artifactName": "${productName} ${version} Mac.${ext}",
