@@ -1,4 +1,6 @@
 {
+    "ui_clean_install": "Temiz Kurulum",
+    "ui_theme": "Tema",
     "0 - abysmal, 1 - low, 2 - medium, 3 - high": "0 - berbat, 1 - düşük, 2 - orta, 3 - yüksek",
     "0 - automatic, 1 - by mouse movement, 2 - by movement keys, 3 - by inverse mouse movement": "0 - otomatik, 1 - fare hareketiyle, 2 - yön tuşlarıyla, 3 - ters fare hareketiyle",
     "0 - automatic, 1 - manual (easy), 2 - manual (hard)": "0 - otomatik, 1 - manuel (kolay), 2 - manuel (zor)",

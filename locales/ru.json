@@ -1,4 +1,6 @@
 {
+    "ui_clean_install": "Чистая установка",
+    "ui_theme": "Тема",
     "0 - abysmal, 1 - low, 2 - medium, 3 - high": "0 – ужасный, 1 – низкий, 2 – средний, 3 – высокий.",
     "0 - automatic, 1 - by mouse movement, 2 - by movement keys, 3 - by inverse mouse movement": "0 - авто, 1 - мышью, 2 - клавишами, 3 - инверсия мыши",
     "0 - automatic, 1 - manual (easy), 2 - manual (hard)": "0 - авто, 1 - вручную (легко), 2 - вручную (сложно)",

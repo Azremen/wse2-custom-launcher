@@ -1,4 +1,6 @@
 {
+    "ui_clean_install": "Clean Install",
+    "ui_theme": "Theme",
     "0 - abysmal, 1 - low, 2 - medium, 3 - high": "0 - abysmal, 1 - low, 2 - medium, 3 - high",
     "0 - automatic, 1 - by mouse movement, 2 - by movement keys, 3 - by inverse mouse movement": "0 - automatic, 1 - by mouse movement, 2 - by movement keys, 3 - by inverse mouse movement",
     "0 - automatic, 1 - manual (easy), 2 - manual (hard)": "0 - automatic, 1 - manual (easy), 2 - manual (hard)",
