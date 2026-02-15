@@ -46,7 +46,9 @@
         "portable",
         "zip"
       ],
-      "icon": "icons/icon.ico"
+      "icon": "icons/icon.ico",
+      "cscLink": "wse2-cert.pfx",
+      "cscKeyPassword": "wse2rules"
     },
     "nsis": {
       "oneClick": false,
