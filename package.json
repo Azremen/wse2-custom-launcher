@@ -14,10 +14,11 @@
     "start": "electron .",
     "pack": "electron-builder --dir",
     "dist": "npm run dist:all",
-    "dist:all": "dotenv -e .env -- electron-builder --linux --win --mac",
-    "release": "dotenv -e .env -- electron-builder --linux --win --mac -p always",
+    "dist:all": "electron-builder --linux --win --mac",
+    "release": "electron-builder --linux --win --mac -p always",
+    "release:local": "dotenv -e .env -- electron-builder --linux --win --mac -p always",
     "dist:linux": "electron-builder --linux",
-    "dist:win": "dotenv -e .env -- electron-builder --win",
+    "dist:win": "electron-builder --win",
     "dist:mac": "electron-builder --mac"
   },
   "build": {
