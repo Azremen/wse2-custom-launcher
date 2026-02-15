@@ -47,7 +47,128 @@ To build executables for all platforms:
 npm run dist
 ```
 
+### Self-Signed Certificate Generation
+If you want to create your own `wse2-cert.pfx` for signing the Windows executable, you can use OpenSSL.
+
+**1. Generate Private Key and Certificate:**
+```bash
+openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 3650 -nodes -subj "/C=US/ST=State/L=City/O=Dummy Organization/OU=Dummy Unit/CN=Dummy Common Name"
+```
+
+**2. Export to PFX Format:**
+```bash
+openssl pkcs12 -export -out wse2-cert.pfx -inkey key.pem -in cert.pem
+```
+*   When prompted for an **Export Password**, enter the password you want to use (e.g., `dummy123`).
+*   Update your `.env` file with this password: `CSC_KEY_PASSWORD=dummy123`.
+
+**3. For GitHub Actions (CI/CD):**
+To use this certificate in GitHub Actions without committing the file to the repo:
+```bash
+base64 wse2-cert.pfx -w 0
+```
+*   Copy the output string.
+*   Go to GitHub Repo Settings -> Secrets -> Actions.
+*   Create a new secret named `CSC_LINK` and paste the base64 string.
+*   Create another secret named `CSC_KEY_PASSWORD` with your password.
+
 ---
+
+<a name="türkçe"></a>
+## 🇹🇷 Türkçe
+
+**Azremen** tarafından geliştirilen Warband Script Enhancer 2 (WSE2) için özel başlatıcı.
+
+### Özellikler
+- **Çoklu Platform:** Windows, Linux ve macOS üzerinde çalışır.
+- **Gelişmiş Yapılandırma:** Renk Seçiciler, Açılır Menüler, Aralıklar ve Kaydırıcılar için modern arayüz desteği.
+- **Yerelleştirme:** Çoklu dil açıklamalarını destekler.
+
+### Başlatma ve Kullanım
+
+#### Windows
+1. **İndirin** (Kurulum veya Taşınabilir).
+2. Dosyayı **Mount & Blade Warband** oyun klasörünüze yerleştirin (`mb_warband_wse2.exe` yanına).
+3. Başlatın ve ayarlarınızı yapın.
+4. **Launch** butonuna basın.
+
+#### Linux
+Bu yerel bir Linux uygulamasıdır, ancak WSE2 (Oyun motoru) Windows uygulamasıdır. `wine` gerektirir.
+
+**Kullanım:**
+1. **AppImage** dosyasını oyun klasörüne atın.
+2. Başlatıcıyı çalıştırın.
+3. Otomatik olarak `wine mb_warband_wse2.exe` komutunu dener.
+
+### Kendi Sertifikanızı Oluşturma (İmzalama İçin)
+Eğer kendi `wse2-cert.pfx` dosyanızı oluşturmak isterseniz:
+
+**1. Sertifika ve Anahtar Oluşturun:**
+```bash
+openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 3650 -nodes -subj "/C=US/ST=State/L=City/O=Dummy Organization/OU=Dummy Unit/CN=Dummy Common Name"
+```
+
+**2. PFX'e Dönüştürün:**
+```bash
+openssl pkcs12 -export -out wse2-cert.pfx -inkey key.pem -in cert.pem
+```
+*   Şifre sorduğunda bir şifre belirleyin (örn: `dummy123`).
+*   `.env` dosyasına bu şifreyi yazın: `CSC_KEY_PASSWORD=dummy123`.
+
+**3. GitHub Actions İçin (İsteğe Bağlı):**
+Sertifika dosyasını repoya yüklemek istemiyorsanız (güvenlik için):
+```bash
+base64 wse2-cert.pfx -w 0
+```
+*   Çıkan uzun yazıyı kopyalayın.
+*   GitHub Repo Ayarları -> Secrets -> Actions kısmına gidin.
+*   `CSC_LINK` adında bir secret oluşturup bu yazıyı yapıştırın.
+*   `CSC_KEY_PASSWORD` secret'ını şifrenizle güncelleyin.
+
+---
+
+<a name="русский"></a>
+## 🇷🇺 Русский
+
+Кастомный лаунчер для Warband Script Enhancer 2 (WSE2) от **Azremen**.
+
+### Особенности
+- **Кроссплатформенность:** Windows, Linux и macOS.
+- **Интерфейс:** Современный UI с поддержкой локализации.
+
+### Использование
+
+#### Windows
+1. Скачайте и поместите в папку с игрой **Mount & Blade Warband** (рядом с `mb_warband_wse2.exe`).
+2. Запустите и нажмите **Launch**.
+
+#### Linux
+Требует установленного **Wine**, так как WSE2 — это Windows-приложение. Лаунчер сам запустит игру через Wine.
+
+### Создание сертификата (Self-Signed)
+Для создания `wse2-cert.pfx`:
+
+**1. Создание ключа:**
+```bash
+openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 3650 -nodes -subj "/C=US/ST=State/L=City/O=Dummy Organization/OU=Dummy Unit/CN=Dummy Common Name"
+```
+
+**2. Конвертация в PFX:**
+```bash
+openssl pkcs12 -export -out wse2-cert.pfx -inkey key.pem -in cert.pem
+```
+*   Задайте пароль (например, `dummy123`).
+*   Укажите его в `.env`: `CSC_KEY_PASSWORD=dummy123`.
+
+**3. Для GitHub Actions (Опционально):**
+Чтобы использовать сертификат без добавления файла в репозиторий:
+```bash
+base64 wse2-cert.pfx -w 0
+```
+*   Скопируйте полученную строку.
+*   Перейдите в GitHub Repo Settings -> Secrets -> Actions.
+*   Создайте секрет `CSC_LINK` и вставьте строку base64.
+*   Задайте пароль в секрете `CSC_KEY_PASSWORD`.
 
 <a name="türkçe"></a>
 ## 🇹🇷 Türkçe
