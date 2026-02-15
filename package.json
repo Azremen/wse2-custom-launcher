@@ -14,9 +14,9 @@
     "start": "electron .",
     "pack": "electron-builder --dir",
     "dist": "npm run dist:all",
-    "dist:all": "electron-builder --linux --win --mac",
+    "dist:all": "dotenv -e .env -- electron-builder --linux --win --mac",
     "dist:linux": "electron-builder --linux",
-    "dist:win": "electron-builder --win",
+    "dist:win": "dotenv -e .env -- electron-builder --win",
     "dist:mac": "electron-builder --mac"
   },
   "build": {
@@ -82,6 +82,7 @@
     "Node.js"
   ],
   "devDependencies": {
+    "dotenv-cli": "^11.0.0",
     "electron": "^40.2.1",
     "electron-builder": "^26.7.0"
   },

@@ -44,3 +44,8 @@ Thumbs.db
 *.exe
 *.so
 *.dylib
+
+# Security
+wse2-cert.pfx
+build_win.sh
+.env
