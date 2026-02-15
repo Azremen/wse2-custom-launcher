@@ -3990,7 +3990,7 @@
             "default-value": true
         },
         "cLogSeparatorChar": {
-            "name": "c Log Separator Char",
+            "name": "Log Separator Char",
             "description": "For advanced log format.",
             "type": "text",
             "default-value": ",",

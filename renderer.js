@@ -763,11 +763,7 @@ function renderConfigForm(schema, values) {
                          
                          // Determine Label
                          let label = opt.label;
-                         // Try translation if label is a key? 
-                         // Usually labels in config.json are english readable. 
-                         // We can try t(label) but fall back to label.
-                         // But if label contains spaces, likely not a key.
-                         $option.text(label);
+                         $option.text(t(label));
                          
                          if (String(opt.value) === String(val)) {
                              $option.prop('selected', true);
