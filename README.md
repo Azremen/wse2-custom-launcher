@@ -11,7 +11,7 @@ A custom launcher for Warband Script Enhancer 2 (WSE2) by **Azremen**.
 
 ### Features
 - **Cross-Platform:** Runs on Windows, Linux, and macOS.
-- **Enhanced Configuration:** Modern UI with support for Color Pickers, Drop-down Menus, Ranges, and Sliders.
+- **Enhanced Configuration:** Up-to-date UI with support for Color Pickers, Drop-down Menus, Ranges, and Sliders.
 - **Localization:** Supports multi-language descriptions.
 
 ### Installation & Usage
@@ -56,7 +56,7 @@ Warband Script Enhancer 2 (WSE2) için **Azremen** tarafından geliştirilen öz
 
 ### Özellikler
 - **Çapraz Platform:** Windows, Linux ve macOS üzerinde çalışır.
-- **Gelişmiş Yapılandırma:** Renk Seçiciler, Açılır Menüler, Aralıklar ve Kaydırıcılar içeren modern arayüz.
+- **Gelişmiş Yapılandırma:** Renk Seçiciler, Açılır Menüler, Aralıklar ve Kaydırıcılar içeren güncel arayüz.
 - **Yerelleştirme:** Çoklu dil açıklamalarını destekler.
 
 ### Kurulum ve Kullanım
@@ -101,7 +101,7 @@ npm run dist
 
 ### Особенности
 - **Кроссплатформенность:** Работает на Windows, Linux и macOS.
-- **Расширенная конфигурация:** Современный интерфейс с поддержкой выбора цвета, выпадающих списков, диапазонов и ползунков.
+- **Расширенная конфигурация:** Актуальный интерфейс с поддержкой выбора цвета, выпадающих списков, диапазонов и ползунков.
 - **Локализация:** Поддержка многоязычных описаний.
 
 ### Установка и использование
