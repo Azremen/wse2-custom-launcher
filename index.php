@@ -14,7 +14,7 @@ foreach (glob("*.zip") as $filename) {
     // Optional: Extract version from filename or manifest if available
     // Better approach: Read a companion .json file for metadata
     
-    $version = '1.0.0'; // Default
+    $version = '1.170'; // Default
     $versionFile = $moduleName . '.json'; // e.g., Native.json
     if (file_exists($versionFile)) {
         $meta = json_decode(file_get_contents($versionFile), true);
