@@ -1,51 +1,75 @@
-# Modules to ignore
+# --- Modules & Dependencies ---
+node_modules/
 Modules/*
 !Modules/Native/
 
-# Dependencies
-node_modules/
-
-# Build Output
+# --- Build & Distribution ---
 dist/
 build/
+out/
+release/
+*.AppImage
+*.exe
+*.dmg
+*.zip
+*.7z
+*.rar
+*.tar.gz
 
-# Logs
+# --- Electron/Builder Specifics ---
+.cache/
+.eslintcache
+app-builder-bin/
+builder-effective-config.yaml
+
+# --- Security & Sensitive Data ---
+# Sertifika dosyalarını asla paylaşma
+wse2-cert.pfx
+*.pfx
+*.pem
+*.key
+*.cert
+cert_base64.txt
+# Gizli ayarlar
+.env
+*.env
+build_win.sh
+
+# --- Logs ---
 logs/
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Temp files
+# --- Temp & Backup Files ---
 *.tmp
 *.bak
 *.bak*
 *.old
 *.swp
 *.swo
+.diff
+.patch
 
-# OS System Files
+# --- OS System Files ---
 .DS_Store
 Thumbs.db
+desktop.ini
 
-# IDE Files
+# --- IDE / Editor Files ---
 .vscode/
 .idea/
 *.sln
 *.suo
 *.user
+*.sublime-project
+*.sublime-workspace
 
-# Binary / Compressed Configs
-*.7z
-*.zip
-*.tar.gz
-*.rar
-*.gz
+# --- Binary / Compiled Artifacts ---
 *.pdb
 *.obj
 *.dll
-*.exe
 *.so
 *.dylib
-
-# Security
-wse2-cert.pfx
-build_win.sh
-.env
+*.bin
