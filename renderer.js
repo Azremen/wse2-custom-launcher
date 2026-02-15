@@ -275,8 +275,13 @@ async function initMainWindow() {
     });
     
     window.api.events.onUpdateAvailable(() => {
-         // Show update notification
-         alert(t("msg_launcher_update"));
+         // Azremen Fix: Ask user before downloading
+         if(confirm(t("msg_launcher_update"))) {
+             window.api.launcher.update();
+             // Optional: Show some feedback like "Downloading update..."
+             // But since we have onUpdateDownloaded later, that might be enough.
+             // Or we could reuse toast if available.
+         }
     });
     
      window.api.events.onUpdateDownloaded(() => {

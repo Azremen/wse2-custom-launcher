@@ -1313,7 +1313,7 @@
     "msg_download_failed": "İndirme/Kurulum başarısız oldu: ",
     "msg_download_success": "Kurulum Tamamlandı!",
     "msg_downloading": "İndiriliyor...",
-    "msg_launcher_update": "Başlatıcı güncellemesi mevcut! Kısa süre içinde yüklenecek.",
+    "msg_launcher_update": "Yeni bir başlatıcı güncellemesi var! İndirip kurmak ister misiniz?",
     "msg_restart_now": "Güncelleme indirildi. Uygulamak için şimdi yeniden başlatılsın mı?",
     "multiplayer.": "multiplayer.",
     "needed.": "needed.",

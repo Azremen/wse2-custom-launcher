@@ -1313,7 +1313,7 @@
     "msg_download_failed": "Download/Installation failed: ",
     "msg_download_success": "Installation Complete!",
     "msg_downloading": "Downloading...",
-    "msg_launcher_update": "A launcher update is available! It will be installed shortly.",
+    "msg_launcher_update": "A launcher update is available! Do you want to download and install it?",
     "msg_restart_now": "Update downloaded. Restart now to apply?",
     "multiplayer.": "multiplayer.",
     "needed.": "needed.",

@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('api', {
     launcher: {
         getVersion: () => ipcRenderer.invoke('get-version'),
         restart: () => ipcRenderer.send('restart_app'),
+        update: () => ipcRenderer.send('start_update'),
         openFolder: () => ipcRenderer.invoke('open-install-folder'),
         launch: (moduleName) => ipcRenderer.invoke('launch-game', moduleName)
     },

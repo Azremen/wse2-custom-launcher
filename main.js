@@ -11,14 +11,36 @@ const crypto = require('crypto'); // Built-in Node.js crypto for hashing
 let logPath;
 try {
     const logName = 'wse2-launcher.log';
-    if (process.platform === 'linux') {
-        // Force /tmp for easy finding on Linux
-        logPath = path.join('/tmp', logName);
+    
+    // Azremen Fix: Log file next to executable
+    let logDir;
+    if (process.env.APPIMAGE) {
+        logDir = path.dirname(process.env.APPIMAGE);
     } else {
-        logPath = path.join(app.getPath('userData'), logName);
+        logDir = path.dirname(app.getPath('exe'));
+        // Development check
+        if (!app.isPackaged) logDir = __dirname;
     }
-    // Clear previous log
-    fs.writeFileSync(logPath, '');
+    
+    // Build candidate path
+    const candidatePath = path.join(logDir, logName);
+    
+    // Simple write check or fallback
+    try {
+        // Try to open/create the file to ensure we can write there
+        fs.writeFileSync(candidatePath, ''); 
+        logPath = candidatePath; 
+    } catch (writeErr) {
+        // Fallback to userData or tmp if installed in read-only location
+        if (process.platform === 'linux') {
+            logPath = path.join('/tmp', logName);
+        } else {
+            logPath = path.join(app.getPath('userData'), logName);
+        }
+        // Try clearing the fallback log
+        try { fs.writeFileSync(logPath, ''); } catch(e) {}
+    }
+
 } catch(e) {
     console.error("Failed to initialize log path", e);
 }
@@ -210,14 +232,17 @@ function createWindow() {
     // Fail-safe Update Logic
     // 1. Silent error handler to prevent dialog popups on network failure
     autoUpdater.on('error', (error) => {
-         // Log for debugging, but do not alert the user
+         // Azremen Fix: Log for debugging, but do not alert user
          console.log(`Auto-updater error: ${error.message}`);
     });
+    
+    // Azremen Fix: Disable Auto Download - Ask first
+    autoUpdater.autoDownload = false;
 
     // 2. Non-blocking check
     try {
         // Fire and forget - don't await this, let it run in background
-        autoUpdater.checkForUpdatesAndNotify().catch(err => {
+        autoUpdater.checkForUpdates().catch(err => {
              console.log("AutoUpdate check failed (network/repo issue):", err.message);
         });
     } catch (err) {
@@ -715,6 +740,11 @@ ipcMain.handle('save-config-data', (event, { modulePath, configData }) => {
 
 ipcMain.on('restart_app', () => {
     autoUpdater.quitAndInstall();
+});
+
+ipcMain.on('start_update', () => {
+    // Azremen Fix: Manually start download
+    autoUpdater.downloadUpdate();
 });
 
 async function processDownloadedModule(tempZipPath, meta) {
