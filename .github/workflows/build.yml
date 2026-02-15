@@ -24,7 +24,7 @@ jobs:
       - name: Build Linux
         env:
           GH_TOKEN: ${{ secrets.PUBLIC_REPO_TOKEN }}
-        run: npm run dist:linux -- -c.publish=never
+        run: npm run dist:linux -- --publish never
 
       - name: Upload Linux Artifacts
         uses: actions/upload-artifact@v4
@@ -50,7 +50,7 @@ jobs:
           GH_TOKEN: ${{ secrets.PUBLIC_REPO_TOKEN }}
           WIN_CSC_LINK: ${{ secrets.CSC_LINK }} 
           WIN_CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-        run: npm run dist:win -- -c.publish=never
+        run: npm run dist:win -- --publish never
 
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4
@@ -74,7 +74,7 @@ jobs:
       - name: Build macOS
         env:
           GH_TOKEN: ${{ secrets.PUBLIC_REPO_TOKEN }}
-        run: npm run dist:mac -- -c.publish=never
+        run: npm run dist:mac -- --publish never
 
       - name: Upload Mac Artifacts
         uses: actions/upload-artifact@v4
@@ -125,7 +125,7 @@ jobs:
       - name: Publish to Private Repository
         uses: ncipollo/release-action@v1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PUBLIC_REPO_TOKEN }}
           tag: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           body: "Full release with source code."
