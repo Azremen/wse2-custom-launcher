@@ -18,12 +18,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 22
       - run: npm ci
       
       - name: Build Linux
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PUBLIC_REPO_TOKEN }}
         run: npm run dist:linux
 
       - name: Upload Linux Artifacts
@@ -42,14 +42,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 22
       - run: npm ci
       
       - name: Build Windows
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Dosya yolu yerine Base64 secret kullanıyoruz
+          GH_TOKEN: ${{ secrets.PUBLIC_REPO_TOKEN }}
+          # Base64 encoded PFX file
           WIN_CSC_LINK: ${{ secrets.CSC_LINK }} 
+          # PFX Password
           WIN_CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
         run: npm run dist:win
 
@@ -69,12 +70,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 22
       - run: npm ci
       
       - name: Build macOS
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PUBLIC_REPO_TOKEN }}
         run: npm run dist:mac
 
       - name: Upload Mac Artifacts
@@ -126,7 +127,7 @@ jobs:
       - name: Publish to Private Repository
         uses: ncipollo/release-action@v1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PUBLIC_REPO_TOKEN }}
           tag: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           body: "Full release with source code."
@@ -140,7 +141,6 @@ jobs:
       - name: Publish to Public Repository
         uses: ncipollo/release-action@v1
         with:
-          # BURAYI KONTROL ET: Hedef Public Repo bilgileri
           owner: Azremen
           repo: wse2-custom-launcher 
           token: ${{ secrets.PUBLIC_REPO_TOKEN }}
