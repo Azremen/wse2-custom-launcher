@@ -2,37 +2,29 @@ name: Build & Release
 
 on:
   push:
-    branches:
-      - main
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+
 jobs:
   # -------------------------------------------------------------------------
-  # 1. BUILD JOBS (Validation & Compilation)
+  # 1. BUILD JOBS (Linux, Windows, macOS)
   # -------------------------------------------------------------------------
   build-linux:
     runs-on: ubuntu-latest
-    environment: ${{ github.ref_type == 'tag' && 'production' || 'testing' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
-          cache: 'npm'
+          node-version: 18
       - run: npm ci
       
-      # Testing ise: Sadece build (yayınlama yok)
-      - name: Build Linux (Test)
-        if: github.ref_type != 'tag'
-        run: npm run dist:linux -- -p never
-
-      # Production ise: Build ve Yayınla
-      - name: Build Linux (Prod)
-        if: github.ref_type == 'tag'
+      - name: Build Linux
         env:
-          GH_TOKEN: ${{ secrets.PUBLIC_REPO_TOKEN }}
-        run: npm run dist:linux -- -p always
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run dist:linux
 
       - name: Upload Linux Artifacts
         uses: actions/upload-artifact@v4
@@ -42,35 +34,24 @@ jobs:
             dist/*.AppImage
             dist/*.yml
             dist/*.yaml
-          if-no-files-found: ignore
+          if-no-files-found: warn
 
   build-windows:
     runs-on: windows-latest
-    environment: ${{ github.ref_type == 'tag' && 'production' || 'testing' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
-          cache: 'npm'
+          node-version: 18
       - run: npm ci
       
-      # Testing
-      - name: Build Windows (Test)
-        if: github.ref_type != 'tag'
+      - name: Build Windows
         env:
-          WIN_CSC_LINK: ${{ secrets.CSC_LINK }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Dosya yolu yerine Base64 secret kullanıyoruz
+          WIN_CSC_LINK: ${{ secrets.CSC_LINK }} 
           WIN_CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-        run: npm run dist:win -- -p never
-
-      # Production
-      - name: Build Windows (Prod)
-        if: github.ref_type == 'tag'
-        env:
-          GH_TOKEN: ${{ secrets.PUBLIC_REPO_TOKEN }}
-          WIN_CSC_LINK: ${{ secrets.CSC_LINK }}
-          WIN_CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-        run: npm run dist:win -- -p always
+        run: npm run dist:win
 
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4
@@ -80,30 +61,21 @@ jobs:
             dist/*.exe
             dist/*.yml
             dist/*.yaml
-          if-no-files-found: ignore
+          if-no-files-found: warn
 
   build-mac:
     runs-on: macos-latest
-    environment: ${{ github.ref_type == 'tag' && 'production' || 'testing' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
-          cache: 'npm'
+          node-version: 18
       - run: npm ci
-
-      # Testing
-      - name: Build macOS (Test)
-        if: github.ref_type != 'tag'
-        run: npm run dist:mac -- -p never
-
-      # Production
-      - name: Build macOS (Prod)
-        if: github.ref_type == 'tag'
+      
+      - name: Build macOS
         env:
-          GH_TOKEN: ${{ secrets.PUBLIC_REPO_TOKEN }}
-        run: npm run dist:mac -- -p always
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run dist:mac
 
       - name: Upload Mac Artifacts
         uses: actions/upload-artifact@v4
@@ -114,33 +86,42 @@ jobs:
             dist/*.zip
             dist/*.yml
             dist/*.yaml
-          if-no-files-found: ignore
+          if-no-files-found: warn
 
   # -------------------------------------------------------------------------
-  # 2. RELEASE JOB (Runs only after ALL builds succeed AND only on Tags)
+  # 2. RELEASE JOB (Runs only after ALL builds succeed)
   # -------------------------------------------------------------------------
   publish-release:
     needs: [build-linux, build-windows, build-mac]
-    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
-    environment: production
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Download all artifacts from previous jobs into one folder
-      - name: Download All Artifacts
+      # Download all artifacts from previous jobs
+      - name: Download Linux Artifacts
         uses: actions/download-artifact@v4
         with:
+          name: artifacts-linux
           path: ./release_assets
-          pattern: artifacts-*
-          merge-multiple: true
+
+      - name: Download Windows Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: artifacts-windows
+          path: ./release_assets
+
+      - name: Download Mac Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: artifacts-mac
+          path: ./release_assets
 
       - name: List Files (Debug)
         run: ls -R ./release_assets
 
       # -----------------------------------------------------------------------
-      # A. Publish to PRIVATE Repo (Source + Binaries)
+      # A. Publish to PRIVATE Repo (This Repo)
       # -----------------------------------------------------------------------
       - name: Publish to Private Repository
         uses: ncipollo/release-action@v1
@@ -159,13 +140,14 @@ jobs:
       - name: Publish to Public Repository
         uses: ncipollo/release-action@v1
         with:
+          # BURAYI KONTROL ET: Hedef Public Repo bilgileri
           owner: Azremen
           repo: wse2-custom-launcher 
           token: ${{ secrets.PUBLIC_REPO_TOKEN }}
           tag: ${{ github.ref_name }}
           commit: "main"
           name: Release ${{ github.ref_name }}
-          body: "Automated production release."
+          body: "Automated release build."
           allowUpdates: true
           artifacts: "release_assets/*"
           makeLatest: true
