@@ -490,7 +490,7 @@ function startDownload(url) {
     // Priority: User Checkbox > Auto-Detection
     // If user explicitly requests clean install, we do it.
     // If user unchecks it, we respect that (overlay install).
-    // If user hasn't touched it (implementation detail: we treat unchecked as "auto" or "overlay"? 
+    // If user hasn't touched it (implementation detail: we treat unchecked as "auto" or "overlay"?
     // The user requirement is "add an option", so the checkbox should control it.
     
     let isCleanInstall = userCleanInstall;

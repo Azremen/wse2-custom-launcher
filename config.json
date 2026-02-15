@@ -3799,7 +3799,7 @@
             "type": "checkbox",
             "default-value": false
         },
-        "bFastDLUrl": {
+        "sFastDLUrl": {
             "name": "Fast D L Url",
             "description": "Supports http, https, ftp.",
             "type": "checkbox",
