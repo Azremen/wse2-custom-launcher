@@ -46,9 +46,7 @@
         "nsis",
         "portable"
       ],
-      "icon": "icons/icon.ico",
-      "cscLink": "wse2-cert.pfx",
-      "cscKeyPassword": "wse2rules"
+      "icon": "icons/icon.ico"
     },
     "nsis": {
       "oneClick": false,
