@@ -84,10 +84,7 @@
     "Mount & Blade",
     "Warband",
     "Warband Script Enhancer 2",
-    "Launcher",
-    "Electron",
-    "JavaScript",
-    "Node.js"
+    "Launcher"
   ],
   "devDependencies": {
     "dotenv-cli": "^11.0.0",

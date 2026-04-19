@@ -1,3 +1,5 @@
+'use strict';
+
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('api', {
@@ -21,6 +23,12 @@ contextBridge.exposeInMainWorld('api', {
         close: () => ipcRenderer.send('configWindowBack'),
         get: (modulePath) => ipcRenderer.invoke('get-config-data', modulePath),
         save: (modulePath, data) => ipcRenderer.invoke('save-config-data', { modulePath, configData: data })
+    },
+    wine: {
+        getSettings: () => ipcRenderer.invoke('get-wine-settings'),
+        setSettings: (settings) => ipcRenderer.invoke('set-wine-settings', settings),
+        browse: () => ipcRenderer.invoke('browse-wine-executable'),
+        isWindows: () => process.platform === 'win32',
     },
     events: {
         onDownloadProgress: (callback) => ipcRenderer.on('download-progress', (event, value) => callback(value)),

@@ -1,0 +1,171 @@
+/* ─── Base ───────────────────────────────────────────────────────────────── */
+
+@media (prefers-color-scheme: dark) {
+    body { background: #333; color: white; }
+}
+
+@media (prefers-color-scheme: light) {
+    body { background: #ddd; color: black; }
+}
+
+html,
+body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+}
+
+/* ─── Layout ─────────────────────────────────────────────────────────────── */
+
+.container-fluid {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+#top-area {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+#top-area > .row {
+    flex: 1;
+    overflow: hidden;
+}
+
+#top-area > .row > [class*="col-"] {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+#footer {
+    flex-shrink: 0;
+    padding-bottom: 20px;
+    background-color: inherit;
+    z-index: 10;
+}
+
+/* ─── Module List ────────────────────────────────────────────────────────── */
+
+#list-pos {
+    flex: 1;
+    overflow-y: auto;
+    border-bottom: 1px solid #555;
+}
+
+#list-pos > button {
+    height: fit-content;
+    width: inherit;
+}
+
+/* ─── Module Image ───────────────────────────────────────────────────────── */
+
+.module-img {
+    max-width: 100%;
+    max-height: 400px;
+    object-fit: contain;
+}
+
+/* ─── Progress Bar ───────────────────────────────────────────────────────── */
+
+.progress-bar-launcher {
+    height: 30px;
+}
+
+.progress-bar-fill {
+    width: 0%;
+}
+
+/* ─── Range Slider Value Badge ───────────────────────────────────────────── */
+
+.range-value-badge {
+    min-width: 3em;
+    text-align: center;
+}
+
+/* ─── Play Button ────────────────────────────────────────────────────────── */
+
+#play-btn {
+    font-size: 24px;
+    border-width: 3px !important;
+}
+
+/* ─── Settings Button ────────────────────────────────────────────────────── */
+
+#settings {
+    width: auto;
+    outline: none;
+    box-shadow: none;
+    padding: 0;
+}
+
+/* ─── Locale Select ──────────────────────────────────────────────────────── */
+
+.locale-select {
+    width: auto;
+}
+
+/* ─── Scrollbar ──────────────────────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* ─── Config Dropdown ────────────────────────────────────────────────────── */
+
+.dropdown-menu {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+/* ─── Dark Theme Overrides ───────────────────────────────────────────────── */
+
+[data-bs-theme="dark"] .bg-light {
+    background-color: #2c2f33 !important;
+    border-color: #444 !important;
+}
+
+[data-bs-theme="dark"] .bg-white {
+    background-color: #23272a !important;
+    color: #fff !important;
+}
+
+[data-bs-theme="dark"] .border-end,
+[data-bs-theme="dark"] .border-bottom,
+[data-bs-theme="dark"] .border-top {
+    border-color: #444 !important;
+}
+
+[data-bs-theme="dark"] .list-group-item {
+    background-color: #2c2f33;
+    color: #dfdfdf;
+    border-color: #444;
+}
+
+[data-bs-theme="dark"] .list-group-item:hover,
+[data-bs-theme="dark"] .list-group-item.active {
+    background-color: #7289da;
+    color: white;
+    border-color: #7289da;
+}
+
+[data-bs-theme="dark"] .text-primary {
+    color: #7289da !important;
+}
