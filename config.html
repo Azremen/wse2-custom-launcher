@@ -1,54 +1,60 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" data-bs-theme="dark">
 
 <head>
-    <!-- Required meta tags -->
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <!-- CSP -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' http://localhost:*;">
+    <title>WSE2 Config</title>
 
-    <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="./libs/css/bootstrap.min.css">
-    <link rel="stylesheet" href="./styles.css" />
     <link rel="stylesheet" href="./libs/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="./main.css">
 </head>
 
 <body>
-    <div class="container-fluid p-0">
-        <div class="row g-0 h-100">
-            <!-- Sidebar -->
-            <div class="col-3 col-lg-2 bg-light border-end d-flex flex-column" style="height: 100vh;">
-                <div class="p-3 border-bottom">
-                    <h5 class="m-0" data-i18n="ui_settings">Settings</h5>
-                </div>
-                <div class="list-group list-group-flush flex-grow-1 overflow-auto" id="config-sidebar">
+<div class="container-fluid p-0">
+    <div class="row g-0 config-full-height">
+
+        <!-- Sidebar -->
+        <aside class="col-3 col-lg-2 bg-light border-end d-flex flex-column config-full-height">
+            <div class="p-3 border-bottom">
+                <h5 class="m-0" data-i18n="ui.settings"></h5>
+            </div>
+            <nav class="list-group list-group-flush flex-grow-1 overflow-auto"
+                 id="config-sidebar" aria-label="Configuration sections">
+                <!-- Populated by renderer.js -->
+            </nav>
+            <div class="p-2 border-top bg-light d-grid gap-1">
+                <button class="btn btn-outline-secondary btn-sm w-100"
+                        id="config-back" type="button"
+                        data-i18n="ui.back"></button>
+                <button class="btn btn-primary btn-sm w-100"
+                        id="config-save" type="button"
+                        data-i18n="ui.save"></button>
+            </div>
+        </aside>
+
+        <!-- Content -->
+        <main class="col-9 col-lg-10 d-flex flex-column config-full-height">
+            <header class="p-3 border-bottom">
+                <h4 id="config-section-title" class="m-0 text-primary"></h4>
+            </header>
+            <div class="p-3 flex-grow-1 overflow-auto">
+                <div class="tab-content" id="configTabsContent">
                     <!-- Populated by renderer.js -->
                 </div>
-                <div class="p-2 border-top bg-light">
-                     <button class="btn btn-outline-secondary btn-sm w-100 mb-1" id="config-back" data-i18n="ui_back">Back</button>
-                     <button class="btn btn-primary btn-sm w-100" id="config-save" data-i18n="ui_save">Save</button>
-                </div>
             </div>
+        </main>
 
-            <!-- Content -->
-            <div class="col-9 col-lg-10 d-flex flex-column" style="height: 100vh;">
-                <div class="p-3 border-bottom bg-white">
-                    <h4 id="config-section-title" class="m-0 text-primary"></h4>
-                </div>
-                <div class="p-3 flex-grow-1 overflow-auto bg-white">
-                     <div class="tab-content" id="configTabsContent">
-                        <!-- Populated by renderer.js -->
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
-    
-    <!-- Scripts -->
-    <script src="./libs/js/jquery.min.js"></script>
-    <script src="./libs/js/bootstrap.bundle.min.js"></script>
-    <script src="./renderer.js"></script>
-</body>
+</div>
 
+<!-- Scripts -->
+<script src="./libs/js/jquery.min.js"></script>
+<script src="./libs/js/bootstrap.bundle.min.js"></script>
+<script src="./renderer.js"></script>
+
+</body>
 </html>
+

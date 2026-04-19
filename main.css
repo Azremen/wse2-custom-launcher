@@ -128,6 +128,12 @@ body {
     background: #555;
 }
 
+/* ─── Config Window ──────────────────────────────────────────────────────── */
+
+.config-full-height {
+    height: 100vh;
+}
+
 /* ─── Config Dropdown ────────────────────────────────────────────────────── */
 
 .dropdown-menu {
