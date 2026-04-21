@@ -15,8 +15,8 @@
     "pack": "electron-builder --dir",
     "dist": "npm run dist:all",
     "dist:all": "electron-builder --linux --win",
-    "release": "electron-builder --linux --win --mac -p always",
-    "release:local": "dotenv -e .env -- electron-builder --linux --win --mac -p always",
+    "release": "electron-builder --linux --win -p always",
+    "release:local": "dotenv -e .env -- electron-builder --linux --win -p always",
     "dist:linux": "electron-builder --linux",
     "dist:win": "electron-builder --win",
     "dist:mac": "electron-builder --mac"
