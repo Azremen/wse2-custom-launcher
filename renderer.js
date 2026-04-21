@@ -1,17 +1,153 @@
 'use strict';
 
 // ── Constants ────────────────────────────────────────────────────────────────
-const REMOTE_URL = 'http://localhost/wse2-launcher/'; // Change to your VPS URL
-const LOCALE_KEY = 'locale';
-const THEME_KEY = 'theme';
-const DEFAULT_LOCALE = 'en';
+const DEFAULT_REMOTE_URL = 'http://gokberkalkis.com:8080/';
+const REMOTE_URL_KEY     = 'remoteUrl';
+const LOCALE_KEY         = 'locale';
+const THEME_KEY          = 'theme';
+const DEFAULT_LOCALE     = 'en';
 
 // ── State ────────────────────────────────────────────────────────────────────
+let REMOTE_URL = localStorage.getItem(REMOTE_URL_KEY) || DEFAULT_REMOTE_URL;
 let localModules = [];
 let remoteModules = [];
 let activeModule = null;
 let currentLocale = DEFAULT_LOCALE;
 let translations = {};
+
+// ── Download Queue ────────────────────────────────────────────────
+let downloadQueue = [];
+let isDownloading = false;
+
+// Config window state
+let _configData = null;
+
+// Cached app version (fetched once, reused by applyTranslations)
+let appVersion = null;
+
+// Cached progress bar DOM elements (set on first use)
+let $progressBar = null;
+let $downloadStatus = null;
+
+function getProgressBar() {
+    if (!$progressBar) $progressBar = $('.progress-bar');
+    return $progressBar;
+}
+
+function getDownloadStatus() {
+    if (!$downloadStatus || $downloadStatus.length === 0) {
+        $downloadStatus = $('#download-status');
+        if ($downloadStatus.length === 0) {
+            $downloadStatus = $('<div id="download-status" class="text-center small text-muted mt-1"></div>');
+            getProgressBar().parent().after($downloadStatus);
+        }
+    }
+    return $downloadStatus;
+}
+
+// ── Utilities ────────────────────────────────────────────────
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+function showDialog(message, { isConfirm = false } = {}) {
+    return new Promise(resolve => {
+        let settled = false;
+        const settle = val => { if (!settled) { settled = true; resolve(val); } };
+
+        const el = document.getElementById('appModal');
+        if (!el) {
+            // Fallback for windows without appModal (e.g. config window)
+            if (isConfirm) {
+                settle(window.confirm(message));
+            } else {
+                window.alert(message);
+                settle(undefined);
+            }
+            return;
+        }
+        const bsModal = bootstrap.Modal.getOrCreateInstance(el);
+
+        $('#appModalBody').text(message);
+        $('#appModalOk').text(t('ui.ok')).off('click').on('click', () => { bsModal.hide(); settle(true); });
+
+        if (isConfirm) {
+            $('#appModalCancel').text(t('ui.cancel')).removeClass('d-none')
+                .off('click').on('click', () => { bsModal.hide(); settle(false); });
+        } else {
+            $('#appModalCancel').addClass('d-none');
+        }
+
+        el.addEventListener('hidden.bs.modal', () => settle(isConfirm ? false : undefined), { once: true });
+        bsModal.show();
+    });
+}
+
+const showAlert   = msg => showDialog(msg, { isConfirm: false });
+const showConfirm = msg => showDialog(msg, { isConfirm: true });
+
+function syncThemeText() {
+    const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+    $('#theme-source').text(isDark ? t('ui.dark') : t('ui.light'));
+}
+
+async function enqueueDownload(url, meta) {
+    downloadQueue.push({ url, meta });
+    await processDownloadQueue();
+}
+
+async function processDownloadQueue() {
+    if (isDownloading || downloadQueue.length === 0) return;
+    isDownloading = true;
+    const next = downloadQueue.shift();
+    $('#btn-cancel-download').removeClass('d-none');
+    try {
+        await window.api.modules.download(next.url, next.meta);
+    } catch (err) {
+        console.error('[Download] Failed to start download:', err);
+        isDownloading = false;
+        $('#btn-cancel-download').addClass('d-none');
+        await showAlert(t('msg_download_failed') + String(err));
+        // Continue with next item in queue
+        processDownloadQueue();
+    }
+}
+
+// ── Renderer-side console overrides ──────────────────────────────────────────
+// These run immediately so errors before initMainWindow are also captured.
+let unreadLogCount = 0;
+
+function appendLogEntry(level, message, time) {
+    const entriesEl = document.getElementById('log-entries');
+    if (!entriesEl) return;
+    const ts = time ? new Date(time).toLocaleTimeString() : new Date().toLocaleTimeString();
+    const cssClass = level === 'ERROR' ? 'log-error' : 'log-warn';
+    const label = level === 'ERROR' ? '\u2716' : '\u26a0';
+    const el = document.createElement('div');
+    el.className = `log-entry ${cssClass}`;
+    el.textContent = `[${ts}] ${label} ${message}`;
+    entriesEl.appendChild(el);
+    entriesEl.scrollTop = entriesEl.scrollHeight;
+}
+
+function bumpLogBadge() {
+    unreadLogCount++;
+    $('#btn-log-panel').removeClass('d-none');
+    $('#log-badge').removeClass('d-none').text(unreadLogCount > 99 ? '99+' : unreadLogCount);
+}
+
+const _rWarn  = console.warn.bind(console);
+const _rError = console.error.bind(console);
+console.warn = (...args) => {
+    _rWarn(...args);
+    const msg = args.map(a => (a && typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' ');
+    appendLogEntry('WARN', msg, null);
+    if (!document.getElementById('logPanel')?.classList.contains('show')) bumpLogBadge();
+};
+console.error = (...args) => {
+    _rError(...args);
+    const msg = args.map(a => (a && typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' ');
+    appendLogEntry('ERROR', msg, null);
+    if (!document.getElementById('logPanel')?.classList.contains('show')) bumpLogBadge();
+};
 
 $(document).ready(async () => {
     // Offline Detection
@@ -24,9 +160,7 @@ $(document).ready(async () => {
 
         // Refresh buttons if a module is selected to reflect online status
         if (activeModule) {
-            // Re-run selection logic to update disabled states
-            const $btn = $('#list-pos .active');
-            if ($btn.length) selectModule(activeModule, $btn);
+            updateModuleButtons(activeModule);
         }
     }
     window.addEventListener('online', updateOnlineStatus);
@@ -53,23 +187,20 @@ $(document).ready(async () => {
             $('#locale-select').val(currentLocale);
 
             // Bind Change Event
-            $('#locale-select').change(async function () {
+            $('#locale-select').on('change', async function () {
                 const newLang = $(this).val();
                 if (newLang !== currentLocale) {
                     currentLocale = newLang;
                     localStorage.setItem(LOCALE_KEY, newLang);
+                    document.documentElement.lang = newLang;
                     await loadTranslations(currentLocale);
-                    // Update dynamic texts
                     // Refresh Main Window Logic if active to re-render buttons
                     renderList();
                     if (activeModule) {
-                        const $btn = $('#list-pos .active');
-                        if ($btn.length) selectModule(activeModule, $btn);
+                        updateModuleButtons(activeModule);
                     }
 
-                    // Update theme text
-                    const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
-                    $("#theme-source").text(isDark ? t("ui.dark") : t("ui.light"));
+                    syncThemeText();
                 }
             });
         }
@@ -81,111 +212,120 @@ $(document).ready(async () => {
 
     // Determine if we are in Main Window or Config Window
     if ($('#config-sidebar').length > 0) {
-        initConfigWindow();
+        await initConfigWindow();
 
         // Listen to storage changes to sync locale if changed in main window
         if (window.api && typeof window.addEventListener === 'function') {
             window.addEventListener('storage', async (e) => {
                 if (e.key === LOCALE_KEY) {
-                    currentLocale = e.newValue;
+                    currentLocale = e.newValue || 'en';
                     await loadTranslations(currentLocale);
                     // Refresh Config Form with new locale
                     // We need the data again, or just re-render with stored schema
-                    if (typeof renderConfigForm === 'function' && window._lastConfigData) {
-                        applyTranslations(); // Updates static translations (tabs, buttons)
+                    if (typeof renderConfigForm === 'function' && _configData) {
+                        applyTranslations();
 
                         // Preserve current user input before re-rendering
-                        const currentValues = collectFormData(window._lastConfigData.schema);
-                        window._lastConfigData.values = currentValues;
+                        const currentValues = collectFormData(_configData.schema);
+                        _configData.values = currentValues;
 
-                        renderConfigForm(window._lastConfigData.schema, currentValues);
+                        renderConfigForm(_configData.schema, currentValues);
                     }
                 } else if (e.key === THEME_KEY) {
                     // Sync theme change
-                    const newTheme = e.newValue;
+                    const newTheme = e.newValue || 'light';
                     document.documentElement.setAttribute('data-bs-theme', newTheme);
-                    // Config window generally doesn't have #theme-source but if it does:
-                    const isDark = newTheme === 'dark';
-                    $("#theme-source").text(isDark ? t("ui.dark") : t("ui.light"));
+                    syncThemeText();
                 }
             });
         }
     } else {
-        initMainWindow();
+        await initMainWindow();
     }
 
-    // Apply theme on load
-    const storedTheme = localStorage.getItem(THEME_KEY);
-    const isSystemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-    // Default to system, but respect manual override if possible (needs main window implementation)
-    // For now we just check system for initial, but listeners above handle sync.
-    // Actually, let's look at how we toggle it.
-
-    if (storedTheme) {
-        document.documentElement.setAttribute('data-bs-theme', storedTheme);
-        $("#theme-source").text(storedTheme === 'dark' ? t("ui.dark") : t("ui.light"));
-    } else if (isSystemDark) {
-        document.documentElement.setAttribute('data-bs-theme', 'dark');
-        $("#theme-source").text(t("ui.dark"));
-    } else {
-        document.documentElement.setAttribute('data-bs-theme', 'light');
-        $("#theme-source").text(t("ui.light"));
-    }
+    initTheme();
 
     // Theme toggle is handled in initMainWindow; config window has no toggle.
 });
 
 async function loadTranslations(lang) {
     try {
-        translations = await $.getJSON(`locales/${lang}.json`);
+        const res = await fetch(`locales/${lang}.json`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        translations = await res.json();
     } catch (e) {
         console.error(`Failed to load locale ${lang}`, e);
-        translations = {}; // fallback
+        if (lang !== 'en') {
+            try {
+                const res = await fetch('locales/en.json');
+                if (res.ok) translations = await res.json();
+                else translations = {};
+            } catch { translations = {}; }
+        } else {
+            translations = {};
+        }
     }
     applyTranslations();
 }
 
 function t(key, params = {}) {
-    // Support dot notation: "ui.install" → translations.ui.install
-    const value = key.split('.').reduce((obj, part) => obj && obj[part], translations);
+    // Fast path: key with no dot notation
+    let value = translations[key];
+    // Slow path: dot notation (e.g. "ui.install")
+    if (value === undefined && key.includes('.')) {
+        value = key.split('.').reduce((obj, part) => obj && obj[part], translations);
+    }
     let str = (value !== undefined && value !== null) ? String(value) : key;
     for (const prop in params) {
-        str = str.replace(`{${prop}}`, params[prop]);
+        str = str.replaceAll(`{${prop}}`, params[prop]);
     }
     return str;
 }
 
 function applyTranslations() {
-    // Text and Placeholder
-    $('[data-i18n]').each(function () {
-        const key = $(this).data('i18n');
+    // Text and Placeholder — native querySelectorAll is faster than jQuery each
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.dataset.i18n;
         const text = t(key);
-        if ($(this).is('input') || $(this).is('textarea')) {
-            $(this).attr('placeholder', text);
+        if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+            el.placeholder = text;
         } else {
-            $(this).text(text);
+            el.textContent = text;
         }
     });
 
     // Tooltips / Titles
-    $('[data-i18n-title]').each(function () {
-        $(this).attr('title', t($(this).data('i18n-title')));
+    document.querySelectorAll('[data-i18n-title]').forEach(el => {
+        el.title = t(el.dataset.i18nTitle);
     });
 
-    // Explicitly update version translation if it exists
-    const verText = $("#version").text().split(":")[1] || "";
-    // Re-render version line completely
-    window.api.launcher.getVersion().then(ver => {
-        $("#version").html(`<strong>${t("heading.version")}</strong>: ${ver}`);
-    });
+    // Re-render version line using cached value (no IPC round-trip)
+    if (appVersion) {
+        const el = document.getElementById('version');
+        if (el) {
+            el.textContent = '';
+            const strong = document.createElement('strong');
+            strong.textContent = t('heading.version');
+            el.appendChild(strong);
+            el.appendChild(document.createTextNode(': ' + appVersion));
+        }
+    }
 
-    // Explicitly update theme text
-    const currentTheme = document.documentElement.getAttribute('data-bs-theme');
-    const isDark = currentTheme === 'dark';
-    $("#theme-source").text(isDark ? t("ui.dark") : t("ui.light"));
+    syncThemeText();
 }
 
+
+function initTheme() {
+    const storedTheme = localStorage.getItem(THEME_KEY);
+    if (storedTheme) {
+        document.documentElement.setAttribute('data-bs-theme', storedTheme);
+    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.setAttribute('data-bs-theme', 'dark');
+    } else {
+        document.documentElement.setAttribute('data-bs-theme', 'light');
+    }
+    syncThemeText();
+}
 
 // ── Main Window Logic ───────────────────────────────────────────────────────
 
@@ -194,49 +334,62 @@ async function initMainWindow() {
     await refreshModuleList();
 
     // 2. UI Event Bindings
-    $('#toggle-dark-mode').click(async () => {
+    $('#toggle-dark-mode').on('click', async () => {
         const currentTheme = document.documentElement.getAttribute('data-bs-theme');
         const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-bs-theme', newTheme);
         localStorage.setItem(THEME_KEY, newTheme);
-        $("#theme-source").text(newTheme === 'dark' ? t("ui.dark") : t("ui.light"));
+        syncThemeText();
 
         // Notify main process if needed (though with BS5 client-side is often enough unless we persist it)
         await window.api.darkMode.toggle();
     });
 
-    $('#btn-install').click(() => {
+    $('#btn-install').on('click', () => {
         if (activeModule && activeModule.url) {
             startDownload(activeModule.url);
         }
     });
 
-    $('#btn-remove').click(async () => {
+    $('#btn-cancel-download').on('click', async () => {
+        await window.api.launcher.cancelDownload();
+        downloadQueue = [];
+        isDownloading = false;
+        $('#btn-cancel-download').addClass('d-none');
+        updateProgressBar(0);
+    });
+
+    $('#btn-remove').on('click', async () => {
         if (activeModule && activeModule.path) {
-            if (confirm(t("msg_confirm_remove", { name: activeModule.name }))) {
+            if (await showConfirm(t("msg_confirm_remove", { name: activeModule.name }))) {
                 await window.api.modules.remove(activeModule.path);
+                activeModule = null;
+                $('#module-img').addClass('d-none').attr('src', '');
+                $('#module-info').addClass('d-none');
+                $('#btn-remove, #btn-configure, #play-btn').addClass('disabled').prop('disabled', true);
+                $('#btn-install').text(t('ui.install')).prop('disabled', true)
+                    .removeClass('btn-success btn-secondary').addClass('btn-primary');
                 await refreshModuleList();
             }
         }
     });
 
-    $('#btn-configure').click(() => {
+    $('#btn-configure').on('click', () => {
         if (activeModule && activeModule.path) {
             window.api.config.open(activeModule.path);
         }
     });
 
-    $('#play-btn').click(() => {
+    $('#play-btn').on('click', async () => {
         if (activeModule && activeModule.isInstalled) {
             window.api.launcher.launch(activeModule.name);
         } else {
-            alert(t("ui.not_installed"));
+            await showAlert(t("ui.not_installed"));
         }
     });
 
-    $('#settings').click(() => {
-        const settingsModal = new bootstrap.Modal(document.getElementById('settingsModal'));
-        settingsModal.show();
+    $('#settings').on('click', () => {
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('settingsModal')).show();
     });
 
     // Wine settings — only relevant on non-Windows
@@ -250,15 +403,23 @@ async function initMainWindow() {
         }
     })();
 
-    $('#btn-browse-wine').click(async () => {
+    $('#btn-browse-wine').on('click', async () => {
         const selected = await window.api.wine.browse();
         if (selected) $('#wine-path-input').val(selected);
     });
 
-    $('#btn-save-wine').click(async () => {
+    $('#btn-save-wine').on('click', async () => {
+        const winePath = $('#wine-path-input').val().trim();
+        const winePrefix = $('#wine-prefix-input').val().trim();
+
+        if (!winePath) {
+            await showAlert(t('ui.wine.path_required') || 'Wine executable path is required.');
+            return;
+        }
+
         const settings = {
-            winePath: $('#wine-path-input').val().trim() || 'wine',
-            winePrefix: $('#wine-prefix-input').val().trim(),
+            winePath: winePath,
+            winePrefix: winePrefix,
         };
         const ok = await window.api.wine.setSettings(settings);
         if (ok) {
@@ -267,8 +428,54 @@ async function initMainWindow() {
         }
     });
 
-    $('#btn-open-folder').click(() => {
+    $('#btn-open-folder').on('click', () => {
         window.api.launcher.openFolder();
+    });
+
+    $('#btn-check-updates').on('click', async () => {
+        const $btn = $('#btn-check-updates');
+        const $feedback = $('#update-check-feedback');
+        $btn.prop('disabled', true);
+        $btn.find('i').addClass('fa-spin');
+        $feedback.removeClass('d-none text-success text-danger').addClass('text-muted').text(t('ui.checking_updates'));
+        const result = await window.api.launcher.checkForUpdates();
+        $btn.prop('disabled', false);
+        $btn.find('i').removeClass('fa-spin');
+        if (result?.error) {
+            $feedback.removeClass('text-muted text-success').addClass('text-danger').text(t('ui.update_check_error'));
+        } else if (!result?.hasUpdate) {
+            $feedback.removeClass('text-muted text-danger').addClass('text-success').text(t('ui.up_to_date'));
+        }
+        // If hasUpdate, the onUpdateAvailable event will fire automatically
+    });
+
+    // Server URL
+    $('#server-url-input').val(REMOTE_URL);
+    $('#btn-save-server-url').on('click', () => {
+        const url = $('#server-url-input').val().trim();
+        const $feedback = $('#server-url-feedback');
+        if (!url) return;
+
+        // Ensure trailing slash
+        const normalized = url.endsWith('/') ? url : url + '/';
+
+        const isInsecure = normalized.startsWith('http://');
+
+        REMOTE_URL = normalized;
+        localStorage.setItem(REMOTE_URL_KEY, normalized);
+        $('#server-url-input').val(normalized);
+
+        if (isInsecure) {
+            $feedback.removeClass('d-none text-success text-danger').addClass('text-warning')
+                .text('⚠ Insecure URL (http). Consider using https.');
+            setTimeout(() => $feedback.addClass('d-none'), 5000);
+        } else {
+            $feedback.removeClass('d-none text-danger text-warning').addClass('text-success')
+                .text(t('ui.server_url_saved'));
+            setTimeout(() => $feedback.addClass('d-none'), 2000);
+        }
+
+        refreshModuleList();
     });
 
     // 3. Event Listeners
@@ -277,44 +484,96 @@ async function initMainWindow() {
     });
 
     window.api.events.onDownloadComplete(async () => {
-        // Now it is truly complete
-        $('.progress-bar').addClass('bg-success').text(t("ui.done"));
-        $('.progress-bar').removeClass('progress-bar-striped progress-bar-animated');
-        $('#download-status').text(t("msg_download_success") || "Installed Successfully!");
-
-        setTimeout(() => {
-            updateProgressBar(0);
-            alert(t("msg_download_complete"));
-            refreshModuleList();
-        }, 1000);
+        isDownloading = false;
+        $('#btn-cancel-download').addClass('d-none');
+        getProgressBar().addClass('bg-success').text(t('ui.done'));
+        getProgressBar().removeClass('progress-bar-striped progress-bar-animated');
+        getDownloadStatus().text(t('msg_download_success'));
+        await delay(1000);
+        updateProgressBar(0);
+        await showAlert(t('msg_download_complete'));
+        await refreshModuleList();
+        await processDownloadQueue();
     });
 
-    window.api.events.onDownloadError((err) => {
-        alert(t("msg_download_failed") + err);
+    window.api.events.onDownloadError(async (err) => {
+        isDownloading = false;
+        $('#btn-cancel-download').addClass('d-none');
+        downloadQueue = [];
+        await showAlert(t("msg_download_failed") + String(err));
         updateProgressBar(0);
     });
 
-    window.api.events.onUpdateAvailable(() => {
-        if (confirm(t("msg_launcher_update"))) {
+    window.api.events.onUpdateAvailable(async () => {
+        if (await showConfirm(t("msg_launcher_update"))) {
             window.api.launcher.update();
-            // Optional: Show some feedback like "Downloading update..."
-            // But since we have onUpdateDownloaded later, that might be enough.
-            // Or we could reuse toast if available.
+            $('#updater-progress-wrap').removeClass('d-none');
         }
     });
 
-    window.api.events.onUpdateDownloaded(() => {
-        if (confirm(t("msg_restart_now"))) {
+    window.api.events.onUpdateProgress((pct) => {
+        $('#updater-progress-bar').css('width', pct + '%').text(pct + '%');
+    });
+
+    window.api.events.onUpdateDownloaded(async () => {
+        $('#updater-progress-wrap').addClass('d-none');
+        if (await showConfirm(t("msg_restart_now"))) {
             window.api.launcher.restart();
         }
     });
 
+    // ── Diagnostic Log Panel ─────────────────────────────────────────────────
+
+    // Reset badge when panel opens
+    document.getElementById('logPanel')?.addEventListener('shown.bs.offcanvas', () => {
+        unreadLogCount = 0;
+        $('#log-badge').addClass('d-none').text('');
+    });
+
+    // Clear log
+    $('#btn-clear-log').on('click', () => {
+        $('#log-entries').empty();
+        unreadLogCount = 0;
+        $('#log-badge').addClass('d-none').text('');
+    });
+
+    // Receive WARN/ERROR from main process
+    window.api.events.onAppLog((entry) => {
+        appendLogEntry(entry.level, entry.message, entry.time);
+        const offcanvasEl = document.getElementById('logPanel');
+        const isOpen = offcanvasEl?.classList.contains('show');
+        if (!isOpen) bumpLogBadge();
+    });
+
+    // Receive launch / non-download errors from main process
+    window.api.events.onAppError(async (msg) => {
+        await showAlert(msg);
+    });
+
     // Initial Render
-    const ver = await window.api.launcher.getVersion();
-    $("#version").html(`<strong>${t("heading.version")}</strong>: ${ver}`);
+    appVersion = await window.api.launcher.getVersion();
+    (() => {
+        const el = document.getElementById('version');
+        if (el) {
+            el.textContent = '';
+            const strong = document.createElement('strong');
+            strong.textContent = t('heading.version');
+            el.appendChild(strong);
+            el.appendChild(document.createTextNode(': ' + appVersion));
+        }
+    })();
 
     // Initial State of Play Button
     $('#play-btn').addClass('disabled');
+
+    // Auto-launch toggle
+    try {
+        const autoLaunch = await window.api.launcher.getAutoLaunch();
+        $('#chk-auto-launch').prop('checked', !!autoLaunch);
+    } catch { /* ignore on unsupported platforms */ }
+    $('#chk-auto-launch').on('change', async function () {
+        await window.api.launcher.setAutoLaunch($(this).is(':checked'));
+    });
 }
 
 async function refreshModuleList() {
@@ -328,18 +587,51 @@ async function refreshModuleList() {
 
     // Get Remote
     try {
-        remoteModules = await $.ajax({
-            dataType: "json",
-            url: REMOTE_URL + 'index.php', // Use the dynamic index.php from VPS
-            timeout: 5000 // Timeout configuration
-        });
-        if (!Array.isArray(remoteModules)) remoteModules = [];
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        try {
+            const res = await fetch(REMOTE_URL + 'index.php', { signal: controller.signal });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            remoteModules = await res.json();
+            if (!Array.isArray(remoteModules)) remoteModules = [];
+        } finally {
+            clearTimeout(timeoutId);
+        }
     } catch (e) {
         console.warn("Could not fetch remote modules", e);
         remoteModules = [];
     }
 
     renderList();
+
+    // Sync activeModule with refreshed data so buttons/state stay accurate
+    if (activeModule) {
+        const freshLocal  = localModules.find(m => m.name === activeModule.name);
+        const freshRemote = Array.isArray(remoteModules) ? remoteModules.find(m => m.name === activeModule.name) : null;
+
+        if (!freshLocal && !freshRemote) {
+            // Module no longer exists at all — clear selection
+            activeModule = null;
+            $('#list-pos .active').removeClass('active');
+            $('#module-img').addClass('d-none').attr('src', '');
+            $('#module-info').addClass('d-none');
+        } else {
+            // Rebuild the merged mod object with latest data so buttons are correct
+            const installed = freshLocal || null;
+            const remote    = freshRemote || null;
+            activeModule = {
+                ...activeModule,
+                localVersion:  installed ? installed.version  : null,
+                path:          installed ? installed.path     : null,
+                img:           installed ? installed.imagePath : null,
+                configExists:  installed ? installed.configExists : false,
+                isInstalled:   !!installed,
+                remoteVersion: remote    ? remote.version     : activeModule.remoteVersion,
+                url:           remote    ? (activeModule.url  || null) : null,
+            };
+            updateModuleButtons(activeModule);
+        }
+    }
 }
 
 function renderList() {
@@ -372,7 +664,9 @@ function renderList() {
                 localVersion: installed ? installed.version : null,
                 path: installed ? installed.path : null,
                 url: modUrl,
-                md5: rm.md5 || null, // Capture checksum from index.php
+                md5: rm.md5 || null,
+                size: rm.size || null,
+                description: rm.description || null,
                 img: installed ? installed.imagePath : null,
                 configExists: installed ? installed.configExists : false,
                 isInstalled: !!installed
@@ -397,30 +691,33 @@ function renderList() {
         }
     });
 
-    displayList.forEach((mod, index) => {
-        let badge = '';
+    displayList.forEach(mod => {
+        let $badge;
         if (mod.isInstalled) {
-            // Updated Logic for Version Display
             if (mod.remoteVersion && mod.localVersion && mod.localVersion !== mod.remoteVersion) {
-                badge = `<span class="badge bg-warning float-end text-dark">${mod.localVersion} -> ${mod.remoteVersion}</span>`;
-            } else if (mod.localVersion === mod.remoteVersion) {
-                // MATCH: Green badge with "Up to date" or just version
-                badge = `<span class="badge bg-success float-end">${mod.localVersion}</span>`;
+                $badge = $('<span class="badge bg-warning float-end text-dark">').text(`${mod.localVersion} -> ${mod.remoteVersion}`);
+            } else if (mod.localVersion && mod.localVersion === mod.remoteVersion) {
+                $badge = $('<span class="badge bg-success float-end">').text(mod.localVersion);
+            } else if (mod.localVersion) {
+                $badge = $('<span class="badge bg-secondary float-end">').text(mod.localVersion);
             } else {
-                // Unknown logic
-                const displayVer = mod.localVersion || t("ui.unknown_version");
-                badge = `<span class="badge bg-secondary float-end">${displayVer}</span>`;
+                $badge = $('<span class="badge bg-dark float-end">').text('?');
             }
         } else {
-            badge = `<span class="badge bg-secondary float-end">${t("ui.not_installed")}</span>`;
+            $badge = $('<span class="badge bg-secondary float-end">').text(t('ui.not_installed'));
         }
 
-        const $btn = $(`<button class="list-group-item list-group-item-action">
-            <span class="name fw-bold">${mod.name}</span>
-            ${badge}
-        </button>`);
+        const $btn = $('<button class="list-group-item list-group-item-action">')
+            .append($('<span class="name fw-bold">').text(mod.name))
+            .append($badge);
 
-        $btn.click(() => selectModule(mod, $btn));
+        $btn.on('click', () => selectModule(mod, $btn));
+
+        // Restore active highlight if this module was selected
+        if (activeModule && mod.name === activeModule.name) {
+            $btn.addClass('active');
+        }
+
         $list.append($btn);
     });
 }
@@ -449,81 +746,81 @@ function selectModule(mod, $btn) {
         $('#module-img').addClass('d-none');
     }
 
+    // Module Detail Panel
+    const $info = $('#module-info');
+    $info.removeClass('d-none');
+    $('#module-info-name').text(mod.name);
+
+    const $badges = $('#module-info-badges').empty();
+
+    if (mod.isInstalled && mod.localVersion) {
+        const isOutdated = mod.remoteVersion && mod.localVersion !== mod.remoteVersion;
+        const badgeCls = isOutdated ? 'bg-warning text-dark' : 'bg-success';
+        $badges.append($('<span class="badge">').addClass(badgeCls).text(`${t('ui.installed')}: v${mod.localVersion}`));
+    } else if (!mod.isInstalled) {
+        $badges.append($('<span class="badge bg-secondary">').text(t('ui.not_installed')));
+    }
+
+    if (mod.remoteVersion) {
+        $badges.append($('<span class="badge bg-primary">').text(`${t('ui.latest')}: v${mod.remoteVersion}`));
+    }
+
+    if (mod.md5) {
+        const $md5Badge = $('<span class="badge bg-secondary">').text(t('ui.checksum_ok'));
+        $md5Badge.attr('title', `MD5: ${mod.md5}`);
+        $md5Badge.prepend($('<i class="fas fa-shield-alt me-1">'));
+        $badges.append($md5Badge);
+    }
+
+    if (mod.size) {
+        const sizeMb = (mod.size / 1024 / 1024).toFixed(1);
+        $badges.append($('<span class="badge bg-secondary">').text(`${sizeMb} MB`));
+    }
+
+    if (mod.description) {
+        $('#module-info-desc').text(mod.description).removeClass('d-none');
+    } else {
+        $('#module-info-desc').addClass('d-none');
+    }
+
     // Buttons
+    updateModuleButtons(mod);
+}
+
+function updateModuleButtons(mod) {
     const installBtn = $('#btn-install');
-    const removeBtn = $('#btn-remove');
-    const configBtn = $('#btn-configure');
-    const playBtn = $('#play-btn');
+    const removeBtn  = $('#btn-remove');
+    const configBtn  = $('#btn-configure');
+    const playBtn    = $('#play-btn');
 
     if (mod.isInstalled) {
-        removeBtn.prop('disabled', false);
-        removeBtn.text(t("ui.remove"));
+        removeBtn.prop('disabled', false).text(t('ui.remove'));
+        playBtn.removeClass('disabled').prop('disabled', false);
+        configBtn.prop('disabled', false).text(t('ui.configure'));
 
-        // Enable Play Button
-        playBtn.removeClass('disabled');
-
-        // Always enable config for installed modules (creates new if missing)
-        configBtn.prop('disabled', false);
-        configBtn.text(t("ui.configure"));
-
-        // Can update?
         if (mod.remoteVersion && mod.localVersion && mod.remoteVersion !== mod.localVersion) {
-            installBtn.text(t("ui.update"));
-            installBtn.prop('disabled', false);
-            installBtn.removeClass('btn-primary').addClass('btn-success');
+            installBtn.text(t('ui.update')).prop('disabled', false)
+                .removeClass('btn-primary btn-secondary').addClass('btn-success');
         } else {
-            // Installed and up to date or unknown state -> Reinstall option
-            // We allow Re-Install for repair purposes
-            installBtn.text(t("ui.reinstall"));
-
-            // If this button is ONLY for install/update, disable it.
-            installBtn.prop('disabled', false); // Allow user to force re-install
-            installBtn.removeClass('btn-primary').removeClass('btn-success').addClass('btn-secondary');
+            installBtn.text(t('ui.reinstall')).prop('disabled', false)
+                .removeClass('btn-primary btn-success').addClass('btn-secondary');
         }
     } else {
-        removeBtn.prop('disabled', true);
-        removeBtn.text(t("ui.remove"));
-        configBtn.prop('disabled', true);
-        configBtn.text(t("ui.configure"));
-
-        // Disable Play Button
-        playBtn.addClass('disabled');
-
-        installBtn.text(t("ui.install"));
-
-        // Disable install if offline OR no URL
-        const isOffline = !navigator.onLine;
-        installBtn.prop('disabled', !mod.url || isOffline);
-
-        installBtn.removeClass('btn-success').addClass('btn-primary');
+        removeBtn.prop('disabled', true).text(t('ui.remove'));
+        configBtn.prop('disabled', true).text(t('ui.configure'));
+        playBtn.addClass('disabled').prop('disabled', true);
+        installBtn.text(t('ui.install'))
+            .prop('disabled', !mod.url || !navigator.onLine)
+            .removeClass('btn-success btn-secondary').addClass('btn-primary');
     }
 }
 
 function startDownload(url) {
     if (!activeModule) return;
 
-    // Check user preference first
-    const userCleanInstall = $('#chk-clean-install').is(':checked');
+    const isCleanInstall = $('#chk-clean-install').is(':checked');
 
-    // Check if this is a "Full Install" or "Clean Update" vs a "Patch"
-    // By default, if the URL ends in a pattern like "Update.zip" or "Patch.zip", we assume patch.
-    // Otherwise, for main files (e.g. "Native.zip"), we default to clean install to avoid conflicts.
-    const isPatch = url.toLowerCase().includes('update') || url.toLowerCase().includes('patch');
-
-    // Priority: User Checkbox > Auto-Detection
-    // If user explicitly requests clean install, we do it.
-    // If user unchecks it, we respect that (overlay install).
-    // If user hasn't touched it (implementation detail: we treat unchecked as "auto" or "overlay"?
-    // The user requirement is "add an option", so the checkbox should control it.
-
-    let isCleanInstall = userCleanInstall;
-
-    // Safety fallback: If user DID NOT check clean install, but it looks like a full installer (not patch),
-    // we might warn or just proceed with overlay. 
-    // However, specifically for the request "don't revert back but add an option", 
-    // let's make the checkbox the authority.
-
-    window.api.modules.download(url, {
+    enqueueDownload(url, {
         name: activeModule.name,
         version: activeModule.remoteVersion,
         md5: activeModule.md5 || null,
@@ -532,16 +829,9 @@ function startDownload(url) {
 }
 
 function updateProgressBar(perc) {
-    const $bar = $('.progress-bar');
-    let $status = $('#download-status');
+    const $bar = getProgressBar();
+    const $status = getDownloadStatus();
 
-    // Create status element if it doesn't exist under parent of progress bar
-    if ($status.length === 0) {
-        $status = $('<div id="download-status" class="text-center small text-muted mt-1"></div>');
-        $bar.parent().after($status);
-    }
-
-    // Explicitly handle Reset (0) or Start
     if (perc === 0) {
         $bar.css('width', '0%').text('');
         $bar.removeClass('bg-success progress-bar-striped progress-bar-animated');
@@ -553,14 +843,11 @@ function updateProgressBar(perc) {
     $bar.removeClass('bg-success');
 
     if (perc >= 99.9) {
-        // Download finished, now main process is working
         $bar.css('width', '100%').text('100%');
-        const verText = t("ui.verifying_extracting");
-        $status.text(verText || "Verifying Integrity & Extracting...");
+        $status.text(t('ui.verifying_extracting'));
     } else {
         $bar.css('width', perc + '%').text(Math.round(perc) + '%');
-        const dlText = t("msg_downloading");
-        $status.text(dlText || "Downloading...");
+        $status.text(t('msg_downloading'));
     }
 }
 
@@ -570,13 +857,7 @@ async function initConfigWindow() {
     let currentConfig = null;
     let modulePath = null;
 
-    // Restore theme from storage
-    const storedTheme = localStorage.getItem(THEME_KEY);
-    if (storedTheme) {
-        document.documentElement.setAttribute('data-bs-theme', storedTheme);
-    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.documentElement.setAttribute('data-bs-theme', 'dark');
-    }
+    initTheme();
 
     $('#config-back').on('click', () => {
         window.api.config.close();
@@ -589,34 +870,33 @@ async function initConfigWindow() {
         const newData = collectFormData(currentConfig.schema);
         const success = await window.api.config.save(modulePath, newData);
         if (success) {
-            alert(t("msg_config_saved"));
+            await showAlert(t("msg_config_saved"));
             window.api.config.close();
         } else {
-            alert(t("msg_config_failed"));
+            await showAlert(t("msg_config_failed"));
         }
     });
 
     // Load Data
     const data = await window.api.config.get(); // Main process remembers the path
     if (data.error) {
-        alert("Error loading config: " + data.error);
+        await showAlert('Error loading config: ' + data.error);
         return;
     }
 
     if (!data.schema || Object.keys(data.schema).length === 0) {
-        alert("Configuration Schema is empty! Check config.json.");
+        await showAlert('Configuration Schema is empty! Check config.json.');
     }
 
     currentConfig = data;
     modulePath = data.modulePath;
 
     if (!modulePath) {
-        // Fallback for visual debugging only
-        console.warn("Module Path missing in config load!");
+        console.warn('Module Path missing in config load!');
     }
 
     // Store for re-rendering on locale change
-    window._lastConfigData = data;
+    _configData = data;
 
     renderConfigForm(data.schema, data.values);
 }
@@ -637,15 +917,18 @@ function renderConfigForm(schema, values) {
         const sectionLabel = t(`ui.tab.${paneId.replace(/-/g, '_')}`) || section;
 
         const isActive = index === 0;
-        const activeClassLink = isActive ? 'active' : '';
-        const activeClassPane = isActive ? 'show active' : '';
 
         // Sidebar Item
-        const $link = $(`<a class="list-group-item list-group-item-action ${activeClassLink}" id="${tabId}" data-bs-toggle="list" href="#${paneId}" role="tab" aria-controls="${paneId}">${sectionLabel}</a>`);
+        const $link = $('<a>')
+            .addClass(`list-group-item list-group-item-action${isActive ? ' active' : ''}`)
+            .attr({ id: tabId, 'data-bs-toggle': 'list', href: `#${paneId}`, role: 'tab', 'aria-controls': paneId })
+            .text(sectionLabel);
         $sidebar.append($link);
 
         // Tab Pane
-        const $pane = $(`<div class="tab-pane fade ${activeClassPane}" id="${paneId}" role="tabpanel" aria-labelledby="${tabId}"></div>`);
+        const $pane = $('<div>')
+            .addClass(`tab-pane fade${isActive ? ' show active' : ''}`)
+            .attr({ id: paneId, role: 'tabpanel', 'aria-labelledby': tabId });
         $tabContent.append($pane);
 
         // Fields
@@ -664,7 +947,10 @@ function renderConfigForm(schema, values) {
             const $group = $('<div class="row mb-3">'); // BS5 mb-3
             const labelKey = fieldDef.name || key;
             const labelText = t(labelKey);
-            const $label = $(`<label class="col-sm-4 col-form-label" data-i18n="${labelKey}">${labelText}</label>`);
+            const $label = $('<label>')
+                .addClass('col-sm-4 col-form-label')
+                .attr({ 'data-i18n': labelKey, for: `field-${section}-${key}` })
+                .text(labelText);
 
             // Set title (tooltip)
             if (fieldDef.description) {

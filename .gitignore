@@ -1,7 +1,6 @@
 # --- Modules & Dependencies ---
 node_modules/
-Modules/*
-!Modules/Native/
+Modules/
 
 # --- Build & Distribution ---
 dist/

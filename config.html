@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' http://localhost:*;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' http: https:;">
     <title>WSE2 Config</title>
 
     <link rel="stylesheet" href="./libs/css/bootstrap.min.css">
@@ -47,6 +47,23 @@
             </div>
         </main>
 
+    </div>
+</div>
+
+<!-- Utility Dialog Modal -->
+<div class="modal fade" id="appModal" tabindex="-1"
+     aria-labelledby="appModalLabel" aria-hidden="true"
+     data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-body" id="appModalBody"></div>
+            <div class="modal-footer p-2 gap-2">
+                <button type="button" class="btn btn-secondary btn-sm d-none"
+                        id="appModalCancel"></button>
+                <button type="button" class="btn btn-primary btn-sm"
+                        id="appModalOk"></button>
+            </div>
+        </div>
     </div>
 </div>
 

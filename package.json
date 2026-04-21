@@ -1,6 +1,6 @@
 {
   "name": "wse2-launcher",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Warband Script Enhancer 2 Launcher By Azremen",
   "private": true,
   "repository": {
@@ -14,7 +14,7 @@
     "start": "electron .",
     "pack": "electron-builder --dir",
     "dist": "npm run dist:all",
-    "dist:all": "electron-builder --linux --win --mac",
+    "dist:all": "electron-builder --linux --win",
     "release": "electron-builder --linux --win --mac -p always",
     "release:local": "dotenv -e .env -- electron-builder --linux --win --mac -p always",
     "dist:linux": "electron-builder --linux",
@@ -53,7 +53,9 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "deleteAppDataOnUninstall": true
+      "deleteAppDataOnUninstall": true,
+      "installerIcon": "icons/icon.ico",
+      "uninstallerIcon": "icons/icon.ico"
     },
     "portable": {
       "artifactName": "${productName} ${version} Windows Portable.${ext}"
@@ -75,7 +77,7 @@
       }
     ],
     "mac": {
-      "target": "zip",
+      "target": ["dmg"],
       "artifactName": "${productName} ${version} Mac.${ext}",
       "icon": "icons/icon.icns"
     }
@@ -89,17 +91,16 @@
   "devDependencies": {
     "dotenv-cli": "^11.0.0",
     "electron": "^40.2.1",
-    "electron-builder": "^26.7.0"
+    "electron-builder": "^26.7.0",
+    "@electron/asar": "^4.0.1"
   },
   "dependencies": {
-    "@electron/asar": "^4.0.1",
     "@fortawesome/fontawesome-free": "^7.1.0",
-    "7zip-bin": "^5.2.0",
     "adm-zip": "^0.5.16",
     "bootstrap": "^5.3.8",
+    "electron-log": "^5.4.3",
     "electron-updater": "^6.1.7",
     "ini": "^4.1.1",
-    "jquery": "^4.0.0",
-    "node-7z": "^3.0.0"
+    "jquery": "^4.0.0"
   }
 }

@@ -1,6 +1,6 @@
 'use strict';
 
-const { app, BrowserWindow, ipcMain, nativeTheme, globalShortcut, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, nativeTheme, globalShortcut, shell, dialog } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const fs = require('fs');
@@ -8,6 +8,7 @@ const AdmZip = require('adm-zip');
 const ini = require('ini');
 const crypto = require('crypto');
 const { spawn } = require('child_process');
+const log = require('electron-log');
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -25,9 +26,7 @@ const IS_WINDOWS = process.platform === 'win32';
 const IS_LINUX = process.platform === 'linux';
 const IS_MAC = process.platform === 'darwin';
 
-// ─── Logger ──────────────────────────────────────────────────────────────────
-
-let logPath = null;
+// ─── Logger (electron-log) ───────────────────────────────────────────────────
 
 (function initLogger() {
     try {
@@ -41,42 +40,44 @@ let logPath = null;
         }
 
         const candidatePath = path.join(logDir, LOG_FILE_NAME);
+        let finalPath;
 
         try {
             fs.writeFileSync(candidatePath, '');
-            logPath = candidatePath;
+            finalPath = candidatePath;
         } catch {
-            logPath = IS_LINUX
+            finalPath = IS_LINUX
                 ? path.join('/tmp', LOG_FILE_NAME)
                 : path.join(app.getPath('userData'), LOG_FILE_NAME);
-            try { fs.writeFileSync(logPath, ''); } catch { /* no-op */ }
         }
+
+        log.transports.file.resolvePathFn = () => finalPath;
+        log.transports.file.level = 'silly';
+        log.transports.console.level = IS_DEV ? 'silly' : false;
     } catch (err) {
-        console.error('Failed to initialize log path:', err);
+        // Can't log this — nowhere to write yet
     }
 })();
 
-function writeLog(level, args) {
-    if (!logPath) return;
+// Override console methods so all existing console.log/warn/error calls
+// automatically go through electron-log and are forwarded to the renderer.
+console.log   = (...args) => { log.info(...args); };
+console.warn  = (...args) => { log.warn(...args);  sendLogToRenderer('WARN',  args); };
+console.error = (...args) => { log.error(...args); sendLogToRenderer('ERROR', args); };
+
+function sendLogToRenderer(level, args) {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
     const message = args
         .map(a => (a !== null && typeof a === 'object' ? JSON.stringify(a) : String(a)))
         .join(' ');
-    const line = `[${new Date().toISOString()}] [${level}] ${message}\n`;
-    try { fs.appendFileSync(logPath, line); } catch { /* no-op */ }
+    const time = new Date().toISOString();
+    try { mainWindow.webContents.send('app-log', { level, message, time }); } catch { /* no-op */ }
 }
 
-const _origLog = console.log.bind(console);
-const _origError = console.error.bind(console);
-const _origWarn = console.warn.bind(console);
-
-console.log = (...args) => { writeLog('INFO', args); _origLog(...args); };
-console.error = (...args) => { writeLog('ERROR', args); _origError(...args); };
-console.warn = (...args) => { writeLog('WARN', args); _origWarn(...args); };
-
 process.on('uncaughtException', err => console.error('CRITICAL - Uncaught Exception:', err));
-process.on('unhandledRejection', reason => console.error('CRITICAL - Unhandled Rejection:', reason));
+process.on('unhandledRejection', (reason) => console.error('CRITICAL - Unhandled Rejection:', reason));
 
-console.log(`Launcher starting... Log: ${logPath}`);
+console.log('[Launcher] Starting...');
 
 // ─── Path Resolution ─────────────────────────────────────────────────────────
 
@@ -94,7 +95,7 @@ function getBaseDirectory() {
 
 const installPath = getBaseDirectory();
 
-function resolveModulesPath() {
+async function resolveModulesPath() {
     const candidates = [
         process.env.PORTABLE_EXECUTABLE_DIR && path.join(process.env.PORTABLE_EXECUTABLE_DIR, 'Modules'),
         path.join(installPath, 'Modules'),
@@ -104,13 +105,12 @@ function resolveModulesPath() {
 
     for (const candidate of candidates) {
         try {
-            if (fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()) {
+            const stat = await fs.promises.stat(candidate);
+            if (stat.isDirectory()) {
                 console.log(`[Paths] Modules found at: ${candidate}`);
                 return candidate;
             }
-        } catch (err) {
-            console.error(`[Paths] Error checking ${candidate}:`, err);
-        }
+        } catch { /* not found */ }
     }
 
     const fallback = path.join(installPath, 'Modules');
@@ -118,23 +118,18 @@ function resolveModulesPath() {
     return fallback;
 }
 
-let modulesPath = resolveModulesPath();
-let tempZipPath = path.join(modulesPath, 'temp.zip');
+let modulesPath = path.join(installPath, 'Modules'); // initial default; overwritten in app.whenReady
 
-(function ensureModulesDirectory() {
+async function ensureModulesDirectory() {
     try {
-        if (!fs.existsSync(modulesPath)) {
-            fs.mkdirSync(modulesPath, { recursive: true });
-        }
-
+        await fs.promises.mkdir(modulesPath, { recursive: true });
         const testFile = path.join(modulesPath, WRITE_TEST_FILE_NAME);
-        fs.writeFileSync(testFile, 'test');
-        fs.unlinkSync(testFile);
+        await fs.promises.writeFile(testFile, 'test');
+        await fs.promises.unlink(testFile);
     } catch (writeErr) {
         console.warn('[Paths] Modules directory is not writable. Updates may require elevated privileges.', writeErr);
-        tempZipPath = path.join(app.getPath('userData'), 'wse2_temp_update.zip');
     }
-})();
+}
 
 // ─── Window Management ───────────────────────────────────────────────────────
 
@@ -149,6 +144,9 @@ let currentConfigModulePath = null;
 
 /** @type {Map<string, object>} */
 const pendingDownloads = new Map();
+
+/** @type {import('electron').DownloadItem | null} */
+let activeDownloadItem = null;
 
 const SHARED_WEB_PREFERENCES = {
     preload: path.join(__dirname, 'preload.js'),
@@ -202,17 +200,19 @@ function createConfigWindow(modulePath) {
         modal: true,
         show: false,
         backgroundColor: '#2c2f33',
-        webPreferences: { ...SHARED_WEB_PREFERENCES, sandbox: false },
+        webPreferences: { ...SHARED_WEB_PREFERENCES },
     });
 
     cfgWindow.setMenuBarVisibility(false);
     cfgWindow.loadFile('config.html');
 
-    cfgWindow.webContents.on('before-input-event', (_, input) => {
-        if (input.type === 'keyDown' && input.key === 'F12') {
-            cfgWindow.webContents.toggleDevTools();
-        }
-    });
+    if (IS_DEV) {
+        cfgWindow.webContents.on('before-input-event', (_, input) => {
+            if (input.type === 'keyDown' && input.key === 'F12') {
+                cfgWindow.webContents.toggleDevTools();
+            }
+        });
+    }
 
     cfgWindow.once('ready-to-show', () => cfgWindow.show());
     cfgWindow.on('closed', () => { cfgWindow = null; });
@@ -222,12 +222,16 @@ function createConfigWindow(modulePath) {
 
 function setupAutoUpdater() {
     autoUpdater.autoDownload = false;
+    autoUpdater.autoInstallOnAppQuit = false;
 
     autoUpdater.on('error', err =>
         console.warn(`[Updater] Non-fatal error: ${err.message}`)
     );
     autoUpdater.on('update-available', () =>
         mainWindow?.webContents.send('update_available')
+    );
+    autoUpdater.on('download-progress', (info) =>
+        mainWindow?.webContents.send('update_download_progress', Math.round(info.percent))
     );
     autoUpdater.on('update-downloaded', () =>
         mainWindow?.webContents.send('update_downloaded')
@@ -254,13 +258,17 @@ function setupDownloadHandler() {
             }
         }
 
-        if (!meta) return;
+        if (!meta) {
+            item.cancel();
+            return;
+        }
 
         const uniqueName = `temp_${Date.now()}_${Math.random().toString(36).slice(2, 11)}.zip`;
         const savePath = path.join(modulesPath, uniqueName);
 
         console.log(`[Download] "${meta.name}" -> ${savePath}`);
         item.setSavePath(savePath);
+        activeDownloadItem = item;
 
         item.on('updated', (__, state) => {
             if (state === 'interrupted') {
@@ -276,6 +284,7 @@ function setupDownloadHandler() {
         });
 
         item.once('done', (__, state) => {
+            activeDownloadItem = null;
             if (matchedUrl) pendingDownloads.delete(matchedUrl);
 
             if (state === 'completed') {
@@ -291,7 +300,10 @@ function setupDownloadHandler() {
 
 // ─── App Lifecycle ───────────────────────────────────────────────────────────
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+    modulesPath = await resolveModulesPath();
+    await ensureModulesDirectory();
+
     createMainWindow();
 
     globalShortcut.register('CommandOrControl+Shift+I', () =>
@@ -317,6 +329,10 @@ app.on('window-all-closed', () => {
     if (!IS_MAC) app.quit();
 });
 
+app.on('will-quit', () => {
+    globalShortcut.unregisterAll();
+});
+
 // ─── IPC Handlers ────────────────────────────────────────────────────────────
 
 ipcMain.handle('dark-mode:toggle', () => {
@@ -334,32 +350,81 @@ ipcMain.handle('launch-game', (_, moduleName) => {
     return launchGame(moduleName);
 });
 
-ipcMain.on('configWindow', (_, modulePath) => createConfigWindow(modulePath));
-ipcMain.on('configWindowBack', () => cfgWindow?.close());
+ipcMain.handle('configWindow', (_, modulePath) => createConfigWindow(modulePath));
+ipcMain.handle('configWindowBack', () => cfgWindow?.close());
 
-ipcMain.on('download', (_, url, meta) => {
+ipcMain.handle('download', (_, url, meta) => {
     pendingDownloads.set(url, meta);
     mainWindow?.webContents.downloadURL(url);
 });
 
-ipcMain.on('restart_app', () => autoUpdater.quitAndInstall());
-ipcMain.on('start_update', () => autoUpdater.downloadUpdate());
-
-ipcMain.handle('get-modules', () => scanModules());
-
-ipcMain.handle('remove-module', (_, modPath) => {
+ipcMain.handle('restart_app', () => autoUpdater.quitAndInstall());
+ipcMain.handle('start_update', () => autoUpdater.downloadUpdate());
+ipcMain.handle('check-for-updates', async () => {
     try {
-        if (!modPath || !fs.existsSync(modPath)) return false;
+        const result = await autoUpdater.checkForUpdates();
+        const remoteVersion = result?.updateInfo?.version;
+        const hasUpdate = !!remoteVersion && remoteVersion !== app.getVersion();
+        return { hasUpdate };
+    } catch (err) {
+        console.warn(`[Updater] Manual check failed: ${err.message}`);
+        return { hasUpdate: false, error: err.message };
+    }
+});
 
-        const resolved = path.resolve(modPath);
+ipcMain.handle('cancel-download', () => {
+    if (activeDownloadItem) {
+        try { activeDownloadItem.cancel(); } catch { /* no-op */ }
+        activeDownloadItem = null;
+        return true;
+    }
+    return false;
+});
+
+ipcMain.handle('get-auto-launch', () => {
+    try { return app.getLoginItemSettings().openAtLogin; }
+    catch { return false; }
+});
+
+ipcMain.handle('set-auto-launch', (_, enabled) => {
+    try {
+        app.setLoginItemSettings({ openAtLogin: !!enabled });
+        return true;
+    } catch (err) {
+        console.error('[AutoLaunch] Failed:', err);
+        return false;
+    }
+});
+
+ipcMain.handle('get-modules', async () => scanModules());
+
+ipcMain.handle('remove-module', async (_, modPath) => {
+    try {
+        if (!modPath) {
+            console.error('[remove-module] No path provided.');
+            return false;
+        }
+
+        const resolved        = path.resolve(modPath);
         const resolvedModules = path.resolve(modulesPath);
 
-        if (!resolved.startsWith(resolvedModules + path.sep)) {
+        // Ensure the target is a direct child of modulesPath (not the root itself)
+        const rel = path.relative(resolvedModules, resolved);
+        const isDirectChild = rel && !rel.startsWith('..') && !path.isAbsolute(rel) && !rel.includes(path.sep);
+        if (!isDirectChild) {
             console.error(`[Security] Blocked removal outside modules path: ${resolved}`);
             return false;
         }
 
-        fs.rmSync(resolved, { recursive: true, force: true });
+        try {
+            await fs.promises.access(resolved);
+        } catch {
+            console.warn(`[remove-module] Path does not exist (already removed?): ${resolved}`);
+            return true; // Treat as success — it's gone either way
+        }
+
+        await fs.promises.rm(resolved, { recursive: true, force: true });
+        console.log(`[remove-module] Removed: ${resolved}`);
         return true;
     } catch (err) {
         console.error('[remove-module] Error:', err);
@@ -373,20 +438,19 @@ ipcMain.handle('save-config-data', (_, { modulePath, configData }) => saveConfig
 // Wine settings — persisted in userData/wine-settings.json
 const WINE_SETTINGS_FILE = path.join(app.getPath('userData'), 'wine-settings.json');
 
-function loadWineSettings() {
+async function loadWineSettings() {
     try {
-        if (fs.existsSync(WINE_SETTINGS_FILE)) {
-            return JSON.parse(fs.readFileSync(WINE_SETTINGS_FILE, 'utf-8'));
-        }
+        const raw = await fs.promises.readFile(WINE_SETTINGS_FILE, 'utf-8');
+        return JSON.parse(raw);
     } catch (err) {
-        console.error('[Wine] Failed to load wine settings:', err);
+        if (err.code !== 'ENOENT') console.error('[Wine] Failed to load wine settings:', err);
     }
     return { winePath: 'wine', winePrefix: '' };
 }
 
-function saveWineSettings(settings) {
+async function saveWineSettings(settings) {
     try {
-        fs.writeFileSync(WINE_SETTINGS_FILE, JSON.stringify(settings, null, 4), 'utf-8');
+        await fs.promises.writeFile(WINE_SETTINGS_FILE, JSON.stringify(settings, null, 4), 'utf-8');
         return true;
     } catch (err) {
         console.error('[Wine] Failed to save wine settings:', err);
@@ -399,7 +463,6 @@ ipcMain.handle('get-wine-settings', () => loadWineSettings());
 ipcMain.handle('set-wine-settings', (_, settings) => saveWineSettings(settings));
 
 ipcMain.handle('browse-wine-executable', async () => {
-    const { dialog } = require('electron');
     const result = await dialog.showOpenDialog(mainWindow, {
         title: 'Select Wine Executable',
         properties: ['openFile'],
@@ -411,7 +474,7 @@ ipcMain.handle('browse-wine-executable', async () => {
 
 // ─── Game Launch ─────────────────────────────────────────────────────────────
 
-function resolveExePath() {
+async function resolveExePath() {
     const candidates = [
         path.join(modulesPath, '..', GAME_EXE_NAME),
         path.join(installPath, GAME_EXE_NAME),
@@ -419,22 +482,24 @@ function resolveExePath() {
     ];
 
     for (const p of candidates) {
-        if (fs.existsSync(p)) return p;
+        try { await fs.promises.access(p); return p; } catch { /* not found */ }
     }
 
     return candidates[0]; // Return first candidate for a clear "not found" error message
 }
 
-function launchGame(moduleName) {
-    const exePath = resolveExePath();
+async function launchGame(moduleName) {
+    const exePath = await resolveExePath();
     const workingDir = path.dirname(exePath);
 
     console.log(`[Launch] Module: "${moduleName}" | Exe: ${exePath} | Platform: ${process.platform}`);
 
-    if (!fs.existsSync(exePath)) {
+    try {
+        await fs.promises.access(exePath);
+    } catch {
         const msg = `Executable not found: ${exePath}`;
         console.error(`[Launch] ${msg}`);
-        mainWindow?.webContents.send('download-error', msg);
+        mainWindow?.webContents.send('app-error', msg);
         return false;
     }
 
@@ -445,6 +510,7 @@ function launchGame(moduleName) {
 
     let command;
     let finalArgs;
+    let wineSettings = null;
 
     if (IS_WINDOWS) {
         // Use the full absolute path so Windows always locates the exe,
@@ -453,12 +519,12 @@ function launchGame(moduleName) {
         finalArgs = gameArgs;
     } else {
         // On Linux/macOS, delegate to Wine with the configured executable.
-        const wineSettings = loadWineSettings();
+        wineSettings = await loadWineSettings();
         command = wineSettings.winePath || 'wine';
         finalArgs = [exePath, ...gameArgs];
     }
 
-    const env = buildLaunchEnv();
+    const env = await buildLaunchEnv(wineSettings);
 
     try {
         console.log(`[Launch] Spawning: ${command} ${finalArgs.map(a => JSON.stringify(a)).join(' ')}`);
@@ -477,8 +543,9 @@ function launchGame(moduleName) {
             data.toString().trim().split('\n').forEach(l => console.error(`[GAME/ERR] ${l}`))
         );
         gameProcess.on('error', err => {
+            clearTimeout(stableTimer);
             console.error('[Launch] Spawn error:', err);
-            mainWindow?.webContents.send('download-error', `Failed to launch: ${err.message}`);
+            mainWindow?.webContents.send('app-error', `Failed to launch: ${err.message}`);
         });
 
         const stableTimer = setTimeout(() => {
@@ -495,7 +562,7 @@ function launchGame(moduleName) {
                 const msg = `Game exited with code ${code}. Check ${LOG_FILE_NAME} for details.`;
                 console.error(`[Launch] ${msg}`);
                 if (mainWindow && !mainWindow.isDestroyed()) {
-                    mainWindow.webContents.send('download-error', msg);
+                    mainWindow.webContents.send('app-error', msg);
                 }
             }
         });
@@ -503,11 +570,12 @@ function launchGame(moduleName) {
         return true;
     } catch (err) {
         console.error('[Launch] Failed to spawn process:', err);
+        mainWindow?.webContents.send('app-error', `Failed to launch: ${err.message}`);
         return false;
     }
 }
 
-function buildLaunchEnv() {
+async function buildLaunchEnv(wineSettings = null) {
     const env = { ...process.env };
 
     if (!IS_WINDOWS) {
@@ -515,9 +583,9 @@ function buildLaunchEnv() {
         env.WINEDLLOVERRIDES = 'winegstreamer=d';
         env.LC_ALL = 'C';
 
-        const wineSettings = loadWineSettings();
-        if (wineSettings.winePrefix) {
-            env.WINEPREFIX = wineSettings.winePrefix;
+        const settings = wineSettings || await loadWineSettings();
+        if (settings.winePrefix) {
+            env.WINEPREFIX = settings.winePrefix;
         }
     }
 
@@ -526,49 +594,56 @@ function buildLaunchEnv() {
 
 // ─── Module Scanning ─────────────────────────────────────────────────────────
 
-function scanModules() {
-    if (!fs.existsSync(modulesPath)) return [];
+async function scanModules() {
+    try {
+        await fs.promises.access(modulesPath);
+    } catch {
+        return [];
+    }
 
     try {
-        return fs.readdirSync(modulesPath)
-            .map(name => {
-                const fullPath = path.join(modulesPath, name);
+        const names = await fs.promises.readdir(modulesPath);
+        const results = await Promise.all(names.map(async name => {
+            // Skip temporary extraction directories
+            if (name.startsWith('_tmp_')) return null;
 
-                try {
-                    if (!fs.statSync(fullPath).isDirectory()) return null;
-                } catch {
-                    return null;
-                }
+            const fullPath = path.join(modulesPath, name);
 
-                const modData = {
-                    name,
-                    version: null,
-                    path: fullPath,
-                    hasImage: false,
-                    imagePath: null,
-                    configExists: false,
-                };
+            try {
+                const stat = await fs.promises.stat(fullPath);
+                if (!stat.isDirectory()) return null;
+            } catch { return null; }
 
-                const versionFile = path.join(fullPath, VERSION_FILE);
-                if (fs.existsSync(versionFile)) {
-                    try {
-                        modData.version = JSON.parse(fs.readFileSync(versionFile, 'utf-8')).version ?? null;
-                    } catch (err) {
-                        console.error(`[Modules] Failed to parse ${VERSION_FILE} for "${name}":`, err);
-                    }
-                }
+            const modData = {
+                name,
+                version: null,
+                path: fullPath,
+                imagePath: null,
+                configExists: false,
+            };
 
-                const imgPath = path.join(fullPath, MODULE_IMAGE_FILE);
-                if (fs.existsSync(imgPath)) {
-                    modData.hasImage = true;
-                    modData.imagePath = imgPath;
-                }
+            const versionFile = path.join(fullPath, VERSION_FILE);
+            try {
+                const raw = await fs.promises.readFile(versionFile, 'utf-8');
+                modData.version = JSON.parse(raw).version ?? null;
+            } catch (err) {
+                if (err.code !== 'ENOENT') console.error(`[Modules] Failed to parse ${VERSION_FILE} for "${name}":`, err);
+            }
 
-                modData.configExists = fs.existsSync(path.join(fullPath, MODULE_CONFIG_FILE));
+            const imgPath = path.join(fullPath, MODULE_IMAGE_FILE);
+            try {
+                await fs.promises.access(imgPath);
+                modData.imagePath = imgPath;
+            } catch { /* no image */ }
 
-                return modData;
-            })
-            .filter(Boolean);
+            try {
+                await fs.promises.access(path.join(fullPath, MODULE_CONFIG_FILE));
+                modData.configExists = true;
+            } catch { /* no config */ }
+
+            return modData;
+        }));
+        return results.filter(Boolean);
     } catch (err) {
         console.error('[Modules] Scan error:', err);
         return [];
@@ -577,20 +652,21 @@ function scanModules() {
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 
-function readConfigData(selectedModulePath) {
+async function readConfigData(selectedModulePath) {
     try {
         const targetPath = selectedModulePath || currentConfigModulePath;
         const schemaPath = path.join(__dirname, APP_CONFIG_FILE);
 
         let schema = {};
-        if (fs.existsSync(schemaPath)) {
-            try {
-                schema = JSON.parse(fs.readFileSync(schemaPath, 'utf-8'));
-            } catch (err) {
+        try {
+            const raw = await fs.promises.readFile(schemaPath, 'utf-8');
+            schema = JSON.parse(raw);
+        } catch (err) {
+            if (err.code === 'ENOENT') {
+                console.error(`[Config] config.json not found at: ${schemaPath}`);
+            } else {
                 console.error('[Config] Failed to parse config.json:', err);
             }
-        } else {
-            console.error(`[Config] config.json not found at: ${schemaPath}`);
         }
 
         let values = {};
@@ -598,21 +674,26 @@ function readConfigData(selectedModulePath) {
         if (targetPath) {
             const iniPath = path.join(targetPath, MODULE_CONFIG_FILE);
 
-            if (fs.existsSync(iniPath)) {
-                values = ini.parse(fs.readFileSync(iniPath, 'utf-8'));
-            } else {
-                console.log(`[Config] No INI found - generating defaults for "${targetPath}"`);
-                for (const section in schema) {
-                    values[section] = {};
-                    for (const key in schema[section]) {
-                        values[section][key] = schema[section][key]['default-value'];
+            try {
+                const raw = await fs.promises.readFile(iniPath, 'utf-8');
+                values = ini.parse(raw);
+            } catch (err) {
+                if (err.code === 'ENOENT') {
+                    console.log(`[Config] No INI found - generating defaults for "${targetPath}"`);
+                    for (const section in schema) {
+                        values[section] = {};
+                        for (const key in schema[section]) {
+                            values[section][key] = schema[section][key]['default-value'];
+                        }
                     }
-                }
-                try {
-                    fs.writeFileSync(iniPath, ini.stringify(values), 'utf-8');
-                    console.log('[Config] Default config written.');
-                } catch (err) {
-                    console.error('[Config] Failed to write default config:', err);
+                    try {
+                        await fs.promises.writeFile(iniPath, ini.stringify(values), 'utf-8');
+                        console.log('[Config] Default config written.');
+                    } catch (writeErr) {
+                        console.error('[Config] Failed to write default config:', writeErr);
+                    }
+                } else {
+                    throw err;
                 }
             }
         } else {
@@ -626,23 +707,25 @@ function readConfigData(selectedModulePath) {
     }
 }
 
-function saveConfigData(modulePath, configData) {
+async function saveConfigData(modulePath, configData) {
     try {
         if (!modulePath) {
             console.error('[Config] save-config-data: no module path provided.');
             return false;
         }
 
-        const resolved = path.resolve(modulePath);
+        const resolved        = path.resolve(modulePath);
         const resolvedModules = path.resolve(modulesPath);
 
-        if (!resolved.startsWith(resolvedModules + path.sep)) {
+        const rel = path.relative(resolvedModules, resolved);
+        const isDirectChild = rel && !rel.startsWith('..') && !path.isAbsolute(rel) && !rel.includes(path.sep);
+        if (!isDirectChild) {
             console.error(`[Security] Blocked config write outside modules path: ${resolved}`);
             throw new Error('Invalid module path');
         }
 
         const iniPath = path.join(modulePath, MODULE_CONFIG_FILE);
-        fs.writeFileSync(iniPath, ini.stringify(configData), 'utf-8');
+        await fs.promises.writeFile(iniPath, ini.stringify(configData), 'utf-8');
         console.log(`[Config] Saved to: ${iniPath}`);
         return true;
     } catch (err) {
@@ -653,10 +736,8 @@ function saveConfigData(modulePath, configData) {
 
 // ─── Module Installation ─────────────────────────────────────────────────────
 
-function safeUnlink(filePath) {
-    try {
-        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-    } catch { /* no-op */ }
+async function safeUnlink(filePath) {
+    try { await fs.promises.unlink(filePath); } catch { /* no-op */ }
 }
 
 async function hashFile(filePath, algorithm = 'md5') {
@@ -689,9 +770,7 @@ async function processDownloadedModule(zipPath, meta) {
             const targetDir = path.join(modulesPath, meta.name);
             console.log(`[Install] Clean install - removing: ${targetDir}`);
             try {
-                if (fs.existsSync(targetDir)) {
-                    fs.rmSync(targetDir, { recursive: true, force: true });
-                }
+                await fs.promises.rm(targetDir, { recursive: true, force: true });
             } catch (err) {
                 console.error('[Install] Clean removal failed:', err);
             }
@@ -700,14 +779,16 @@ async function processDownloadedModule(zipPath, meta) {
         // Extract
         console.log('[Install] Extracting...');
         const zip = new AdmZip(zipPath);
-        const entries = zip.getEntries();
 
+        // Detect root folder using only the first few entries to avoid loading all metadata
+        const entries = zip.getEntries();
+        const sampleEntries = entries.slice(0, 20);
         let rootFolderName = null;
 
-        if (entries.length > 0) {
-            const firstParts = entries[0].entryName.split('/');
+        if (sampleEntries.length > 0) {
+            const firstParts = sampleEntries[0].entryName.split('/');
             const potentialRoot = firstParts[0] + '/';
-            const allUnderRoot = entries.every(
+            const allUnderRoot = sampleEntries.every(
                 e => e.entryName.startsWith(potentialRoot) || e.entryName === potentialRoot
             );
             if (firstParts.length > 1 && firstParts[0] && allUnderRoot) {
@@ -716,45 +797,57 @@ async function processDownloadedModule(zipPath, meta) {
         }
 
         const targetModuleDir = path.join(modulesPath, meta.name);
+        let tempDir = null;
 
         if (!rootFolderName) {
             // Flat zip - extract directly into the module folder
-            fs.mkdirSync(targetModuleDir, { recursive: true });
-            zip.extractAllTo(targetModuleDir, true);
+            await fs.promises.mkdir(targetModuleDir, { recursive: true });
+            await new Promise((resolve, reject) =>
+                zip.extractAllToAsync(targetModuleDir, true, false, err => err ? reject(err) : resolve())
+            );
         } else if (rootFolderName === meta.name) {
             // Root folder already matches the module name
-            zip.extractAllTo(modulesPath, true);
+            await new Promise((resolve, reject) =>
+                zip.extractAllToAsync(modulesPath, true, false, err => err ? reject(err) : resolve())
+            );
         } else {
             // Root folder has a different name - extract to temp, then rename/merge
-            const tempDir = path.join(modulesPath, `_tmp_${Date.now()}`);
-            zip.extractAllTo(tempDir, true);
+            tempDir = path.join(modulesPath, `_tmp_${Date.now()}`);
+            await new Promise((resolve, reject) =>
+                zip.extractAllToAsync(tempDir, true, false, err => err ? reject(err) : resolve())
+            );
 
             const extractedRoot = path.join(tempDir, rootFolderName);
 
-            if (!fs.existsSync(targetModuleDir)) {
-                fs.renameSync(extractedRoot, targetModuleDir);
-            } else {
-                for (const file of fs.readdirSync(extractedRoot)) {
-                    fs.cpSync(
+            try {
+                await fs.promises.access(targetModuleDir);
+                // Dir exists — merge
+                const files = await fs.promises.readdir(extractedRoot);
+                await Promise.all(files.map(file =>
+                    fs.promises.cp(
                         path.join(extractedRoot, file),
                         path.join(targetModuleDir, file),
                         { recursive: true, force: true }
-                    );
-                }
+                    )
+                ));
+            } catch {
+                // Dir doesn't exist — rename
+                await fs.promises.rename(extractedRoot, targetModuleDir);
             }
 
-            fs.rmSync(tempDir, { recursive: true, force: true });
+            await fs.promises.rm(tempDir, { recursive: true, force: true });
         }
 
         // Write version.json
-        if (meta.name && meta.version && fs.existsSync(targetModuleDir)) {
+        if (meta.name && meta.version) {
             try {
-                fs.writeFileSync(
+                await fs.promises.access(targetModuleDir);
+                await fs.promises.writeFile(
                     path.join(targetModuleDir, VERSION_FILE),
                     JSON.stringify({ version: meta.version }, null, 4)
                 );
             } catch (err) {
-                console.error('[Install] Failed to write version.json:', err);
+                if (err.code !== 'ENOENT') console.error('[Install] Failed to write version.json:', err);
             }
         }
 
@@ -765,5 +858,6 @@ async function processDownloadedModule(zipPath, meta) {
         mainWindow?.webContents.send('download-error', err.message);
     } finally {
         setTimeout(() => safeUnlink(zipPath), 1000);
+        if (tempDir) setTimeout(() => fs.promises.rm(tempDir, { recursive: true, force: true }).catch(() => {}), 1000);
     }
 }

@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' http://localhost:*;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' http: https:;">
     <title>WSE2 Launcher</title>
 
     <link rel="stylesheet" href="./libs/css/bootstrap.min.css">
@@ -54,9 +54,14 @@
                 </div>
             </aside>
 
-            <!-- Right Panel: Module Image -->
-            <section class="col-9 col-md-8" aria-label="Module preview">
+            <!-- Right Panel: Module Image + Detail Info -->
+            <section class="col-9 col-md-8 d-flex flex-column" aria-label="Module preview">
                 <img id="module-img" class="module-img d-none" alt="Module banner">
+                <div id="module-info" class="module-info d-none mt-2">
+                    <h6 id="module-info-name" class="mb-1 fw-bold"></h6>
+                    <div id="module-info-badges" class="d-flex flex-wrap gap-1 mb-1"></div>
+                    <p id="module-info-desc" class="small text-muted mb-0 d-none"></p>
+                </div>
             </section>
 
         </div>
@@ -64,21 +69,45 @@
 
     <!-- Footer: Progress + Controls -->
     <footer id="footer">
-        <div class="progress progress-bar-launcher" id="prg-bar"
-             role="progressbar"
-             aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"
-             aria-label="Download progress">
-            <div class="progress-bar progress-bar-striped progress-bar-animated fw-bold fs-6 progress-bar-fill"
-                 data-i18n="ui.progress"></div>
+        <div class="d-flex align-items-center gap-2">
+            <div class="progress progress-bar-launcher flex-grow-1" id="prg-bar"
+                 role="progressbar"
+                 aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"
+                 aria-label="Download progress">
+                <div class="progress-bar progress-bar-striped progress-bar-animated fw-bold fs-6 progress-bar-fill"
+                     data-i18n="ui.progress"></div>
+            </div>
+            <button id="btn-cancel-download" class="btn btn-sm btn-outline-danger d-none" type="button"
+                    data-i18n-title="ui.cancel_download">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+        </div>
+
+        <!-- Updater self-download progress (hidden until update download starts) -->
+        <div id="updater-progress-wrap" class="d-none mt-1">
+            <div class="progress updater-progress">
+                <div id="updater-progress-bar" class="progress-bar bg-info progress-bar-striped progress-bar-animated updater-progress-bar"
+                     role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
+                     aria-label="Updater progress"></div>
+            </div>
+            <small class="text-muted" data-i18n="ui.updater_downloading"></small>
         </div>
 
         <div class="row align-items-center mt-3">
 
-            <!-- Version -->
-            <div class="col-4">
+            <!-- Version + Log Button -->
+            <div class="col-4 d-flex align-items-center gap-2">
                 <p class="small text-truncate mb-0" id="version" aria-live="polite">
                     <!-- Populated by JS -->
                 </p>
+                <button class="btn btn-sm p-0 position-relative log-toggle-btn d-none"
+                        id="btn-log-panel" type="button"
+                        data-bs-toggle="offcanvas" data-bs-target="#logPanel"
+                        aria-label="Diagnostics">
+                    <i class="fas fa-exclamation-circle text-warning" aria-hidden="true"></i>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none"
+                          id="log-badge"></span>
+                </button>
             </div>
 
             <!-- Play Controls -->
@@ -141,12 +170,42 @@
             </div>
 
             <div class="modal-body">
+
+                <!-- Server URL -->
+                <section id="server-url-section" aria-label="Server URL">
+                    <label class="form-label small mb-1" for="server-url-input"
+                           data-i18n="ui.server_url"></label>
+                    <div class="input-group input-group-sm mb-1">
+                        <input type="url" class="form-control" id="server-url-input"
+                               placeholder="http://your-vps/launcher/"
+                               autocomplete="off" spellcheck="false">
+                        <button class="btn btn-primary" id="btn-save-server-url" type="button">
+                            <i class="fas fa-save" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <div id="server-url-feedback" class="form-text d-none"></div>
+                </section>
+
+                <hr>
+
+                <!-- Auto-launch on system startup -->
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" id="chk-auto-launch" role="switch">
+                    <label class="form-check-label small" for="chk-auto-launch"
+                           data-i18n="ui.auto_launch"></label>
+                </div>
+
                 <div class="d-grid gap-2">
                     <button class="btn btn-outline-secondary" id="btn-open-folder" type="button">
                         <i class="fas fa-folder-open me-2" aria-hidden="true"></i>
                         <span data-i18n="ui.open_folder"></span>
                     </button>
+                    <button class="btn btn-outline-info" id="btn-check-updates" type="button">
+                        <i class="fas fa-sync-alt me-2" aria-hidden="true"></i>
+                        <span data-i18n="ui.check_updates"></span>
+                    </button>
                 </div>
+                <div id="update-check-feedback" class="form-text mt-1 d-none"></div>
 
                 <!-- Wine Settings — shown only on non-Windows (JS toggles d-none) -->
                 <section id="wine-settings-section" class="mt-3 d-none"
@@ -191,6 +250,42 @@
             </div>
 
         </div>
+    </div>
+</div>
+
+<!-- Utility Dialog Modal -->
+<div class="modal fade" id="appModal" tabindex="-1"
+     aria-labelledby="appModalLabel" aria-hidden="true"
+     data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-body" id="appModalBody"></div>
+            <div class="modal-footer p-2 gap-2">
+                <button type="button" class="btn btn-secondary btn-sm d-none"
+                        id="appModalCancel"></button>
+                <button type="button" class="btn btn-primary btn-sm"
+                        id="appModalOk"></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Log Panel (Offcanvas) -->
+<div class="offcanvas offcanvas-bottom" id="logPanel" tabindex="-1"
+     aria-labelledby="logPanelLabel">
+    <div class="offcanvas-header py-2 border-bottom">
+        <h6 class="offcanvas-title mb-0" id="logPanelLabel">
+            <i class="fas fa-terminal me-2" aria-hidden="true"></i>
+            <span data-i18n="ui.diagnostics"></span>
+        </h6>
+        <div class="ms-auto d-flex align-items-center gap-2">
+            <button class="btn btn-sm btn-outline-secondary py-0" id="btn-clear-log" type="button"
+                    data-i18n="ui.clear_log"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+    </div>
+    <div class="offcanvas-body p-0">
+        <div id="log-entries" role="log" aria-live="polite"></div>
     </div>
 </div>
 
