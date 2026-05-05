@@ -508,6 +508,7 @@ async function initMainWindow() {
         'sv': 'Svenska', 'th': 'ภาษาไทย', 'tr': 'Türkçe', 'uk': 'Українська',
         'ur': 'اردو', 'uz': 'Oʻzbekcha', 'vi': 'Tiếng Việt', 'zh': '中文',
         'zh_CN': '中文(简体)', 'zh_TW': '中文(繁體)',
+        'cns': '中文(简体)', 'cnt': '中文(繁體)', 'cz': 'Čeština',
     };
     function langLabel(code) {
         return LANG_NAMES[code] || LANG_NAMES[code.toLowerCase()] || code;
