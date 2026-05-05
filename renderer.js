@@ -492,6 +492,27 @@ async function initMainWindow() {
     $('#server-url-input').val(REMOTE_URL);
 
     // Game Language
+    const LANG_NAMES = {
+        'af': 'Afrikaans', 'ar': 'العربية', 'az': 'Azərbaycanca', 'be': 'Беларуская',
+        'bg': 'Български', 'bs': 'Bosanski', 'ca': 'Català', 'cs': 'Čeština',
+        'cy': 'Cymraeg', 'da': 'Dansk', 'de': 'Deutsch', 'el': 'Ελληνικά',
+        'en': 'English', 'es': 'Español', 'et': 'Eesti', 'eu': 'Euskara',
+        'fa': 'فارسی', 'fi': 'Suomi', 'fr': 'Français', 'ga': 'Gaeilge',
+        'gl': 'Galego', 'he': 'עברית', 'hi': 'हिन्दी', 'hr': 'Hrvatski',
+        'hu': 'Magyar', 'hy': 'Հայերեն', 'id': 'Indonesia', 'is': 'Íslenska',
+        'it': 'Italiano', 'ja': '日本語', 'ka': 'ქართული', 'kk': 'Қазақша',
+        'ko': '한국어', 'lt': 'Lietuvių', 'lv': 'Latviešu', 'mk': 'Македонски',
+        'mn': 'Монгол', 'ms': 'Melayu', 'nl': 'Nederlands', 'no': 'Norsk',
+        'pl': 'Polski', 'pt': 'Português', 'ro': 'Română', 'ru': 'Русский',
+        'sk': 'Slovenčina', 'sl': 'Slovenščina', 'sq': 'Shqip', 'sr': 'Српски',
+        'sv': 'Svenska', 'th': 'ภาษาไทย', 'tr': 'Türkçe', 'uk': 'Українська',
+        'ur': 'اردو', 'uz': 'Oʻzbekcha', 'vi': 'Tiếng Việt', 'zh': '中文',
+        'zh_CN': '中文(简体)', 'zh_TW': '中文(繁體)',
+    };
+    function langLabel(code) {
+        return LANG_NAMES[code] || LANG_NAMES[code.toLowerCase()] || code;
+    }
+
     (async () => {
         const $select = $('#game-language-select');
         const settings = await window.api.wine.getSettings();
@@ -502,7 +523,7 @@ async function initMainWindow() {
             $select.empty();
             $select.append(`<option value="">${t('ui.game_language_default')}</option>`);
             langs.forEach(lang => {
-                const opt = $('<option>').val(lang).text(lang);
+                const opt = $('<option>').val(lang).text(langLabel(lang));
                 if (lang === savedLang) opt.prop('selected', true);
                 $select.append(opt);
             });
