@@ -8,6 +8,9 @@
     "url": "git+https://github.com/Azremen/wse2-custom-launcher.git"
   },
   "main": "main.js",
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "author": "Azremen <timurid76@gmail.com>",
   "license": "AGPL-3.0-or-later",
   "scripts": {
