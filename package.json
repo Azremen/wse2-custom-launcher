@@ -1,6 +1,6 @@
 {
   "name": "wse2-launcher",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Warband Script Enhancer 2 Launcher By Azremen",
   "private": true,
   "repository": {
@@ -55,16 +55,17 @@
       "createDesktopShortcut": true,
       "deleteAppDataOnUninstall": true,
       "installerIcon": "icons/icon.ico",
-      "uninstallerIcon": "icons/icon.ico"
+      "uninstallerIcon": "icons/icon.ico",
+      "artifactName": "${productName} Setup.${ext}"
     },
     "portable": {
-      "artifactName": "${productName} ${version} Windows Portable.${ext}"
+      "artifactName": "${productName} Windows Portable.${ext}"
     },
     "linux": {
       "target": [
         "AppImage"
       ],
-      "artifactName": "${productName} ${version} Linux.${ext}",
+      "artifactName": "${productName} Linux.${ext}",
       "category": "Game",
       "icon": "icons/icon.png"
     },
@@ -74,11 +75,17 @@
         "owner": "Azremen",
         "repo": "wse2-custom-launcher",
         "releaseType": "release"
+      },
+      {
+        "provider": "github",
+        "owner": "Azremen",
+        "repo": "WSE2-Launcher",
+        "releaseType": "release"
       }
     ],
     "mac": {
       "target": ["dmg"],
-      "artifactName": "${productName} ${version} Mac.${ext}",
+      "artifactName": "${productName} Mac.${ext}",
       "icon": "icons/icon.icns"
     }
   },
