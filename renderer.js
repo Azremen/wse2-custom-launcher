@@ -400,6 +400,7 @@ async function initMainWindow() {
             const wineSettings = await window.api.wine.getSettings();
             $('#wine-path-input').val(wineSettings.winePath || 'wine');
             $('#wine-prefix-input').val(wineSettings.winePrefix || '');
+            await refreshDxvkStatus();
         }
     })();
 
@@ -408,25 +409,63 @@ async function initMainWindow() {
         if (selected) $('#wine-path-input').val(selected);
     });
 
-    $('#btn-save-wine').on('click', async () => {
-        const winePath = $('#wine-path-input').val().trim();
-        const winePrefix = $('#wine-prefix-input').val().trim();
+    async function refreshDxvkStatus() {
+        const $badge = $('#dxvk-badge');
+        const $btn = $('#btn-install-dxvk');
+        const $feedback = $('#dxvk-feedback');
 
-        if (!winePath) {
-            await showAlert(t('ui.wine.path_required') || 'Wine executable path is required.');
-            return;
+        $badge.attr('class', 'badge bg-secondary').html(
+            `<i class="fas fa-circle-notch fa-spin me-1" aria-hidden="true"></i>${t('ui.wine.dxvk_checking')}`
+        );
+        $btn.addClass('d-none');
+        $feedback.addClass('d-none').text('');
+
+        try {
+            const result = await window.api.wine.checkDxvk();
+            if (result.installed) {
+                $badge.attr('class', 'badge bg-success').html(
+                    `<i class="fas fa-check me-1" aria-hidden="true"></i>${t('ui.wine.dxvk_installed')}`
+                );
+                $btn.addClass('d-none');
+            } else if (!result.available) {
+                $badge.attr('class', 'badge bg-secondary').text(t('ui.wine.dxvk_unavailable'));
+                $btn.addClass('d-none');
+                $feedback.removeClass('d-none').addClass('text-muted').text(t('ui.wine.dxvk_unavailable_hint'));
+            } else {
+                $badge.attr('class', 'badge bg-warning text-dark').text(t('ui.wine.dxvk_not_installed'));
+                $btn.removeClass('d-none');
+            }
+        } catch (err) {
+            $badge.attr('class', 'badge bg-secondary').text('?');
+        }
+    }
+
+    $('#btn-install-dxvk').on('click', async () => {
+        const $btn = $('#btn-install-dxvk');
+        const $badge = $('#dxvk-badge');
+        const $feedback = $('#dxvk-feedback');
+
+        $btn.prop('disabled', true);
+        $btn.find('i').attr('class', 'fas fa-circle-notch fa-spin me-1');
+        $badge.attr('class', 'badge bg-secondary').html(
+            `<i class="fas fa-circle-notch fa-spin me-1" aria-hidden="true"></i>${t('ui.wine.dxvk_installing')}`
+        );
+        $feedback.addClass('d-none').text('');
+
+        const result = await window.api.wine.installDxvk();
+        $btn.prop('disabled', false);
+        $btn.find('i').attr('class', 'fas fa-download me-1');
+
+        if (result.success) {
+            $feedback.removeClass('d-none text-danger').addClass('text-success').text(t('ui.wine.dxvk_install_ok'));
+        } else {
+            $feedback.removeClass('d-none text-success').addClass('text-danger').text(t('ui.wine.dxvk_install_fail'));
         }
 
-        const settings = {
-            winePath: winePath,
-            winePrefix: winePrefix,
-        };
-        const ok = await window.api.wine.setSettings(settings);
-        if (ok) {
-            $('#btn-save-wine').removeClass('btn-primary').addClass('btn-success');
-            setTimeout(() => $('#btn-save-wine').removeClass('btn-success').addClass('btn-primary'), 1500);
-        }
+        await refreshDxvkStatus();
     });
+
+
 
     $('#btn-open-folder').on('click', () => {
         window.api.launcher.openFolder();
@@ -451,31 +490,70 @@ async function initMainWindow() {
 
     // Server URL
     $('#server-url-input').val(REMOTE_URL);
-    $('#btn-save-server-url').on('click', () => {
+
+    // Game Language
+    (async () => {
+        const $select = $('#game-language-select');
+        const settings = await window.api.wine.getSettings();
+        const savedLang = settings.gameLanguage || '';
+
+        try {
+            const langs = await window.api.wine.getGameLanguages();
+            $select.empty();
+            $select.append(`<option value="">${t('ui.game_language_default')}</option>`);
+            langs.forEach(lang => {
+                const opt = $('<option>').val(lang).text(lang);
+                if (lang === savedLang) opt.prop('selected', true);
+                $select.append(opt);
+            });
+            if (!savedLang) $select.val('');
+        } catch {
+            $select.empty().append(`<option value="">${t('ui.game_language_default')}</option>`);
+        }
+    })();
+
+    // Single save button for all settings
+    $('#btn-save-settings').on('click', async () => {
+        const $btn = $('#btn-save-settings');
+
+        // --- Server URL ---
         const url = $('#server-url-input').val().trim();
-        const $feedback = $('#server-url-feedback');
-        if (!url) return;
-
-        // Ensure trailing slash
-        const normalized = url.endsWith('/') ? url : url + '/';
-
-        const isInsecure = normalized.startsWith('http://');
-
-        REMOTE_URL = normalized;
-        localStorage.setItem(REMOTE_URL_KEY, normalized);
-        $('#server-url-input').val(normalized);
-
-        if (isInsecure) {
-            $feedback.removeClass('d-none text-success text-danger').addClass('text-warning')
-                .text('⚠ Insecure URL (http). Consider using https.');
-            setTimeout(() => $feedback.addClass('d-none'), 5000);
-        } else {
-            $feedback.removeClass('d-none text-danger text-warning').addClass('text-success')
-                .text(t('ui.server_url_saved'));
-            setTimeout(() => $feedback.addClass('d-none'), 2000);
+        const $urlFeedback = $('#server-url-feedback');
+        if (url) {
+            const normalized = url.endsWith('/') ? url : url + '/';
+            REMOTE_URL = normalized;
+            localStorage.setItem(REMOTE_URL_KEY, normalized);
+            $('#server-url-input').val(normalized);
+            if (normalized.startsWith('http://')) {
+                $urlFeedback.removeClass('d-none text-success text-danger').addClass('text-warning')
+                    .text('⚠ Insecure URL (http). Consider using https.');
+                setTimeout(() => $urlFeedback.addClass('d-none'), 5000);
+            } else {
+                $urlFeedback.removeClass('d-none text-danger text-warning').addClass('text-success')
+                    .text(t('ui.server_url_saved'));
+                setTimeout(() => $urlFeedback.addClass('d-none'), 2000);
+            }
+            refreshModuleList();
         }
 
-        refreshModuleList();
+        // --- Wine + Language ---
+        const existing = await window.api.wine.getSettings();
+        const lang = $('#game-language-select').val();
+        const isWindows = window.api.wine.isWindows();
+        if (isWindows) {
+            await window.api.wine.setSettings({ ...existing, gameLanguage: lang });
+        } else {
+            const winePath = $('#wine-path-input').val().trim();
+            if (!winePath) {
+                await showAlert(t('ui.wine.path_required') || 'Wine executable path is required.');
+                return;
+            }
+            const winePrefix = $('#wine-prefix-input').val().trim();
+            await window.api.wine.setSettings({ ...existing, winePath, winePrefix, gameLanguage: lang });
+        }
+
+        $btn.removeClass('btn-primary').addClass('btn-success');
+        setTimeout(() => $btn.removeClass('btn-success').addClass('btn-primary'), 1500);
     });
 
     // 3. Event Listeners

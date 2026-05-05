@@ -23,6 +23,7 @@ const APP_CONFIG_FILE = 'config.json';
 
 const IS_DEV = !app.isPackaged;
 const IS_WINDOWS = process.platform === 'win32';
+const IS_LINUX   = process.platform === 'linux';
 const IS_LINUX = process.platform === 'linux';
 const IS_MAC = process.platform === 'darwin';
 
@@ -445,7 +446,7 @@ async function loadWineSettings() {
     } catch (err) {
         if (err.code !== 'ENOENT') console.error('[Wine] Failed to load wine settings:', err);
     }
-    return { winePath: 'wine', winePrefix: '' };
+    return { winePath: 'wine', winePrefix: '', gameLanguage: '' };
 }
 
 async function saveWineSettings(settings) {
@@ -462,6 +463,29 @@ ipcMain.handle('get-wine-settings', () => loadWineSettings());
 
 ipcMain.handle('set-wine-settings', (_, settings) => saveWineSettings(settings));
 
+ipcMain.handle('get-game-languages', async () => {
+    const exePath = await resolveExePath();
+    const gameDir = path.dirname(exePath);
+
+    const dirsToScan = [
+        path.join(gameDir, 'languages'),
+        path.join(gameDir, 'Languages'),
+        path.join(gameDir, 'Data', 'languages'),
+        path.join(gameDir, 'Data', 'Languages'),
+    ];
+
+    const langSet = new Set();
+    for (const dir of dirsToScan) {
+        try {
+            const entries = await fs.promises.readdir(dir, { withFileTypes: true });
+            entries.filter(e => e.isDirectory()).forEach(e => langSet.add(e.name));
+        } catch { /* directory doesn't exist, skip */ }
+    }
+
+    const langs = [...langSet].sort();
+    return langs.length > 0 ? langs : ['en'];
+});
+
 ipcMain.handle('browse-wine-executable', async () => {
     const result = await dialog.showOpenDialog(mainWindow, {
         title: 'Select Wine Executable',
@@ -470,6 +494,59 @@ ipcMain.handle('browse-wine-executable', async () => {
     });
     if (result.canceled || result.filePaths.length === 0) return null;
     return result.filePaths[0];
+});
+
+// ─── DXVK Management ─────────────────────────────────────────────────────────
+
+function spawnAsync(cmd, args, options = {}) {
+    return new Promise(resolve => {
+        const proc = spawn(cmd, args, { stdio: ['ignore', 'pipe', 'pipe'], ...options });
+        let output = '';
+        proc.stdout?.on('data', d => { output += d.toString(); });
+        proc.stderr?.on('data', d => { output += d.toString(); });
+        proc.on('error', err => resolve({ code: -1, output: err.message }));
+        proc.on('exit', code => resolve({ code, output }));
+    });
+}
+
+ipcMain.handle('check-dxvk', async () => {
+    if (!IS_LINUX) return { available: false, installed: false };
+
+    // Check if setup_dxvk is in PATH
+    const which = await spawnAsync('which', ['setup_dxvk']);
+    const available = which.code === 0;
+
+    const settings = await loadWineSettings();
+    const prefix = settings.winePrefix || path.join(process.env.HOME || '', '.wine');
+
+    // Compare file sizes: if prefix dll matches system DXVK dll, it's installed
+    const systemDll = '/usr/share/dxvk/x32/d3d9.dll';
+    const prefixDll = path.join(prefix, 'dosdevices/c:/windows/syswow64/d3d9.dll');
+
+    let installed = false;
+    try {
+        const [sysStat, prefStat] = await Promise.all([
+            fs.promises.stat(systemDll),
+            fs.promises.stat(prefixDll),
+        ]);
+        installed = sysStat.size === prefStat.size;
+    } catch { /* files don't exist */ }
+
+    return { available, installed };
+});
+
+ipcMain.handle('install-dxvk', async () => {
+    if (!IS_LINUX) return { success: false, error: 'Not applicable on this platform' };
+
+    const settings = await loadWineSettings();
+    const env = { ...process.env };
+    if (settings.winePrefix) env.WINEPREFIX = settings.winePrefix;
+
+    console.log('[DXVK] Running setup_dxvk install...');
+    const result = await spawnAsync('setup_dxvk', ['install'], { env });
+    const success = result.code === 0;
+    console.log(`[DXVK] Installation ${success ? 'succeeded' : 'failed'}:\n${result.output}`);
+    return { success, output: result.output };
 });
 
 // ─── Game Launch ─────────────────────────────────────────────────────────────
@@ -506,6 +583,7 @@ async function launchGame(moduleName) {
     // Pass module name as a discrete argv element so Node's spawn correctly
     // quotes arguments that contain spaces — fixing launch failures for module
     // folder names like "My Cool Mod".
+    const launchSettings = await loadWineSettings();
     const gameArgs = ['--module', moduleName, '--no-intro'];
 
     let command;
@@ -519,12 +597,17 @@ async function launchGame(moduleName) {
         finalArgs = gameArgs;
     } else {
         // On Linux/macOS, delegate to Wine with the configured executable.
-        wineSettings = await loadWineSettings();
+        wineSettings = launchSettings;
         command = wineSettings.winePath || 'wine';
         finalArgs = [exePath, ...gameArgs];
     }
 
     const env = await buildLaunchEnv(wineSettings);
+
+    // Write language.txt before launching so the game picks up the selected language.
+    if (launchSettings.gameLanguage) {
+        await writeGameLanguage(launchSettings);
+    }
 
     try {
         console.log(`[Launch] Spawning: ${command} ${finalArgs.map(a => JSON.stringify(a)).join(' ')}`);
@@ -540,7 +623,10 @@ async function launchGame(moduleName) {
             data.toString().trim().split('\n').forEach(l => console.log(`[GAME/OUT] ${l}`))
         );
         gameProcess.stderr.on('data', data =>
-            data.toString().trim().split('\n').forEach(l => console.error(`[GAME/ERR] ${l}`))
+            data.toString().trim().split('\n').forEach(l => {
+                if (/^(fixme:|info:|warn:)/.test(l)) console.warn(`[GAME/WINE] ${l}`);
+                else console.error(`[GAME/ERR] ${l}`);
+            })
         );
         gameProcess.on('error', err => {
             clearTimeout(stableTimer);
@@ -587,9 +673,56 @@ async function buildLaunchEnv(wineSettings = null) {
         if (settings.winePrefix) {
             env.WINEPREFIX = settings.winePrefix;
         }
+
+        env.WINEDEBUG = '-all';
     }
 
     return env;
+}
+
+async function writeGameLanguage(settings) {
+    try {
+        let langFilePath;
+
+        if (IS_WINDOWS) {
+            const appData = process.env.APPDATA;
+            if (!appData) return;
+            langFilePath = path.join(appData, 'Mount&Blade Warband WSE2', 'language.txt');
+        } else {
+            const prefix = settings.winePrefix || path.join(process.env.HOME || '', '.wine');
+            const usersDir = path.join(prefix, 'drive_c', 'users');
+            // Find the language.txt under any user directory
+            let found = null;
+            try {
+                const userDirs = await fs.promises.readdir(usersDir);
+                for (const u of userDirs) {
+                    const candidate = path.join(usersDir, u, 'AppData', 'Roaming', 'Mount&Blade Warband WSE2', 'language.txt');
+                    try { await fs.promises.access(candidate); found = candidate; break; } catch { /* next */ }
+                }
+            } catch { /* can't read users dir */ }
+
+            if (!found) {
+                // File doesn't exist yet — create it under first user directory
+                try {
+                    const userDirs = await fs.promises.readdir(usersDir);
+                    const firstUser = userDirs.find(u => u !== 'Public' && u !== 'Default');
+                    if (firstUser) {
+                        const dir = path.join(usersDir, firstUser, 'AppData', 'Roaming', 'Mount&Blade Warband WSE2');
+                        await fs.promises.mkdir(dir, { recursive: true });
+                        found = path.join(dir, 'language.txt');
+                    }
+                } catch { /* skip */ }
+            }
+
+            if (!found) return;
+            langFilePath = found;
+        }
+
+        await fs.promises.writeFile(langFilePath, settings.gameLanguage, 'utf-8');
+        console.log(`[Language] Written "${settings.gameLanguage}" to ${langFilePath}`);
+    } catch (err) {
+        console.warn('[Language] Failed to write language.txt:', err.message);
+    }
 }
 
 // ─── Module Scanning ─────────────────────────────────────────────────────────

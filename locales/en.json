@@ -1360,6 +1360,8 @@
     "x,y": "x,y",
     "Сorrect legs position for riders on steep slopes.": "Сorrect legs position for riders on steep slopes.",
     "ui": {
+        "game_language": "Game Language",
+        "game_language_default": "Default (game setting)",
         "clean_install": "Clean Install",
         "theme": "Theme",
         "progress": "Progress",
@@ -1401,7 +1403,16 @@
             "section": "Wine Configuration",
             "path": "Wine Executable",
             "prefix": "WINEPREFIX (optional)",
-            "browse": "Browse"
+            "browse": "Browse",
+            "dxvk_checking": "Checking...",
+            "dxvk_installed": "Installed",
+            "dxvk_not_installed": "Not Installed",
+            "dxvk_unavailable": "setup_dxvk not found",
+            "dxvk_unavailable_hint": "Install the dxvk package (e.g. sudo pacman -S dxvk or sudo apt install dxvk) to enable automatic installation.",
+            "dxvk_install": "Install DXVK",
+            "dxvk_installing": "Installing...",
+            "dxvk_install_ok": "DXVK installed successfully!",
+            "dxvk_install_fail": "DXVK installation failed. Check the diagnostics log."
         },
         "tab": {
             "battle": "Battle",

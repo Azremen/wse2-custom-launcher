@@ -179,11 +179,21 @@
                         <input type="url" class="form-control" id="server-url-input"
                                placeholder="http://your-vps/launcher/"
                                autocomplete="off" spellcheck="false">
-                        <button class="btn btn-primary" id="btn-save-server-url" type="button">
-                            <i class="fas fa-save" aria-hidden="true"></i>
-                        </button>
                     </div>
                     <div id="server-url-feedback" class="form-text d-none"></div>
+                </section>
+
+                <hr>
+
+                <!-- Game Language -->
+                <section aria-label="Game language">
+                    <label class="form-label small mb-1" for="game-language-select"
+                           data-i18n="ui.game_language"></label>
+                    <div class="input-group input-group-sm">
+                        <select class="form-select form-select-sm" id="game-language-select">
+                            <!-- populated by JS -->
+                        </select>
+                    </div>
                 </section>
 
                 <hr>
@@ -238,15 +248,29 @@
                                placeholder="~/.wine" autocomplete="off" spellcheck="false">
                     </div>
 
-                    <button class="btn btn-primary btn-sm w-100" id="btn-save-wine" type="button">
-                        <i class="fas fa-save me-1" aria-hidden="true"></i>
-                        <span data-i18n="ui.save"></span>
-                    </button>
+                    <!-- DXVK Status -->
+                    <div class="d-flex align-items-center justify-content-between mt-2">
+                        <span class="small fw-semibold">DXVK</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <span id="dxvk-badge" class="badge bg-secondary">
+                                <i class="fas fa-circle-notch fa-spin me-1" aria-hidden="true"></i>
+                                <span data-i18n="ui.wine.dxvk_checking"></span>
+                            </span>
+                            <button id="btn-install-dxvk" class="btn btn-warning btn-sm d-none" type="button">
+                                <i class="fas fa-download me-1" aria-hidden="true"></i>
+                                <span data-i18n="ui.wine.dxvk_install"></span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="dxvk-feedback" class="form-text d-none"></div>
                 </section>
             </div>
 
             <div class="modal-footer">
-                <small class="text-muted w-100 text-center">WSE2 Launcher</small>
+                <button class="btn btn-primary w-100" id="btn-save-settings" type="button">
+                    <i class="fas fa-save me-1" aria-hidden="true"></i>
+                    <span data-i18n="ui.save"></span>
+                </button>
             </div>
 
         </div>

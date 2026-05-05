@@ -1360,6 +1360,8 @@
     "x,y": "x,y",
     "Сorrect legs position for riders on steep slopes.": "Корректировать ноги всадника на крутых склонах.",
     "ui": {
+        "game_language": "Язык игры",
+        "game_language_default": "По умолчанию (настройка игры)",
         "clean_install": "Чистая установка",
         "theme": "Тема",
         "progress": "Прогресс",
@@ -1401,7 +1403,16 @@
             "section": "Настройки Wine",
             "path": "Исполняемый файл Wine",
             "prefix": "WINEPREFIX (необязательно)",
-            "browse": "Обзор"
+            "browse": "Обзор",
+            "dxvk_checking": "Проверка...",
+            "dxvk_installed": "Установлен",
+            "dxvk_not_installed": "Не установлен",
+            "dxvk_unavailable": "setup_dxvk не найден",
+            "dxvk_unavailable_hint": "Установите пакет dxvk для автоматической установки (например, sudo pacman -S dxvk или sudo apt install dxvk).",
+            "dxvk_install": "Установить DXVK",
+            "dxvk_installing": "Установка...",
+            "dxvk_install_ok": "DXVK успешно установлен!",
+            "dxvk_install_fail": "Ошибка установки DXVK. Проверьте журнал диагностики."
         },
         "tab": {
             "battle": "Битва",

@@ -33,6 +33,9 @@ contextBridge.exposeInMainWorld('api', {
         setSettings: (settings) => ipcRenderer.invoke('set-wine-settings', settings),
         browse: () => ipcRenderer.invoke('browse-wine-executable'),
         isWindows: () => process.platform === 'win32',
+        checkDxvk: () => ipcRenderer.invoke('check-dxvk'),
+        installDxvk: () => ipcRenderer.invoke('install-dxvk'),
+        getGameLanguages: () => ipcRenderer.invoke('get-game-languages'),
     },
     events: {
         onDownloadProgress: (callback) => { ipcRenderer.removeAllListeners('download-progress'); ipcRenderer.on('download-progress', (_, value) => callback(value)); },

@@ -1360,6 +1360,8 @@
     "x,y": "x,y",
     "Сorrect legs position for riders on steep slopes.": "Dik yokuşlarda binici bacak pozisyonunu düzelt.",
     "ui": {
+        "game_language": "Oyun Dili",
+        "game_language_default": "Varsayılan (oyun ayarı)",
         "clean_install": "Temiz Kurulum",
         "theme": "Tema",
         "progress": "İlerleme",
@@ -1401,7 +1403,16 @@
             "section": "Wine Yapılandırması",
             "path": "Wine Çalıştırılabilir Dosyası",
             "prefix": "WINEPREFIX (isteğe bağlı)",
-            "browse": "Gözat"
+            "browse": "Gözat",
+            "dxvk_checking": "Kontrol ediliyor...",
+            "dxvk_installed": "Kurulu",
+            "dxvk_not_installed": "Kurulu Değil",
+            "dxvk_unavailable": "setup_dxvk bulunamadı",
+            "dxvk_unavailable_hint": "Otomatik kurulum için dxvk paketini yükleyin (ör. sudo pacman -S dxvk veya sudo apt install dxvk).",
+            "dxvk_install": "DXVK Kur",
+            "dxvk_installing": "Kuruluyor...",
+            "dxvk_install_ok": "DXVK başarıyla kuruldu!",
+            "dxvk_install_fail": "DXVK kurulumu başarısız. Tanılama günlüğünü kontrol edin."
         },
         "tab": {
             "battle": "Savaş",
