@@ -23,7 +23,7 @@ jobs:
       
       - name: Build Linux
         env:
-          GH_TOKEN: ${{ secrets.PUBLIC_REPO_TOKEN }}
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         run: npm run dist:linux -- --publish never
 
       - name: Upload Linux Artifacts
@@ -47,7 +47,7 @@ jobs:
       
       - name: Build Windows
         env:
-          GH_TOKEN: ${{ secrets.PUBLIC_REPO_TOKEN }}
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
           WIN_CSC_LINK: ${{ secrets.CSC_LINK }} 
           WIN_CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
         run: npm run dist:win -- --publish never
@@ -73,7 +73,7 @@ jobs:
       
       - name: Build macOS
         env:
-          GH_TOKEN: ${{ secrets.PUBLIC_REPO_TOKEN }}
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         run: npm run dist:mac -- --publish never
 
       - name: Upload Mac Artifacts
@@ -125,7 +125,7 @@ jobs:
       - name: Publish to Private Repository
         uses: ncipollo/release-action@v1
         with:
-          token: ${{ secrets.PUBLIC_REPO_TOKEN }}
+          token: ${{ secrets.RELEASE_TOKEN }}
           tag: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           body: "Full release with source code."
@@ -141,7 +141,7 @@ jobs:
         with:
           owner: Azremen
           repo: wse2-custom-launcher 
-          token: ${{ secrets.PUBLIC_REPO_TOKEN }}
+          token: ${{ secrets.RELEASE_TOKEN }}
           tag: ${{ github.ref_name }}
           commit: "main"
           name: Release ${{ github.ref_name }}
