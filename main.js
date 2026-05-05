@@ -24,7 +24,6 @@ const APP_CONFIG_FILE = 'config.json';
 const IS_DEV = !app.isPackaged;
 const IS_WINDOWS = process.platform === 'win32';
 const IS_LINUX   = process.platform === 'linux';
-const IS_LINUX = process.platform === 'linux';
 const IS_MAC = process.platform === 'darwin';
 
 // ─── Logger (electron-log) ───────────────────────────────────────────────────
