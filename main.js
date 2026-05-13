@@ -33,6 +33,11 @@ const IS_MAC = process.platform === 'darwin';
         let logDir;
         if (process.env.APPIMAGE) {
             logDir = path.dirname(process.env.APPIMAGE);
+        } else if (IS_WINDOWS && process.env.PORTABLE_EXECUTABLE_DIR) {
+            // Portable Windows build: app.getPath('exe') points to the temp extraction
+            // directory, not the actual portable exe location. Use PORTABLE_EXECUTABLE_DIR
+            // so the log is written next to the portable exe where the user can find it.
+            logDir = process.env.PORTABLE_EXECUTABLE_DIR;
         } else if (IS_DEV) {
             logDir = __dirname;
         } else {
@@ -83,6 +88,9 @@ console.log('[Launcher] Starting...');
 
 function getBaseDirectory() {
     if (process.env.APPIMAGE) return path.dirname(process.env.APPIMAGE);
+    // Portable Windows build: app.getPath('exe') resolves to the temp extraction path.
+    // Use PORTABLE_EXECUTABLE_DIR so installPath points to the actual game directory.
+    if (IS_WINDOWS && process.env.PORTABLE_EXECUTABLE_DIR) return process.env.PORTABLE_EXECUTABLE_DIR;
 
     let base = IS_DEV ? __dirname : path.dirname(app.getPath('exe'));
 
@@ -590,10 +598,13 @@ async function launchGame(moduleName) {
     let wineSettings = null;
 
     if (IS_WINDOWS) {
-        // Use the full absolute path so Windows always locates the exe,
-        // regardless of PATH or CWD quirks.
-        command = exePath;
-        finalArgs = gameArgs;
+        // Explicitly quote any path/argument that contains spaces, then pass the
+        // assembled command line verbatim to CreateProcess via windowsVerbatimArguments.
+        // This reliably handles game installations in directories with spaces
+        // (e.g. "C:\My Games\Warband") and module names with spaces.
+        const quoteIfNeeded = s => /\s/.test(s) ? `"${s.replace(/"/g, '\\"')}"` : s;
+        command = quoteIfNeeded(exePath);
+        finalArgs = gameArgs.map(quoteIfNeeded);
     } else {
         // On Linux/macOS, delegate to Wine with the configured executable.
         wineSettings = launchSettings;
@@ -616,6 +627,7 @@ async function launchGame(moduleName) {
             detached: true,
             env,
             stdio: ['ignore', 'pipe', 'pipe'],
+            windowsVerbatimArguments: IS_WINDOWS,
         });
 
         gameProcess.stdout.on('data', data =>
