@@ -34,9 +34,7 @@ const IS_MAC = process.platform === 'darwin';
         if (process.env.APPIMAGE) {
             logDir = path.dirname(process.env.APPIMAGE);
         } else if (IS_WINDOWS && process.env.PORTABLE_EXECUTABLE_DIR) {
-            // Portable Windows build: app.getPath('exe') points to the temp extraction
-            // directory, not the actual portable exe location. Use PORTABLE_EXECUTABLE_DIR
-            // so the log is written next to the portable exe where the user can find it.
+            // Portable build: write log next to the exe, not in the temp extraction dir.
             logDir = process.env.PORTABLE_EXECUTABLE_DIR;
         } else if (IS_DEV) {
             logDir = __dirname;
@@ -60,12 +58,11 @@ const IS_MAC = process.platform === 'darwin';
         log.transports.file.level = 'silly';
         log.transports.console.level = IS_DEV ? 'silly' : false;
     } catch (err) {
-        // Can't log this — nowhere to write yet
+        // Nowhere to write yet — silently ignore
     }
 })();
 
-// Override console methods so all existing console.log/warn/error calls
-// automatically go through electron-log and are forwarded to the renderer.
+// Route all console calls through electron-log and forward to the renderer.
 console.log   = (...args) => { log.info(...args); };
 console.warn  = (...args) => { log.warn(...args);  sendLogToRenderer('WARN',  args); };
 console.error = (...args) => { log.error(...args); sendLogToRenderer('ERROR', args); };
@@ -88,8 +85,7 @@ console.log('[Launcher] Starting...');
 
 function getBaseDirectory() {
     if (process.env.APPIMAGE) return path.dirname(process.env.APPIMAGE);
-    // Portable Windows build: app.getPath('exe') resolves to the temp extraction path.
-    // Use PORTABLE_EXECUTABLE_DIR so installPath points to the actual game directory.
+    // Portable build: resolve to the actual exe directory, not the temp extraction path.
     if (IS_WINDOWS && process.env.PORTABLE_EXECUTABLE_DIR) return process.env.PORTABLE_EXECUTABLE_DIR;
 
     let base = IS_DEV ? __dirname : path.dirname(app.getPath('exe'));
@@ -187,6 +183,20 @@ function createMainWindow() {
                 mainWindow.webContents.toggleDevTools();
             }
         });
+    } else {
+        // Disable DevTools shortcuts in production.
+        mainWindow.webContents.on('before-input-event', (event, input) => {
+            if (input.type !== 'keyDown') return;
+            const ctrl = input.control || input.meta;
+            if (
+                input.key === 'F12' ||
+                input.key === 'F5' ||
+                (ctrl && (input.key === 'r' || input.key === 'R')) ||
+                (ctrl && input.shift && (input.key === 'i' || input.key === 'I'))
+            ) {
+                event.preventDefault();
+            }
+        });
     }
 
     setupAutoUpdater();
@@ -218,6 +228,20 @@ function createConfigWindow(modulePath) {
         cfgWindow.webContents.on('before-input-event', (_, input) => {
             if (input.type === 'keyDown' && input.key === 'F12') {
                 cfgWindow.webContents.toggleDevTools();
+            }
+        });
+    } else {
+        // Disable DevTools shortcuts in production.
+        cfgWindow.webContents.on('before-input-event', (event, input) => {
+            if (input.type !== 'keyDown') return;
+            const ctrl = input.control || input.meta;
+            if (
+                input.key === 'F12' ||
+                input.key === 'F5' ||
+                (ctrl && (input.key === 'r' || input.key === 'R')) ||
+                (ctrl && input.shift && (input.key === 'i' || input.key === 'I'))
+            ) {
+                event.preventDefault();
             }
         });
     }
@@ -314,11 +338,10 @@ app.whenReady().then(async () => {
 
     createMainWindow();
 
-    globalShortcut.register('CommandOrControl+Shift+I', () =>
-        mainWindow?.webContents.toggleDevTools()
-    );
-
     if (IS_DEV) {
+        globalShortcut.register('CommandOrControl+Shift+I', () =>
+            mainWindow?.webContents.toggleDevTools()
+        );
         globalShortcut.register('CommandOrControl+R', () => {
             mainWindow?.reload();
             cfgWindow?.reload();
@@ -587,40 +610,37 @@ async function launchGame(moduleName) {
         return false;
     }
 
-    // Pass module name as a discrete argv element so Node's spawn correctly
-    // quotes arguments that contain spaces — fixing launch failures for module
-    // folder names like "My Cool Mod".
     const launchSettings = await loadWineSettings();
-    const gameArgs = ['--module', moduleName, '--no-intro'];
 
     let command;
     let finalArgs;
     let wineSettings = null;
 
     if (IS_WINDOWS) {
-        // Explicitly quote any path/argument that contains spaces, then pass the
-        // assembled command line verbatim to CreateProcess via windowsVerbatimArguments.
-        // This reliably handles game installations in directories with spaces
-        // (e.g. "C:\My Games\Warband") and module names with spaces.
-        const quoteIfNeeded = s => /\s/.test(s) ? `"${s.replace(/"/g, '\\"')}"` : s;
-        command = quoteIfNeeded(exePath);
-        finalArgs = gameArgs.map(quoteIfNeeded);
+        // Spread module name words as separate argv elements + windowsVerbatimArguments
+        // so Node.js doesn't add quotes. Mirrors how the C++ launcher calls CreateProcess.
+        command = exePath;
+        finalArgs = ['--module', ...moduleName.split(' '), '--no-intro'];
     } else {
-        // On Linux/macOS, delegate to Wine with the configured executable.
+        // Wine joins argv with spaces when building the Windows command line,
+        // so spreading module name words avoids unwanted quoting.
         wineSettings = launchSettings;
         command = wineSettings.winePath || 'wine';
-        finalArgs = [exePath, ...gameArgs];
+        finalArgs = [exePath, '--module', ...moduleName.split(' '), '--no-intro'];
     }
 
     const env = await buildLaunchEnv(wineSettings);
 
-    // Write language.txt before launching so the game picks up the selected language.
+    // Write language.txt before launch so the game picks up the selected language.
     if (launchSettings.gameLanguage) {
         await writeGameLanguage(launchSettings);
     }
 
     try {
-        console.log(`[Launch] Spawning: ${command} ${finalArgs.map(a => JSON.stringify(a)).join(' ')}`);
+        const displayCmd = IS_WINDOWS
+            ? `${command} ${finalArgs.join(' ')}`
+            : `${command} ${finalArgs.map(a => /\s/.test(a) ? `"${a}"` : a).join(' ')}`;
+        console.log(`[Launch] Spawning: ${displayCmd}`);
 
         const gameProcess = spawn(command, finalArgs, {
             cwd: workingDir,
@@ -735,8 +755,6 @@ async function writeGameLanguage(settings) {
         console.warn('[Language] Failed to write language.txt:', err.message);
     }
 }
-
-// ─── Module Scanning ─────────────────────────────────────────────────────────
 
 async function scanModules() {
     try {
