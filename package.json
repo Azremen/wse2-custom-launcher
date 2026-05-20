@@ -59,16 +59,16 @@
       "deleteAppDataOnUninstall": true,
       "installerIcon": "icons/icon.ico",
       "uninstallerIcon": "icons/icon.ico",
-      "artifactName": "${productName} Setup.${ext}"
+      "artifactName": "${productName}-Setup.${ext}"
     },
     "portable": {
-      "artifactName": "${productName} Windows Portable.${ext}"
+      "artifactName": "${productName}-Windows-Portable.${ext}"
     },
     "linux": {
       "target": [
         "AppImage"
       ],
-      "artifactName": "${productName} Linux.${ext}",
+      "artifactName": "${productName}-Linux.${ext}",
       "category": "Game",
       "icon": "icons/icon.png"
     },
