@@ -1182,17 +1182,11 @@ function renderConfigForm(schema, values) {
                 colorVal = String(colorVal);
 
                 if (colorVal.startsWith('0x') || colorVal.startsWith('0X')) {
-                    // Normalize 0xRRGGBB -> #RRGGBB
                     let hex = colorVal.substring(2);
-                    // Padding to 6 chars
+                    // Strip alpha if 0xAARRGGBB (8 chars)
+                    if (hex.length > 6) hex = hex.substring(hex.length - 6);
                     while (hex.length < 6) hex = '0' + hex;
                     colorVal = '#' + hex;
-                }
-                // Ensure valid 7-char hex for color input
-                if (!colorVal.startsWith('#') || colorVal.length !== 7) {
-                    // Fallback or attempt fix? 
-                    // If it's just "FF" (blue), it needs to be #0000FF?
-                    // Assuming standard format. If invalid, browser displays black.
                 }
 
                 $input.val(colorVal);
@@ -1270,10 +1264,15 @@ function collectFormData(schema) {
                 val = $el.is(':checked');
             } else if ($el.attr('type') === 'color') {
                 let hex = $el.val();
-                // Convert #RRGGBB to 0xRRGGBB if schema default was 0x format, or just generic 0x
-                // Check default value format? or just assume 0x
                 if (hex.startsWith('#')) {
-                    val = '0x' + hex.substring(1).toUpperCase();
+                    const defaultVal = fieldDef ? String(fieldDef['default-value'] || '') : '';
+                    // Restore alpha prefix if default was 0xAARRGGBB
+                    if (defaultVal.startsWith('0x') && defaultVal.length === 10) {
+                        const alpha = defaultVal.substring(2, 4).toLowerCase();
+                        val = '0x' + alpha + hex.substring(1).toLowerCase();
+                    } else {
+                        val = '0x' + hex.substring(1).toLowerCase();
+                    }
                 } else {
                     val = hex;
                 }

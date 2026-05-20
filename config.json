@@ -697,7 +697,7 @@
             "name": "Banner Outline Color Friendly",
             "description": "Configures the Banner Outline Color Friendly setting.",
             "type": "text",
-            "default-value": "0xff00",
+            "default-value": "0x00ff00",
             "inputType": "color"
         },
         "uBannerOutlineColorEnemy": {
@@ -711,7 +711,7 @@
             "name": "Banner Outline Color Neutral",
             "description": "Configures the Banner Outline Color Neutral setting.",
             "type": "text",
-            "default-value": "0xff",
+            "default-value": "0x0000ff",
             "inputType": "color"
         },
         "fDynamicBannerTransparencyMinDistance": {
