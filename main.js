@@ -834,29 +834,30 @@ async function readConfigData(selectedModulePath) {
         let values = {};
 
         if (targetPath) {
-            const iniPath = path.join(targetPath, MODULE_CONFIG_FILE);
+            // Build defaults from schema first, then overlay saved INI values.
+            // This way the form is always fully populated even when the INI only
+            // contains a handful of non-default overrides.
+            for (const section in schema) {
+                values[section] = {};
+                for (const key in schema[section]) {
+                    values[section][key] = schema[section][key]['default-value'];
+                }
+            }
 
+            const iniPath = path.join(targetPath, MODULE_CONFIG_FILE);
             try {
                 const raw = await fs.promises.readFile(iniPath, 'utf-8');
-                values = ini.parse(raw);
-            } catch (err) {
-                if (err.code === 'ENOENT') {
-                    console.log(`[Config] No INI found - generating defaults for "${targetPath}"`);
-                    for (const section in schema) {
-                        values[section] = {};
-                        for (const key in schema[section]) {
-                            values[section][key] = schema[section][key]['default-value'];
-                        }
+                const saved = ini.parse(raw);
+                for (const section in saved) {
+                    if (!values[section]) values[section] = {};
+                    for (const key in saved[section]) {
+                        values[section][key] = saved[section][key];
                     }
-                    try {
-                        await fs.promises.writeFile(iniPath, ini.stringify(values), 'utf-8');
-                        console.log('[Config] Default config written.');
-                    } catch (writeErr) {
-                        console.error('[Config] Failed to write default config:', writeErr);
-                    }
-                } else {
-                    throw err;
                 }
+            } catch (err) {
+                if (err.code !== 'ENOENT') throw err;
+                // No INI yet — defaults are already set above, nothing to write.
+                console.log(`[Config] No INI found - using defaults for "${targetPath}"`);
             }
         } else {
             console.error('[Config] No module path provided to get-config-data.');
@@ -886,9 +887,41 @@ async function saveConfigData(modulePath, configData) {
             throw new Error('Invalid module path');
         }
 
+        // Read defaults from config.json schema so we only persist values that
+        // differ from the default — keeps the INI file minimal and readable.
+        let schema = {};
+        try {
+            const raw = await fs.promises.readFile(path.join(__dirname, APP_CONFIG_FILE), 'utf-8');
+            schema = JSON.parse(raw);
+        } catch { /* proceed without defaults — save everything */ }
+
+        const toWrite = {};
+        for (const section in configData) {
+            for (const key in configData[section]) {
+                const defaultVal = schema[section]?.[key]?.['default-value'];
+                const val = configData[section][key];
+                // Loose equality covers number/string coercion from INI parsing
+                // eslint-disable-next-line eqeqeq
+                if (defaultVal === undefined || val != defaultVal) {
+                    if (!toWrite[section]) toWrite[section] = {};
+                    toWrite[section][key] = val;
+                }
+            }
+        }
+
         const iniPath = path.join(modulePath, MODULE_CONFIG_FILE);
-        await fs.promises.writeFile(iniPath, ini.stringify(configData), 'utf-8');
-        console.log(`[Config] Saved to: ${iniPath}`);
+        const hasNonDefaults = Object.values(toWrite).some(s => Object.keys(s).length > 0);
+
+        let fileExists = true;
+        try { await fs.promises.access(iniPath); } catch { fileExists = false; }
+
+        if (!fileExists && !hasNonDefaults) {
+            console.log(`[Config] All values are default and no INI exists — skipping save.`);
+            return true;
+        }
+
+        await fs.promises.writeFile(iniPath, ini.stringify(toWrite), 'utf-8');
+        console.log(`[Config] Saved ${Object.values(toWrite).reduce((n, s) => n + Object.keys(s).length, 0)} non-default value(s) to: ${iniPath}`);
         return true;
     } catch (err) {
         console.error('[Config] saveConfigData error:', err);
