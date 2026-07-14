@@ -305,6 +305,9 @@ function setupDownloadHandler() {
         const uniqueName = `temp_${Date.now()}_${Math.random().toString(36).slice(2, 11)}.zip`;
         const savePath = path.join(modulesPath, uniqueName);
 
+        // Track retries across repeated will-download attempts for the same URL.
+        meta._retryCount = Number(meta._retryCount || 0);
+
         console.log(`[Download] "${meta.name}" -> ${savePath}`);
         item.setSavePath(savePath);
         activeDownloadItem = item;
@@ -312,25 +315,43 @@ function setupDownloadHandler() {
         item.on('updated', (__, state) => {
             if (state === 'interrupted') {
                 console.warn(`[Download] Interrupted: ${meta.name}`);
+                if (item.canResume()) {
+                    try {
+                        item.resume();
+                        console.log(`[Download] Resume requested: ${meta.name}`);
+                    } catch (err) {
+                        console.warn(`[Download] Resume failed for ${meta.name}: ${err.message}`);
+                    }
+                }
                 return;
             }
             if (state === 'progressing' && !item.isPaused()) {
                 const total = item.getTotalBytes();
                 const received = item.getReceivedBytes();
-                const pct = total > 0 ? (received / total) * 100 : 0;
+                const expected = total > 0 ? total : Number(meta.size || 0);
+                const pct = expected > 0 ? Math.min((received / expected) * 100, 99.9) : 0;
                 mainWindow?.webContents.send('download-progress', pct);
             }
         });
 
         item.once('done', (__, state) => {
             activeDownloadItem = null;
-            if (matchedUrl) pendingDownloads.delete(matchedUrl);
 
             if (state === 'completed') {
+                if (matchedUrl) pendingDownloads.delete(matchedUrl);
                 processDownloadedModule(savePath, meta);
+            } else if (state === 'interrupted' && matchedUrl && meta._retryCount < 1) {
+                meta._retryCount += 1;
+                console.warn(`[Download] Retrying (${meta._retryCount}) for: ${meta.name}`);
+                safeUnlink(savePath);
+                mainWindow?.webContents.downloadURL(matchedUrl);
             } else {
-                console.error(`[Download] Failed with state: ${state}`);
-                mainWindow?.webContents.send('download-error', `Download failed: ${state}`);
+                if (matchedUrl) pendingDownloads.delete(matchedUrl);
+                const received = item.getReceivedBytes();
+                const total = item.getTotalBytes();
+                const detail = `${state} (${received}/${total} bytes)`;
+                console.error(`[Download] Failed with state: ${detail}`);
+                mainWindow?.webContents.send('download-error', `Download failed: ${detail}`);
                 safeUnlink(savePath);
             }
         });

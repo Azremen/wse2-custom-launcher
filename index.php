@@ -7,6 +7,7 @@ const DEFAULT_VERSION  = '1.0.0';
 const SKIP_FILES       = ['wse2-launcher.zip'];
 const CACHE_DIR        = __DIR__ . '/.cache';
 const MODULES_DIR      = __DIR__ . '/Modules';
+const MODULES_URL_PATH = 'Modules/';
 // Set to a specific origin (e.g. 'https://example.com') to restrict CORS,
 // or keep '*' to allow any origin (suitable for a public mod distribution server).
 const ALLOWED_ORIGIN   = '*';
@@ -121,7 +122,7 @@ foreach (glob(MODULES_DIR . '/*.zip') ?: [] as $zipPath) {
         'name'        => $moduleName,
         'version'     => $meta['version'],
         'description' => $meta['description'],
-        'url'         => $filename,
+        'url'         => MODULES_URL_PATH . rawurlencode($filename),
         'md5'         => resolvemd5($zipPath),
         'size'        => $filesize !== false ? $filesize : null,
         'manifest'    => $manifest,

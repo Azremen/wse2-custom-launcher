@@ -946,6 +946,7 @@ function startDownload(url) {
     enqueueDownload(url, {
         name: activeModule.name,
         version: activeModule.remoteVersion,
+        size: activeModule.size || null,
         md5: activeModule.md5 || null,
         manifest: activeModule.manifest || null,
         cleanInstall: isCleanInstall
