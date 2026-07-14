@@ -153,6 +153,9 @@ const pendingDownloads = new Map();
 /** @type {import('electron').DownloadItem | null} */
 let activeDownloadItem = null;
 
+/** @type {boolean} */
+let pendingUpdateAvailable = false;
+
 const SHARED_WEB_PREFERENCES = {
     preload: path.join(__dirname, 'preload.js'),
     contextIsolation: true,
@@ -261,7 +264,10 @@ function setupAutoUpdater() {
         console.warn(`[Updater] Non-fatal error: ${err.message}`)
     );
     autoUpdater.on('update-available', () =>
-        mainWindow?.webContents.send('update_available')
+    {
+        pendingUpdateAvailable = true;
+        mainWindow?.webContents.send('update_available');
+    }
     );
     autoUpdater.on('download-progress', (info) =>
         mainWindow?.webContents.send('update_download_progress', Math.round(info.percent))
@@ -397,6 +403,7 @@ ipcMain.handle('check-for-updates', async () => {
         const result = await autoUpdater.checkForUpdates();
         const remoteVersion = result?.updateInfo?.version;
         const hasUpdate = !!remoteVersion && remoteVersion !== app.getVersion();
+        pendingUpdateAvailable = pendingUpdateAvailable || hasUpdate;
         return { hasUpdate };
     } catch (err) {
         console.warn(`[Updater] Manual check failed: ${err.message}`);
@@ -971,13 +978,17 @@ function manifestToMap(manifest) {
             if (!entry || typeof entry !== 'object') continue;
             const relPath = normalizeRelativePath(entry.path || entry.name);
             if (!relPath) continue;
-            map.set(relPath, String(entry.md5 || entry.hash || '').toLowerCase());
+            const sha256 = String(entry.sha256 || entry.hash || '').toLowerCase();
+            if (sha256.length !== 64) continue;
+            map.set(relPath, sha256);
         }
     } else if (manifest.files && typeof manifest.files === 'object') {
         for (const [relPathRaw, hash] of Object.entries(manifest.files)) {
             const relPath = normalizeRelativePath(relPathRaw);
             if (!relPath) continue;
-            map.set(relPath, String(hash || '').toLowerCase());
+            const sha256 = String(hash || '').toLowerCase();
+            if (sha256.length !== 64) continue;
+            map.set(relPath, sha256);
         }
     }
 
@@ -1062,27 +1073,29 @@ async function syncModuleFiles(sourceDir, targetDir, remoteManifest, installedMa
         const targetPath = path.join(targetDir, relPath);
         const installedHash = installedMap.get(relPath) || null;
 
-        let currentHash = null;
+        let currentHashForRemote = null;
         try {
             await fs.promises.access(targetPath);
-            currentHash = await hashFile(targetPath);
+            currentHashForRemote = await hashFile(targetPath, 'sha256');
         } catch {
-            currentHash = null;
+            currentHashForRemote = null;
         }
 
-        if (!currentHash) {
+        if (!currentHashForRemote) {
             console.log(`[Install] Copying missing file: ${relPath}`);
             await copyFileEnsuringDirectory(sourcePath, targetPath);
             copiedCount++;
             continue;
         }
 
-        if (currentHash === remoteHash) {
+        if (currentHashForRemote === remoteHash) {
             skippedCount++;
             continue;
         }
 
-        if (installedHash && currentHash === installedHash && remoteHash !== installedHash) {
+        const currentHashForInstalled = currentHashForRemote;
+
+        if (installedHash && currentHashForInstalled === installedHash && remoteHash !== installedHash) {
             console.log(`[Install] Updating changed file: ${relPath}`);
             await copyFileEnsuringDirectory(sourcePath, targetPath);
             copiedCount++;
@@ -1099,7 +1112,7 @@ async function syncModuleFiles(sourceDir, targetDir, remoteManifest, installedMa
         let currentHash = null;
         try {
             await fs.promises.access(targetPath);
-            currentHash = await hashFile(targetPath);
+            currentHash = await hashFile(targetPath, 'sha256');
         } catch {
             currentHash = null;
         }

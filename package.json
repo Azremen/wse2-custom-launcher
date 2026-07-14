@@ -18,8 +18,9 @@
     "pack": "electron-builder --dir",
     "dist": "npm run dist:all",
     "dist:all": "electron-builder --linux --win",
-    "release": "electron-builder --linux --win -p always",
-    "release:local": "dotenv -e .env -- electron-builder --linux --win -p always",
+    "generate:manifests": "php generate-manifests.php",
+    "release": "npm run generate:manifests && electron-builder --linux --win -p always",
+    "release:local": "dotenv -e .env -- sh -c \"npm run generate:manifests && electron-builder --linux --win -p always\"",
     "dist:linux": "electron-builder --linux",
     "dist:win": "electron-builder --win",
     "dist:mac": "electron-builder --mac"
@@ -111,6 +112,7 @@
     "bootstrap": "^5.3.8",
     "electron-log": "^5.4.3",
     "electron-updater": "^6.1.7",
+    "extract-zip": "^2.0.1",
     "ini": "^4.1.1",
     "jquery": "^4.0.0"
   }

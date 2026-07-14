@@ -25,6 +25,8 @@ let _configData = null;
 // Cached app version (fetched once, reused by applyTranslations)
 let appVersion = null;
 
+let updatePromptShown = false;
+
 // Cached progress bar DOM elements (set on first use)
 let $progressBar = null;
 let $downloadStatus = null;
@@ -605,6 +607,8 @@ async function initMainWindow() {
     });
 
     window.api.events.onUpdateAvailable(async () => {
+        if (updatePromptShown) return;
+        updatePromptShown = true;
         if (await showConfirm(t("msg_launcher_update"))) {
             window.api.launcher.update();
             $('#updater-progress-wrap').removeClass('d-none');
@@ -621,6 +625,21 @@ async function initMainWindow() {
             window.api.launcher.restart();
         }
     });
+
+    // Fallback for Linux/slow startups: check once after the UI is ready so an early
+    // update event does not get missed before the renderer listeners are attached.
+    try {
+        const startupUpdate = await window.api.launcher.checkForUpdates();
+        if (!updatePromptShown && startupUpdate?.hasUpdate) {
+            updatePromptShown = true;
+            if (await showConfirm(t("msg_launcher_update"))) {
+                window.api.launcher.update();
+                $('#updater-progress-wrap').removeClass('d-none');
+            }
+        }
+    } catch (err) {
+        console.warn('Startup update check failed', err);
+    }
 
     // ── Diagnostic Log Panel ─────────────────────────────────────────────────
 
