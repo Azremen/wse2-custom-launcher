@@ -87,8 +87,10 @@
       }
     ],
     "mac": {
-      "target": ["dmg"],
-      "artifactName": "${productName} Mac.${ext}",
+      "target": [
+        "dmg"
+      ],
+      "artifactName": "${productName}-Mac.${ext}",
       "icon": "icons/icon.icns"
     }
   },
@@ -99,14 +101,13 @@
     "Launcher"
   ],
   "devDependencies": {
+    "@electron/asar": "^4.0.1",
     "dotenv-cli": "^11.0.0",
     "electron": "^40.2.1",
-    "electron-builder": "^26.7.0",
-    "@electron/asar": "^4.0.1"
+    "electron-builder": "^26.7.0"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.1.0",
-    "adm-zip": "^0.5.16",
     "bootstrap": "^5.3.8",
     "electron-log": "^5.4.3",
     "electron-updater": "^6.1.7",

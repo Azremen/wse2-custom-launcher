@@ -4,7 +4,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' http: https:;">
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' http: https:;">
     <title>WSE2 Launcher</title>
 
     <link rel="stylesheet" href="./libs/css/bootstrap.min.css">
@@ -13,310 +14,288 @@
 </head>
 
 <body>
-<div class="container-fluid">
+    <div class="container-fluid">
 
-    <!-- Offline Warning -->
-    <div id="offline-warning" class="alert alert-warning d-none text-center m-0 p-1"
-         role="alert" aria-live="polite">
-        <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
-        <span data-i18n="ui.offline"></span>
-    </div>
+        <!-- Offline Warning -->
+        <div id="offline-warning" class="alert alert-warning d-none text-center m-0 p-1" role="alert"
+            aria-live="polite">
+            <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+            <span data-i18n="ui.offline"></span>
+        </div>
 
-    <!-- Main Content -->
-    <main id="top-area" class="pt-3 pb-1">
-        <div class="row">
+        <!-- Main Content -->
+        <main id="top-area" class="pt-3 pb-1">
+            <div class="row">
 
-            <!-- Left Panel: Module List + Actions -->
-            <aside class="col-3 col-md-4" aria-label="Module list">
-                <ul class="list-group p-0 mb-0 rounded-0" id="list-pos"
-                    role="listbox" aria-label="Installed modules">
-                </ul>
+                <!-- Left Panel: Module List + Actions -->
+                <aside class="col-3 col-md-4" aria-label="Module list">
+                    <ul class="list-group p-0 mb-0 rounded-0" id="list-pos" role="listbox"
+                        aria-label="Installed modules">
+                    </ul>
 
-                <div id="buttons" class="pt-1 d-flex justify-content-between"
-                     role="group" aria-label="Module actions">
-                    <button class="btn btn-primary btn-sm flex-fill me-1"
-                            id="btn-install" type="button" disabled
+                    <div id="buttons" class="pt-1 d-flex justify-content-between" role="group"
+                        aria-label="Module actions">
+                        <button class="btn btn-primary btn-sm flex-fill me-1" id="btn-install" type="button" disabled
                             data-i18n="ui.install"></button>
-                    <button class="btn btn-danger btn-sm flex-fill me-1"
-                            id="btn-remove" type="button" disabled
+                        <button class="btn btn-danger btn-sm flex-fill me-1" id="btn-remove" type="button" disabled
                             data-i18n="ui.remove"></button>
-                    <button class="btn btn-secondary btn-sm flex-fill"
-                            id="btn-configure" type="button" disabled
+                        <button class="btn btn-secondary btn-sm flex-fill" id="btn-configure" type="button" disabled
                             data-i18n="ui.configure"></button>
-                </div>
+                    </div>
 
-                <div class="form-check form-switch mt-2">
-                    <input class="form-check-input" type="checkbox"
-                           id="chk-clean-install" role="switch">
-                    <label class="form-check-label small text-white"
-                           for="chk-clean-install"
-                           data-i18n="ui.clean_install"></label>
-                </div>
-            </aside>
+                    <div class="form-check form-switch mt-2">
+                        <input class="form-check-input" type="checkbox" id="chk-clean-install" role="switch">
+                        <label class="form-check-label small text-white" for="chk-clean-install"
+                            data-i18n="ui.clean_install"></label>
+                    </div>
+                </aside>
 
-            <!-- Right Panel: Module Image + Detail Info -->
-            <section class="col-9 col-md-8 d-flex flex-column" aria-label="Module preview">
-                <img id="module-img" class="module-img d-none" alt="Module banner">
-                <div id="module-info" class="module-info d-none mt-2">
-                    <h6 id="module-info-name" class="mb-1 fw-bold"></h6>
-                    <div id="module-info-badges" class="d-flex flex-wrap gap-1 mb-1"></div>
-                    <p id="module-info-desc" class="small text-muted mb-0 d-none"></p>
-                </div>
-            </section>
+                <!-- Right Panel: Module Image + Detail Info -->
+                <section class="col-9 col-md-8 d-flex flex-column" aria-label="Module preview">
+                    <img id="module-img" class="module-img d-none" alt="Module banner">
+                    <div id="module-info" class="module-info d-none mt-2">
+                        <h6 id="module-info-name" class="mb-1 fw-bold"></h6>
+                        <div id="module-info-badges" class="d-flex flex-wrap gap-1 mb-1"></div>
+                        <p id="module-info-desc" class="small text-muted mb-0 d-none"></p>
+                    </div>
+                </section>
 
-        </div>
-    </main>
-
-    <!-- Footer: Progress + Controls -->
-    <footer id="footer">
-        <div class="d-flex align-items-center gap-2">
-            <div class="progress progress-bar-launcher flex-grow-1" id="prg-bar"
-                 role="progressbar"
-                 aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"
-                 aria-label="Download progress">
-                <div class="progress-bar progress-bar-striped progress-bar-animated fw-bold fs-6 progress-bar-fill"
-                     data-i18n="ui.progress"></div>
             </div>
-            <button id="btn-cancel-download" class="btn btn-sm btn-outline-danger d-none" type="button"
+        </main>
+
+        <!-- Footer: Progress + Controls -->
+        <footer id="footer">
+            <div class="d-flex align-items-center gap-2">
+                <div class="progress progress-bar-launcher flex-grow-1" id="prg-bar" role="progressbar"
+                    aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Download progress">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated fw-bold fs-6 progress-bar-fill"
+                        data-i18n="ui.progress"></div>
+                </div>
+                <button id="btn-cancel-download" class="btn btn-sm btn-outline-danger d-none" type="button"
                     data-i18n-title="ui.cancel_download">
-                <i class="fas fa-times" aria-hidden="true"></i>
-            </button>
-        </div>
-
-        <!-- Updater self-download progress (hidden until update download starts) -->
-        <div id="updater-progress-wrap" class="d-none mt-1">
-            <div class="progress updater-progress">
-                <div id="updater-progress-bar" class="progress-bar bg-info progress-bar-striped progress-bar-animated updater-progress-bar"
-                     role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
-                     aria-label="Updater progress"></div>
-            </div>
-            <small class="text-muted" data-i18n="ui.updater_downloading"></small>
-        </div>
-
-        <div class="row align-items-center mt-3">
-
-            <!-- Version + Log Button -->
-            <div class="col-4 d-flex align-items-center gap-2">
-                <p class="small text-truncate mb-0" id="version" aria-live="polite">
-                    <!-- Populated by JS -->
-                </p>
-                <button class="btn btn-sm p-0 position-relative log-toggle-btn d-none"
-                        id="btn-log-panel" type="button"
-                        data-bs-toggle="offcanvas" data-bs-target="#logPanel"
-                        aria-label="Diagnostics">
-                    <i class="fas fa-exclamation-circle text-warning" aria-hidden="true"></i>
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none"
-                          id="log-badge"></span>
+                    <i class="fas fa-times" aria-hidden="true"></i>
                 </button>
             </div>
 
-            <!-- Play Controls -->
-            <div class="col-4">
-                <div class="d-flex justify-content-center align-items-center">
-                    <button class="btn text-secondary me-3" id="settings"
-                            type="button" aria-label="Settings"
-                            data-i18n-title="ui.settings">
-                        <i class="fa fa-cog fa-2x" aria-hidden="true"></i>
-                    </button>
-                    <button class="btn btn-primary btn-lg rounded-pill px-5 shadow"
-                            id="play-btn" type="button" aria-label="Play">
-                        <strong data-i18n="ui.play"></strong>
-                    </button>
+            <!-- Updater self-download progress (hidden until update download starts) -->
+            <div id="updater-progress-wrap" class="d-none mt-1">
+                <div class="progress updater-progress">
+                    <div id="updater-progress-bar"
+                        class="progress-bar bg-info progress-bar-striped progress-bar-animated updater-progress-bar"
+                        role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
+                        aria-label="Updater progress"></div>
                 </div>
+                <small class="text-muted" data-i18n="ui.updater_downloading"></small>
             </div>
 
-            <!-- Locale + Theme -->
-            <div class="col-4 text-end">
-                <div class="d-flex justify-content-end align-items-center gap-2">
-                    <label for="locale-select" class="visually-hidden"
-                           data-i18n="ui.language"></label>
-                    <select class="form-select form-select-sm locale-select"
-                            id="locale-select" aria-label="Language">
-                        <option value="en">English</option>
-                        <option value="tr">Türkçe</option>
-                        <option value="ru">Русский</option>
-                    </select>
+            <div class="row align-items-center mt-3">
 
-                    <div id="theme" class="d-flex align-items-center gap-1">
-                        <small>
-                            <span data-i18n="ui.theme"></span>:
-                            <strong id="theme-source">Auto</strong>
-                        </small>
-                        <button class="btn btn-sm btn-outline-secondary"
-                                id="toggle-dark-mode" type="button"
-                                aria-label="Toggle dark mode">
-                            <i class="fas fa-moon" aria-hidden="true"></i>
+                <!-- Version + Log Button -->
+                <div class="col-4 d-flex align-items-center gap-2">
+                    <p class="small text-truncate mb-0" id="version" aria-live="polite">
+                        <!-- Populated by JS -->
+                    </p>
+                    <button class="btn btn-sm p-0 position-relative log-toggle-btn d-none" id="btn-log-panel"
+                        type="button" data-bs-toggle="offcanvas" data-bs-target="#logPanel" aria-label="Diagnostics">
+                        <i class="fas fa-exclamation-circle text-warning" aria-hidden="true"></i>
+                        <span
+                            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none"
+                            id="log-badge"></span>
+                    </button>
+                </div>
+
+                <!-- Play Controls -->
+                <div class="col-4">
+                    <div class="d-flex justify-content-center align-items-center">
+                        <button class="btn text-secondary me-3" id="settings" type="button" aria-label="Settings"
+                            data-i18n-title="ui.settings">
+                            <i class="fa fa-cog fa-2x" aria-hidden="true"></i>
+                        </button>
+                        <button class="btn btn-primary btn-lg rounded-pill px-5 shadow" id="play-btn" type="button"
+                            aria-label="Play">
+                            <strong data-i18n="ui.play"></strong>
                         </button>
                     </div>
                 </div>
-            </div>
 
-        </div>
-    </footer>
-
-</div><!-- /.container-fluid -->
-
-<!-- Settings Modal -->
-<div class="modal fade" id="settingsModal" tabindex="-1"
-     aria-labelledby="settingsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content text-body">
-
-            <div class="modal-header">
-                <h5 class="modal-title" id="settingsModalLabel"
-                    data-i18n="ui.settings"></h5>
-                <button type="button" class="btn-close"
-                        data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-
-            <div class="modal-body">
-
-                <!-- Server URL -->
-                <section id="server-url-section" aria-label="Server URL">
-                    <label class="form-label small mb-1" for="server-url-input"
-                           data-i18n="ui.server_url"></label>
-                    <div class="input-group input-group-sm mb-1">
-                        <input type="url" class="form-control" id="server-url-input"
-                               placeholder="http://your-vps/launcher/"
-                               autocomplete="off" spellcheck="false">
-                    </div>
-                    <div id="server-url-feedback" class="form-text d-none"></div>
-                </section>
-
-                <hr>
-
-                <!-- Game Language -->
-                <section aria-label="Game language">
-                    <label class="form-label small mb-1" for="game-language-select"
-                           data-i18n="ui.game_language"></label>
-                    <div class="input-group input-group-sm">
-                        <select class="form-select form-select-sm" id="game-language-select">
-                            <!-- populated by JS -->
+                <!-- Locale + Theme -->
+                <div class="col-4 text-end">
+                    <div class="d-flex justify-content-end align-items-center gap-2">
+                        <label for="locale-select" class="visually-hidden" data-i18n="ui.language"></label>
+                        <select class="form-select form-select-sm locale-select" id="locale-select"
+                            aria-label="Language">
+                            <option value="en">English</option>
+                            <option value="tr">Türkçe</option>
+                            <option value="ru">Русский</option>
                         </select>
+
+                        <div id="theme" class="d-flex align-items-center gap-1">
+                            <small>
+                                <span data-i18n="ui.theme"></span>:
+                                <strong id="theme-source">Auto</strong>
+                            </small>
+                            <button class="btn btn-sm btn-outline-secondary" id="toggle-dark-mode" type="button"
+                                aria-label="Toggle dark mode">
+                                <i class="fas fa-moon" aria-hidden="true"></i>
+                            </button>
+                        </div>
                     </div>
-                </section>
-
-                <hr>
-
-                <!-- Auto-launch on system startup -->
-                <div class="form-check form-switch mb-2">
-                    <input class="form-check-input" type="checkbox" id="chk-auto-launch" role="switch">
-                    <label class="form-check-label small" for="chk-auto-launch"
-                           data-i18n="ui.auto_launch"></label>
                 </div>
 
-                <div class="d-grid gap-2">
-                    <button class="btn btn-outline-secondary" id="btn-open-folder" type="button">
-                        <i class="fas fa-folder-open me-2" aria-hidden="true"></i>
-                        <span data-i18n="ui.open_folder"></span>
-                    </button>
-                    <button class="btn btn-outline-info" id="btn-check-updates" type="button">
-                        <i class="fas fa-sync-alt me-2" aria-hidden="true"></i>
-                        <span data-i18n="ui.check_updates"></span>
-                    </button>
-                </div>
-                <div id="update-check-feedback" class="form-text mt-1 d-none"></div>
+            </div>
+        </footer>
 
-                <!-- Wine Settings — shown only on non-Windows (JS toggles d-none) -->
-                <section id="wine-settings-section" class="mt-3 d-none"
-                         aria-label="Wine configuration">
+    </div><!-- /.container-fluid -->
+
+    <!-- Settings Modal -->
+    <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content text-body">
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="settingsModalLabel" data-i18n="ui.settings"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+
+                    <!-- Server URL -->
+                    <section id="server-url-section" aria-label="Server URL">
+                        <label class="form-label small mb-1" for="server-url-input" data-i18n="ui.server_url"></label>
+                        <div class="input-group input-group-sm mb-1">
+                            <input type="url" class="form-control" id="server-url-input"
+                                placeholder="http://your-vps/launcher/" autocomplete="off" spellcheck="false">
+                        </div>
+                        <div id="server-url-feedback" class="form-text d-none"></div>
+                    </section>
+
                     <hr>
-                    <h6 class="mb-2">
-                        <i class="fas fa-wine-glass me-2" aria-hidden="true"></i>
-                        <span data-i18n="ui.wine.section"></span>
-                    </h6>
 
-                    <div class="mb-2">
-                        <label class="form-label small mb-1" for="wine-path-input"
-                               data-i18n="ui.wine.path"></label>
+                    <!-- Game Language -->
+                    <section aria-label="Game language">
+                        <label class="form-label small mb-1" for="game-language-select"
+                            data-i18n="ui.game_language"></label>
                         <div class="input-group input-group-sm">
-                            <input type="text" class="form-control" id="wine-path-input"
-                                   placeholder="wine" autocomplete="off" spellcheck="false">
-                            <button class="btn btn-outline-secondary" id="btn-browse-wine"
-                                    type="button" aria-label="Browse for Wine executable">
-                                <i class="fas fa-folder-open" aria-hidden="true"></i>
-                                <span data-i18n="ui.wine.browse"></span>
-                            </button>
+                            <select class="form-select form-select-sm" id="game-language-select">
+                                <!-- populated by JS -->
+                            </select>
                         </div>
+                    </section>
+
+                    <hr>
+
+                    <!-- Auto-launch on system startup -->
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" id="chk-auto-launch" role="switch">
+                        <label class="form-check-label small" for="chk-auto-launch" data-i18n="ui.auto_launch"></label>
                     </div>
 
-                    <div class="mb-2">
-                        <label class="form-label small mb-1" for="wine-prefix-input"
-                               data-i18n="ui.wine.prefix"></label>
-                        <input type="text" class="form-control form-control-sm"
-                               id="wine-prefix-input"
-                               placeholder="~/.wine" autocomplete="off" spellcheck="false">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-secondary" id="btn-open-folder" type="button">
+                            <i class="fas fa-folder-open me-2" aria-hidden="true"></i>
+                            <span data-i18n="ui.open_folder"></span>
+                        </button>
+                        <button class="btn btn-outline-info" id="btn-check-updates" type="button">
+                            <i class="fas fa-sync-alt me-2" aria-hidden="true"></i>
+                            <span data-i18n="ui.check_updates"></span>
+                        </button>
                     </div>
+                    <div id="update-check-feedback" class="form-text mt-1 d-none"></div>
 
-                    <!-- DXVK Status -->
-                    <div class="d-flex align-items-center justify-content-between mt-2">
-                        <span class="small fw-semibold">DXVK</span>
-                        <div class="d-flex align-items-center gap-2">
-                            <span id="dxvk-badge" class="badge bg-secondary">
-                                <i class="fas fa-circle-notch fa-spin me-1" aria-hidden="true"></i>
-                                <span data-i18n="ui.wine.dxvk_checking"></span>
-                            </span>
-                            <button id="btn-install-dxvk" class="btn btn-warning btn-sm d-none" type="button">
-                                <i class="fas fa-download me-1" aria-hidden="true"></i>
-                                <span data-i18n="ui.wine.dxvk_install"></span>
-                            </button>
+                    <!-- Wine Settings — shown only on non-Windows (JS toggles d-none) -->
+                    <section id="wine-settings-section" class="mt-3 d-none" aria-label="Wine configuration">
+                        <hr>
+                        <h6 class="mb-2">
+                            <i class="fas fa-wine-glass me-2" aria-hidden="true"></i>
+                            <span data-i18n="ui.wine.section"></span>
+                        </h6>
+
+                        <div class="mb-2">
+                            <label class="form-label small mb-1" for="wine-path-input" data-i18n="ui.wine.path"></label>
+                            <div class="input-group input-group-sm">
+                                <input type="text" class="form-control" id="wine-path-input" placeholder="wine"
+                                    autocomplete="off" spellcheck="false">
+                                <button class="btn btn-outline-secondary" id="btn-browse-wine" type="button"
+                                    aria-label="Browse for Wine executable">
+                                    <i class="fas fa-folder-open" aria-hidden="true"></i>
+                                    <span data-i18n="ui.wine.browse"></span>
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                    <div id="dxvk-feedback" class="form-text d-none"></div>
-                </section>
-            </div>
 
-            <div class="modal-footer">
-                <button class="btn btn-primary w-100" id="btn-save-settings" type="button">
-                    <i class="fas fa-save me-1" aria-hidden="true"></i>
-                    <span data-i18n="ui.save"></span>
-                </button>
-            </div>
+                        <div class="mb-2">
+                            <label class="form-label small mb-1" for="wine-prefix-input"
+                                data-i18n="ui.wine.prefix"></label>
+                            <input type="text" class="form-control form-control-sm" id="wine-prefix-input"
+                                placeholder="~/.wine" autocomplete="off" spellcheck="false">
+                        </div>
 
+                        <!-- DXVK Status -->
+                        <div class="d-flex align-items-center justify-content-between mt-2">
+                            <span class="small fw-semibold">DXVK</span>
+                            <div class="d-flex align-items-center gap-2">
+                                <span id="dxvk-badge" class="badge bg-secondary">
+                                    <i class="fas fa-circle-notch fa-spin me-1" aria-hidden="true"></i>
+                                    <span data-i18n="ui.wine.dxvk_checking"></span>
+                                </span>
+                                <button id="btn-install-dxvk" class="btn btn-warning btn-sm d-none" type="button">
+                                    <i class="fas fa-download me-1" aria-hidden="true"></i>
+                                    <span data-i18n="ui.wine.dxvk_install"></span>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="dxvk-feedback" class="form-text d-none"></div>
+                    </section>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-primary w-100" id="btn-save-settings" type="button">
+                        <i class="fas fa-save me-1" aria-hidden="true"></i>
+                        <span data-i18n="ui.save"></span>
+                    </button>
+                </div>
+
+            </div>
         </div>
     </div>
-</div>
 
-<!-- Utility Dialog Modal -->
-<div class="modal fade" id="appModal" tabindex="-1"
-     aria-labelledby="appModalLabel" aria-hidden="true"
-     data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content">
-            <div class="modal-body" id="appModalBody"></div>
-            <div class="modal-footer p-2 gap-2">
-                <button type="button" class="btn btn-secondary btn-sm d-none"
-                        id="appModalCancel"></button>
-                <button type="button" class="btn btn-primary btn-sm"
-                        id="appModalOk"></button>
+    <!-- Utility Dialog Modal -->
+    <div class="modal fade" id="appModal" tabindex="-1" aria-labelledby="appModalLabel" aria-hidden="true"
+        data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body" id="appModalBody"></div>
+                <div class="modal-footer p-2 gap-2">
+                    <button type="button" class="btn btn-secondary btn-sm d-none" id="appModalCancel"></button>
+                    <button type="button" class="btn btn-primary btn-sm" id="appModalOk"></button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Log Panel (Offcanvas) -->
-<div class="offcanvas offcanvas-bottom" id="logPanel" tabindex="-1"
-     aria-labelledby="logPanelLabel">
-    <div class="offcanvas-header py-2 border-bottom">
-        <h6 class="offcanvas-title mb-0" id="logPanelLabel">
-            <i class="fas fa-terminal me-2" aria-hidden="true"></i>
-            <span data-i18n="ui.diagnostics"></span>
-        </h6>
-        <div class="ms-auto d-flex align-items-center gap-2">
-            <button class="btn btn-sm btn-outline-secondary py-0" id="btn-clear-log" type="button"
+    <!-- Log Panel (Offcanvas) -->
+    <div class="offcanvas offcanvas-bottom" id="logPanel" tabindex="-1" aria-labelledby="logPanelLabel">
+        <div class="offcanvas-header py-2 border-bottom">
+            <h6 class="offcanvas-title mb-0" id="logPanelLabel">
+                <i class="fas fa-terminal me-2" aria-hidden="true"></i>
+                <span data-i18n="ui.diagnostics"></span>
+            </h6>
+            <div class="ms-auto d-flex align-items-center gap-2">
+                <button class="btn btn-sm btn-outline-secondary py-0" id="btn-clear-log" type="button"
                     data-i18n="ui.clear_log"></button>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+        </div>
+        <div class="offcanvas-body p-0">
+            <div id="log-entries" role="log" aria-live="polite"></div>
         </div>
     </div>
-    <div class="offcanvas-body p-0">
-        <div id="log-entries" role="log" aria-live="polite"></div>
-    </div>
-</div>
 
-<!-- Scripts — placed at end of body for performance -->
-<script src="./libs/js/jquery.min.js"></script>
-<script src="./libs/js/bootstrap.bundle.min.js"></script>
-<script src="./renderer.js"></script>
+    <!-- Scripts — placed at end of body for performance -->
+    <script src="./libs/js/jquery.min.js"></script>
+    <script src="./libs/js/bootstrap.bundle.min.js"></script>
+    <script src="./renderer.js"></script>
 
 </body>
+
 </html>

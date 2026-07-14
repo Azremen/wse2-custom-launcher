@@ -4,7 +4,7 @@ const { app, BrowserWindow, ipcMain, nativeTheme, globalShortcut, shell, dialog 
 const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const fs = require('fs');
-const AdmZip = require('adm-zip');
+const extract = require('extract-zip');
 const ini = require('ini');
 const crypto = require('crypto');
 const { spawn } = require('child_process');
@@ -19,11 +19,12 @@ const WRITE_TEST_FILE_NAME = '.test_write';
 const VERSION_FILE = 'version.json';
 const MODULE_IMAGE_FILE = 'main.bmp';
 const MODULE_CONFIG_FILE = 'module_config_template.ini';
+const MODULE_MANIFEST_FILE = 'module_manifest.json';
 const APP_CONFIG_FILE = 'config.json';
 
 const IS_DEV = !app.isPackaged;
 const IS_WINDOWS = process.platform === 'win32';
-const IS_LINUX   = process.platform === 'linux';
+const IS_LINUX = process.platform === 'linux';
 const IS_MAC = process.platform === 'darwin';
 
 // ─── Logger (electron-log) ───────────────────────────────────────────────────
@@ -63,8 +64,8 @@ const IS_MAC = process.platform === 'darwin';
 })();
 
 // Route all console calls through electron-log and forward to the renderer.
-console.log   = (...args) => { log.info(...args); };
-console.warn  = (...args) => { log.warn(...args);  sendLogToRenderer('WARN',  args); };
+console.log = (...args) => { log.info(...args); };
+console.warn = (...args) => { log.warn(...args); sendLogToRenderer('WARN', args); };
 console.error = (...args) => { log.error(...args); sendLogToRenderer('ERROR', args); };
 
 function sendLogToRenderer(level, args) {
@@ -436,7 +437,7 @@ ipcMain.handle('remove-module', async (_, modPath) => {
             return false;
         }
 
-        const resolved        = path.resolve(modPath);
+        const resolved = path.resolve(modPath);
         const resolvedModules = path.resolve(modulesPath);
 
         // Ensure the target is a direct child of modulesPath (not the root itself)
@@ -782,6 +783,7 @@ async function scanModules() {
                 path: fullPath,
                 imagePath: null,
                 configExists: false,
+                manifest: null,
             };
 
             const versionFile = path.join(fullPath, VERSION_FILE);
@@ -802,6 +804,17 @@ async function scanModules() {
                 await fs.promises.access(path.join(fullPath, MODULE_CONFIG_FILE));
                 modData.configExists = true;
             } catch { /* no config */ }
+
+            const manifestFile = path.join(fullPath, MODULE_MANIFEST_FILE);
+            try {
+                const raw = await fs.promises.readFile(manifestFile, 'utf-8');
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === 'object' && parsed.files && typeof parsed.files === 'object') {
+                    modData.manifest = parsed;
+                }
+            } catch (err) {
+                if (err.code !== 'ENOENT') console.error(`[Modules] Failed to parse ${MODULE_MANIFEST_FILE} for "${name}":`, err);
+            }
 
             return modData;
         }));
@@ -877,7 +890,7 @@ async function saveConfigData(modulePath, configData) {
             return false;
         }
 
-        const resolved        = path.resolve(modulePath);
+        const resolved = path.resolve(modulePath);
         const resolvedModules = path.resolve(modulesPath);
 
         const rel = path.relative(resolvedModules, resolved);
@@ -945,7 +958,164 @@ async function hashFile(filePath, algorithm = 'md5') {
     });
 }
 
+function normalizeRelativePath(filePath) {
+    return String(filePath || '').replace(/\\/g, '/').replace(/^\.\//, '');
+}
+
+function manifestToMap(manifest) {
+    const map = new Map();
+    if (!manifest || typeof manifest !== 'object') return map;
+
+    if (Array.isArray(manifest.files)) {
+        for (const entry of manifest.files) {
+            if (!entry || typeof entry !== 'object') continue;
+            const relPath = normalizeRelativePath(entry.path || entry.name);
+            if (!relPath) continue;
+            map.set(relPath, String(entry.md5 || entry.hash || '').toLowerCase());
+        }
+    } else if (manifest.files && typeof manifest.files === 'object') {
+        for (const [relPathRaw, hash] of Object.entries(manifest.files)) {
+            const relPath = normalizeRelativePath(relPathRaw);
+            if (!relPath) continue;
+            map.set(relPath, String(hash || '').toLowerCase());
+        }
+    }
+
+    return map;
+}
+
+async function readStoredManifest(moduleDir) {
+    const manifestPath = path.join(moduleDir, MODULE_MANIFEST_FILE);
+    try {
+        const raw = await fs.promises.readFile(manifestPath, 'utf-8');
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object' && parsed.files && typeof parsed.files === 'object') {
+            return parsed;
+        }
+    } catch (err) {
+        if (err.code !== 'ENOENT') console.error(`[Install] Failed to read ${MODULE_MANIFEST_FILE}:`, err);
+    }
+    return null;
+}
+
+async function writeModuleManifest(moduleDir, manifest, version) {
+    const manifestPath = path.join(moduleDir, MODULE_MANIFEST_FILE);
+    const payload = {
+        version: version ?? null,
+        generatedAt: new Date().toISOString(),
+        files: manifestToObject(manifest)
+    };
+    await fs.promises.writeFile(manifestPath, JSON.stringify(payload, null, 4));
+}
+
+function manifestToObject(manifest) {
+    const obj = {};
+    for (const [relPath, hash] of manifestToMap(manifest).entries()) {
+        obj[relPath] = hash;
+    }
+    return obj;
+}
+
+async function copyFileEnsuringDirectory(sourcePath, targetPath) {
+    await fs.promises.mkdir(path.dirname(targetPath), { recursive: true });
+    await fs.promises.copyFile(sourcePath, targetPath);
+}
+
+async function removeFileIfExists(filePath) {
+    try {
+        await fs.promises.unlink(filePath);
+    } catch (err) {
+        if (err.code !== 'ENOENT') throw err;
+    }
+}
+
+async function syncModuleFiles(sourceDir, targetDir, remoteManifest, installedManifest) {
+    const remoteMap = manifestToMap(remoteManifest);
+    const installedMap = manifestToMap(installedManifest);
+    let copiedCount = 0;
+    let skippedCount = 0;
+    let removedCount = 0;
+
+    if (remoteMap.size === 0) {
+        const files = await fs.promises.readdir(sourceDir);
+        await Promise.all(files.map(file =>
+            copyFileEnsuringDirectory(path.join(sourceDir, file), path.join(targetDir, file))
+        ));
+        return;
+    }
+
+    const remotePaths = new Set(remoteMap.keys());
+
+    if (!installedManifest) {
+        await fs.promises.mkdir(targetDir, { recursive: true });
+        for (const relPath of remotePaths) {
+            console.log(`[Install] Copying new file: ${relPath}`);
+            await copyFileEnsuringDirectory(path.join(sourceDir, relPath), path.join(targetDir, relPath));
+            copiedCount++;
+        }
+        console.log(`[Install] Selective update summary: copied=${copiedCount}, skipped=${skippedCount}, removed=${removedCount}`);
+        return;
+    }
+
+    for (const [relPath, remoteHash] of remoteMap.entries()) {
+        const sourcePath = path.join(sourceDir, relPath);
+        const targetPath = path.join(targetDir, relPath);
+        const installedHash = installedMap.get(relPath) || null;
+
+        let currentHash = null;
+        try {
+            await fs.promises.access(targetPath);
+            currentHash = await hashFile(targetPath);
+        } catch {
+            currentHash = null;
+        }
+
+        if (!currentHash) {
+            console.log(`[Install] Copying missing file: ${relPath}`);
+            await copyFileEnsuringDirectory(sourcePath, targetPath);
+            copiedCount++;
+            continue;
+        }
+
+        if (currentHash === remoteHash) {
+            skippedCount++;
+            continue;
+        }
+
+        if (installedHash && currentHash === installedHash && remoteHash !== installedHash) {
+            console.log(`[Install] Updating changed file: ${relPath}`);
+            await copyFileEnsuringDirectory(sourcePath, targetPath);
+            copiedCount++;
+        } else {
+            console.log(`[Install] Skipping user-modified file: ${relPath}`);
+            skippedCount++;
+        }
+    }
+
+    for (const [relPath, installedHash] of installedMap.entries()) {
+        if (remotePaths.has(relPath)) continue;
+
+        const targetPath = path.join(targetDir, relPath);
+        let currentHash = null;
+        try {
+            await fs.promises.access(targetPath);
+            currentHash = await hashFile(targetPath);
+        } catch {
+            currentHash = null;
+        }
+
+        if (currentHash && currentHash === installedHash) {
+            console.log(`[Install] Removing obsolete file: ${relPath}`);
+            await removeFileIfExists(targetPath);
+            removedCount++;
+        }
+    }
+
+    console.log(`[Install] Selective update summary: copied=${copiedCount}, skipped=${skippedCount}, removed=${removedCount}`);
+}
+
 async function processDownloadedModule(zipPath, meta) {
+    let tempDir = null;
     try {
         console.log(`[Install] Processing "${meta.name}"...`);
 
@@ -971,66 +1141,60 @@ async function processDownloadedModule(zipPath, meta) {
             }
         }
 
-        // Extract
+        // Extract to temp dir using streaming (handles large files without loading into memory)
         console.log('[Install] Extracting...');
-        const zip = new AdmZip(zipPath);
+        tempDir = path.join(modulesPath, `_tmp_${Date.now()}`);
+        await fs.promises.mkdir(tempDir, { recursive: true });
+        await extract(zipPath, { dir: tempDir });
 
-        // Detect root folder using only the first few entries to avoid loading all metadata
-        const entries = zip.getEntries();
-        const sampleEntries = entries.slice(0, 20);
-        let rootFolderName = null;
+        // Detect root folder from extracted content
+        const topLevel = await fs.promises.readdir(tempDir);
+        const targetModuleDir = path.join(modulesPath, meta.name);
 
-        if (sampleEntries.length > 0) {
-            const firstParts = sampleEntries[0].entryName.split('/');
-            const potentialRoot = firstParts[0] + '/';
-            const allUnderRoot = sampleEntries.every(
-                e => e.entryName.startsWith(potentialRoot) || e.entryName === potentialRoot
-            );
-            if (firstParts.length > 1 && firstParts[0] && allUnderRoot) {
-                rootFolderName = firstParts[0];
+        let sourceDir = tempDir;
+        if (topLevel.length === 1) {
+            const firstStat = await fs.promises.stat(path.join(tempDir, topLevel[0]));
+            if (firstStat.isDirectory()) {
+                sourceDir = path.join(tempDir, topLevel[0]);
             }
         }
 
-        const targetModuleDir = path.join(modulesPath, meta.name);
-        let tempDir = null;
+        const remoteManifest = meta.manifest || null;
+        const installedManifest = await readStoredManifest(targetModuleDir);
 
-        if (!rootFolderName) {
-            // Flat zip - extract directly into the module folder
+        if (remoteManifest && Object.keys(manifestToObject(remoteManifest)).length > 0) {
             await fs.promises.mkdir(targetModuleDir, { recursive: true });
-            await new Promise((resolve, reject) =>
-                zip.extractAllToAsync(targetModuleDir, true, false, err => err ? reject(err) : resolve())
-            );
-        } else if (rootFolderName === meta.name) {
-            // Root folder already matches the module name
-            await new Promise((resolve, reject) =>
-                zip.extractAllToAsync(modulesPath, true, false, err => err ? reject(err) : resolve())
-            );
+
+            if (meta.cleanInstall || !installedManifest) {
+                console.log('[Install] Performing full refresh from manifest...');
+                await fs.promises.rm(targetModuleDir, { recursive: true, force: true });
+                await fs.promises.mkdir(targetModuleDir, { recursive: true });
+                await syncModuleFiles(sourceDir, targetModuleDir, remoteManifest, null);
+            } else {
+                console.log('[Install] Performing manifest-aware selective update...');
+                await syncModuleFiles(sourceDir, targetModuleDir, remoteManifest, installedManifest);
+            }
         } else {
-            // Root folder has a different name - extract to temp, then rename/merge
-            tempDir = path.join(modulesPath, `_tmp_${Date.now()}`);
-            await new Promise((resolve, reject) =>
-                zip.extractAllToAsync(tempDir, true, false, err => err ? reject(err) : resolve())
-            );
-
-            const extractedRoot = path.join(tempDir, rootFolderName);
-
+            // Fallback for older metadata: move/merge source into target module dir.
+            let targetExists = false;
             try {
                 await fs.promises.access(targetModuleDir);
-                // Dir exists — merge
-                const files = await fs.promises.readdir(extractedRoot);
+                targetExists = true;
+            } catch { /* doesn't exist */ }
+
+            if (targetExists) {
+                const files = await fs.promises.readdir(sourceDir);
                 await Promise.all(files.map(file =>
                     fs.promises.cp(
-                        path.join(extractedRoot, file),
+                        path.join(sourceDir, file),
                         path.join(targetModuleDir, file),
                         { recursive: true, force: true }
                     )
                 ));
-            } catch {
-                // Dir doesn't exist — rename
-                await fs.promises.rename(extractedRoot, targetModuleDir);
+            } else {
+                await fs.promises.rename(sourceDir, targetModuleDir);
+                if (sourceDir === tempDir) tempDir = null;
             }
-
-            await fs.promises.rm(tempDir, { recursive: true, force: true });
         }
 
         // Write version.json
@@ -1046,6 +1210,14 @@ async function processDownloadedModule(zipPath, meta) {
             }
         }
 
+        if (remoteManifest && Object.keys(manifestToObject(remoteManifest)).length > 0) {
+            try {
+                await writeModuleManifest(targetModuleDir, remoteManifest, meta.version);
+            } catch (err) {
+                console.error('[Install] Failed to write module manifest:', err);
+            }
+        }
+
         mainWindow?.webContents.send('download-complete');
         console.log(`[Install] "${meta.name}" installed successfully.`);
     } catch (err) {
@@ -1053,6 +1225,6 @@ async function processDownloadedModule(zipPath, meta) {
         mainWindow?.webContents.send('download-error', err.message);
     } finally {
         setTimeout(() => safeUnlink(zipPath), 1000);
-        if (tempDir) setTimeout(() => fs.promises.rm(tempDir, { recursive: true, force: true }).catch(() => {}), 1000);
+        if (tempDir) setTimeout(() => fs.promises.rm(tempDir, { recursive: true, force: true }).catch(() => { }), 1000);
     }
 }

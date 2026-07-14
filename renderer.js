@@ -2,10 +2,10 @@
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const DEFAULT_REMOTE_URL = 'http://gokberkalkis.com:8080/';
-const REMOTE_URL_KEY     = 'remoteUrl';
-const LOCALE_KEY         = 'locale';
-const THEME_KEY          = 'theme';
-const DEFAULT_LOCALE     = 'en';
+const REMOTE_URL_KEY = 'remoteUrl';
+const LOCALE_KEY = 'locale';
+const THEME_KEY = 'theme';
+const DEFAULT_LOCALE = 'en';
 
 // ── State ────────────────────────────────────────────────────────────────────
 let REMOTE_URL = localStorage.getItem(REMOTE_URL_KEY) || DEFAULT_REMOTE_URL;
@@ -81,7 +81,7 @@ function showDialog(message, { isConfirm = false } = {}) {
     });
 }
 
-const showAlert   = msg => showDialog(msg, { isConfirm: false });
+const showAlert = msg => showDialog(msg, { isConfirm: false });
 const showConfirm = msg => showDialog(msg, { isConfirm: true });
 
 function syncThemeText() {
@@ -134,7 +134,7 @@ function bumpLogBadge() {
     $('#log-badge').removeClass('d-none').text(unreadLogCount > 99 ? '99+' : unreadLogCount);
 }
 
-const _rWarn  = console.warn.bind(console);
+const _rWarn = console.warn.bind(console);
 const _rError = console.error.bind(console);
 console.warn = (...args) => {
     _rWarn(...args);
@@ -706,7 +706,7 @@ async function refreshModuleList() {
 
     // Sync activeModule with refreshed data so buttons/state stay accurate
     if (activeModule) {
-        const freshLocal  = localModules.find(m => m.name === activeModule.name);
+        const freshLocal = localModules.find(m => m.name === activeModule.name);
         const freshRemote = Array.isArray(remoteModules) ? remoteModules.find(m => m.name === activeModule.name) : null;
 
         if (!freshLocal && !freshRemote) {
@@ -718,16 +718,17 @@ async function refreshModuleList() {
         } else {
             // Rebuild the merged mod object with latest data so buttons are correct
             const installed = freshLocal || null;
-            const remote    = freshRemote || null;
+            const remote = freshRemote || null;
             activeModule = {
                 ...activeModule,
-                localVersion:  installed ? installed.version  : null,
-                path:          installed ? installed.path     : null,
-                img:           installed ? installed.imagePath : null,
-                configExists:  installed ? installed.configExists : false,
-                isInstalled:   !!installed,
-                remoteVersion: remote    ? remote.version     : activeModule.remoteVersion,
-                url:           remote    ? (activeModule.url  || null) : null,
+                localVersion: installed ? installed.version : null,
+                path: installed ? installed.path : null,
+                img: installed ? installed.imagePath : null,
+                configExists: installed ? installed.configExists : false,
+                isInstalled: !!installed,
+                remoteVersion: remote ? remote.version : activeModule.remoteVersion,
+                manifest: remote ? (remote.manifest || null) : (activeModule.manifest || null),
+                url: remote ? (activeModule.url || null) : null,
             };
             updateModuleButtons(activeModule);
         }
@@ -767,6 +768,7 @@ function renderList() {
                 md5: rm.md5 || null,
                 size: rm.size || null,
                 description: rm.description || null,
+                manifest: rm.manifest || null,
                 img: installed ? installed.imagePath : null,
                 configExists: installed ? installed.configExists : false,
                 isInstalled: !!installed
@@ -784,6 +786,7 @@ function renderList() {
                 localVersion: lm.version,
                 path: lm.path,
                 url: null,
+                manifest: lm.manifest || null,
                 img: lm.imagePath,
                 configExists: lm.configExists,
                 isInstalled: true
@@ -828,11 +831,12 @@ function selectModule(mod, $btn) {
     $btn.addClass('active');
 
     // Smart Default for Clean Install
-    // If installed and URL suggests patch -> Default OFF
-    // If installed and URL suggests full -> Default ON (safer to wipe old version usually)
-    // If not installed -> Default OFF (doesn't matter)
+    // If the installed version differs from the remote one, default to a clean
+    // reinstall so the update replaces the old module contents consistently.
     let defaultClean = false;
-    if (mod.isInstalled && mod.url) {
+    if (mod.isInstalled && mod.remoteVersion && mod.localVersion && mod.remoteVersion !== mod.localVersion) {
+        defaultClean = true;
+    } else if (mod.isInstalled && mod.url) {
         const urlLower = mod.url.toLowerCase();
         const isPatch = urlLower.includes('update') || urlLower.includes('patch');
         defaultClean = !isPatch;
@@ -889,9 +893,9 @@ function selectModule(mod, $btn) {
 
 function updateModuleButtons(mod) {
     const installBtn = $('#btn-install');
-    const removeBtn  = $('#btn-remove');
-    const configBtn  = $('#btn-configure');
-    const playBtn    = $('#play-btn');
+    const removeBtn = $('#btn-remove');
+    const configBtn = $('#btn-configure');
+    const playBtn = $('#play-btn');
 
     if (mod.isInstalled) {
         removeBtn.prop('disabled', false).text(t('ui.remove'));
@@ -924,6 +928,7 @@ function startDownload(url) {
         name: activeModule.name,
         version: activeModule.remoteVersion,
         md5: activeModule.md5 || null,
+        manifest: activeModule.manifest || null,
         cleanInstall: isCleanInstall
     });
 }

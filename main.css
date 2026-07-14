@@ -1,11 +1,17 @@
 /* ─── Base ───────────────────────────────────────────────────────────────── */
 
 @media (prefers-color-scheme: dark) {
-    body { background: #333; color: white; }
+    body {
+        background: #333;
+        color: white;
+    }
 }
 
 @media (prefers-color-scheme: light) {
-    body { background: #ddd; color: black; }
+    body {
+        background: #ddd;
+        color: black;
+    }
 }
 
 html,
@@ -30,12 +36,12 @@ body {
     flex-direction: column;
 }
 
-#top-area > .row {
+#top-area>.row {
     flex: 1;
     overflow: hidden;
 }
 
-#top-area > .row > [class*="col-"] {
+#top-area>.row>[class*="col-"] {
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -57,7 +63,7 @@ body {
     border-bottom: 1px solid #555;
 }
 
-#list-pos > button {
+#list-pos>button {
     height: fit-content;
     width: inherit;
 }
@@ -167,8 +173,13 @@ body {
     line-height: 1.4;
 }
 
-.log-entry.log-warn  { color: #ffc107; }
-.log-entry.log-error { color: #f85149; }
+.log-entry.log-warn {
+    color: #ffc107;
+}
+
+.log-entry.log-error {
+    color: #f85149;
+}
 
 .log-toggle-btn {
     font-size: 1rem;
@@ -177,7 +188,9 @@ body {
     background: transparent;
 }
 
-.log-toggle-btn:focus { box-shadow: none; }
+.log-toggle-btn:focus {
+    box-shadow: none;
+}
 
 /* ─── Config Window ──────────────────────────────────────────────────────── */
 

@@ -33,11 +33,11 @@ function readMeta(string $moduleName): array
 
     return [
         'version'     => (is_array($meta) && isset($meta['version']) && is_string($meta['version']))
-                            ? $meta['version']
-                            : DEFAULT_VERSION,
+            ? $meta['version']
+            : DEFAULT_VERSION,
         'description' => (is_array($meta) && isset($meta['description']) && is_string($meta['description']))
-                            ? $meta['description']
-                            : null,
+            ? $meta['description']
+            : null,
     ];
 }
 
@@ -79,6 +79,130 @@ function resolvemd5(string $zipPath): ?string
     return $hash ?: null;
 }
 
+/**
+ * Return a cached file manifest for a ZIP archive.
+ * The manifest contains per-file MD5 hashes and relative paths.
+ */
+function readManifest(string $zipPath): ?array
+{
+    if (!class_exists('ZipArchive') || !is_readable($zipPath)) {
+        return null;
+    }
+
+    if (!is_dir(CACHE_DIR)) {
+        mkdir(CACHE_DIR, 0750, true);
+    }
+
+    $cacheFile    = CACHE_DIR . '/' . basename($zipPath) . '.manifest.json';
+    $currentMtime = filemtime($zipPath);
+
+    if (is_readable($cacheFile)) {
+        $cached = json_decode(file_get_contents($cacheFile), true);
+        if (
+            is_array($cached)
+            && isset($cached['mtime'], $cached['manifest'])
+            && (int) $cached['mtime'] === $currentMtime
+            && is_array($cached['manifest'])
+        ) {
+            return $cached['manifest'];
+        }
+    }
+
+    $zip = new ZipArchive();
+    if ($zip->open($zipPath) !== true) {
+        return null;
+    }
+
+    $files = [];
+    $rootPrefix = null;
+    $rootName = null;
+    $allUnderRoot = true;
+
+    for ($i = 0; $i < $zip->numFiles; $i++) {
+        $stat = $zip->statIndex($i);
+        $name = $stat['name'] ?? '';
+        $name = str_replace('\\', '/', $name);
+
+        if ($name === '' || str_ends_with($name, '/')) {
+            continue;
+        }
+
+        $parts = explode('/', $name, 2);
+        if (count($parts) < 2 || $parts[0] === '') {
+            $allUnderRoot = false;
+            break;
+        }
+
+        $candidatePrefix = $parts[0] . '/';
+        if ($rootPrefix === null) {
+            $rootPrefix = $candidatePrefix;
+            $rootName = $parts[0];
+        } elseif ($rootPrefix !== $candidatePrefix) {
+            $allUnderRoot = false;
+            break;
+        }
+    }
+
+    if (!$allUnderRoot) {
+        $rootPrefix = null;
+        $rootName = null;
+    }
+
+    for ($i = 0; $i < $zip->numFiles; $i++) {
+        $stat = $zip->statIndex($i);
+        $name = $stat['name'] ?? '';
+        $name = str_replace('\\', '/', $name);
+
+        if ($name === '' || str_ends_with($name, '/')) {
+            continue;
+        }
+
+        $relativePath = $name;
+        if ($rootPrefix !== null && str_starts_with($relativePath, $rootPrefix)) {
+            $relativePath = substr($relativePath, strlen($rootPrefix));
+        }
+
+        if ($relativePath === '') {
+            continue;
+        }
+
+        $stream = $zip->getStream($stat['name']);
+        if ($stream === false) {
+            continue;
+        }
+
+        $hashCtx = hash_init('md5');
+        while (!feof($stream)) {
+            $chunk = fread($stream, 8192);
+            if ($chunk !== false && $chunk !== '') {
+                hash_update($hashCtx, $chunk);
+            }
+        }
+        fclose($stream);
+
+        $files[] = [
+            'path' => $relativePath,
+            'md5'  => hash_final($hashCtx),
+            'size' => isset($stat['size']) ? (int) $stat['size'] : null,
+        ];
+    }
+
+    $zip->close();
+
+    $manifest = [
+        'root'  => $rootName,
+        'files' => $files,
+    ];
+
+    file_put_contents(
+        $cacheFile,
+        json_encode(['mtime' => $currentMtime, 'manifest' => $manifest], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+        LOCK_EX
+    );
+
+    return $manifest;
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 $modules = [];
@@ -93,6 +217,7 @@ foreach (glob(__DIR__ . '/*.zip') ?: [] as $zipPath) {
 
     $meta     = readMeta($moduleName);
     $filesize = filesize($zipPath);
+    $manifest = readManifest($zipPath);
 
     $modules[] = [
         'name'        => $moduleName,
@@ -101,6 +226,7 @@ foreach (glob(__DIR__ . '/*.zip') ?: [] as $zipPath) {
         'url'         => $filename,
         'md5'         => resolvemd5($zipPath),
         'size'        => $filesize !== false ? $filesize : null,
+        'manifest'    => $manifest,
     ];
 }
 
