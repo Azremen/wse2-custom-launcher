@@ -13,7 +13,7 @@ contextBridge.exposeInMainWorld('api', {
         checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
         cancelDownload: () => ipcRenderer.invoke('cancel-download'),
         openFolder: () => ipcRenderer.invoke('open-install-folder'),
-        launch: (moduleName, useX64) => ipcRenderer.invoke('launch-game', moduleName, useX64),
+        launch: (moduleName, modulePath, useX64) => ipcRenderer.invoke('launch-game', moduleName, modulePath, useX64),
         hasX64: () => ipcRenderer.invoke('has-x64-executable'),
         getAutoLaunch: () => ipcRenderer.invoke('get-auto-launch'),
         setAutoLaunch: (val) => ipcRenderer.invoke('set-auto-launch', val),

@@ -21,7 +21,7 @@ A custom launcher for Warband Script Enhancer 2 (WSE2) by **Azremen**.
 
 ### Steam Workshop
 
-The launcher reads your subscribed items through the Steamworks API, exactly like the official WSE2 launcher. Because the game engine only loads modules from its own `Modules` folder, each workshop item is exposed there as a **junction/symlink** — nothing is copied, and Steam updates apply instantly.
+The launcher reads your subscribed items through the Steamworks API, exactly like the official WSE2 launcher. Workshop items are kept in Steam's installed workshop folders and are shown directly in the launcher; they are not copied or linked into `Modules`, so symbolic-link privileges are not required.
 
 - Steam must be running and the game must be owned by the signed-in account.
 - If Steam is unavailable, the launcher falls back to scanning `steamapps/workshop/content/48700`.
@@ -64,9 +64,8 @@ npm run dist:linux  # Linux (see note below)
 npm run dist:mac    # macOS only (must run on macOS)
 ```
 
-> **Building the AppImage on Windows fails** with `EPERM: operation not permitted, symlink`.
-> Enable **Developer Mode** (Settings → Privacy & security → For developers), build from WSL,
-> or simply let GitHub Actions produce the Linux artifact.
+> **Building the AppImage on Windows requires a Linux packaging environment.**
+> Build it from WSL/Linux or let GitHub Actions produce the Linux artifact. The launcher itself does not require symbolic-link privileges for workshop modules.
 
 ### Release Secrets
 
@@ -138,7 +137,7 @@ Paste it into the `CSC_LINK` secret and set `CSC_KEY_PASSWORD`.
 
 ### Steam Atölyesi
 
-Başlatıcı, abone olduğunuz öğeleri resmi WSE2 başlatıcısıyla aynı şekilde Steamworks API üzerinden okur. Oyun motoru yalnızca kendi `Modules` klasöründen modül yükleyebildiği için her atölye öğesi oraya **junction/symlink** olarak bağlanır — dosya kopyalanmaz, Steam güncellemeleri anında yansır.
+Başlatıcı, abone olduğunuz öğeleri resmi WSE2 başlatıcısıyla aynı şekilde Steamworks API üzerinden okur. Atölye öğeleri Steam'in kurulu atölye klasörlerinden doğrudan listelenir; `Modules` klasörüne kopyalanmaz veya bağlanmaz, bu nedenle sembolik bağlantı yetkisi gerekmez.
 
 - Steam açık olmalı ve oyun giriş yapılmış hesapta sahipli olmalıdır.
 - Steam erişilemezse `steamapps/workshop/content/48700` klasörü taranarak devam edilir.
@@ -253,7 +252,7 @@ CSC_KEY_PASSWORD=sifreniz
 
 ### Steam Workshop
 
-Лаунчер читает ваши подписки через Steamworks API — так же, как официальный лаунчер WSE2. Поскольку движок загружает модули только из своей папки `Modules`, каждый элемент мастерской подключается туда как **junction/symlink** — файлы не копируются, обновления Steam применяются сразу.
+Лаунчер читает ваши подписки через Steamworks API — так же, как официальный лаунчер WSE2. Элементы мастерской берутся непосредственно из установленных папок Steam и отображаются в лаунчере; они не копируются и не подключаются к папке `Modules`, поэтому права на символические ссылки не требуются.
 
 - Steam должен быть запущен, а игра — принадлежать текущему аккаунту.
 - Если Steam недоступен, выполняется сканирование `steamapps/workshop/content/48700`.

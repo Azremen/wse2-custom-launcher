@@ -385,7 +385,7 @@ async function initMainWindow() {
 
     $('#play-btn').on('click', async () => {
         if (activeModule && activeModule.isInstalled) {
-            window.api.launcher.launch(activeModule.name, $('#x64-toggle').is(':checked'));
+                window.api.launcher.launch(activeModule.launchName || activeModule.name, activeModule.path, $('#x64-toggle').is(':checked'));
         } else {
             await showAlert(t("ui.not_installed"));
         }

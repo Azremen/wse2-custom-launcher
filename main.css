@@ -203,13 +203,18 @@ a {
     max-width: 100%;
     max-height: 400px;
     object-fit: contain;
+    box-sizing: border-box;
+    background-color: var(--inset-fill-strong);
+    padding: 10px;
     border: 1px solid var(--border-strong);
     border-radius: 4px 9px 6px 10px;
-    /* Flex children default to min-height:auto, which refuses to shrink
-       below the image's intrinsic size — that's what was pushing it over
-       the badges/description below. Letting it shrink (and reserving the
-       info block's own space via flex:none) keeps them from overlapping. */
-    flex: 1 1 auto;
+    /* flex-basis:auto sizes a replaced element like this one from its own
+       intrinsic aspect ratio stretched to the container's width — for a
+       tall portrait image that computes to a height far past max-height,
+       which is what was pushing it over the badges/description below.
+       flex-basis:0 sizes it from available space instead, so max-height
+       actually clamps it and object-fit:contain scales it inside that. */
+    flex: 1 1 0;
     min-height: 0;
 }
 
@@ -219,25 +224,30 @@ a {
 
 /* A quiet empty state when nothing has a banner yet — a real public-domain
    woodcut (Dürer, "The Knight on Horseback and the Lansquenet", c. 1496-97,
-   National Gallery of Art, CC0) rather than blank space. Pure CSS, reacts
-   automatically whenever renderer.js toggles the d-none class on the img. */
-section[aria-label="Module preview"]:has(#module-img.d-none) {
-    background-image: url('./assets/knight-placeholder.jpg');
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: 50% 40%;
-    border-radius: 4px 9px 6px 10px;
+   National Gallery of Art, CC0) rather than blank space. This is a real
+   <img> (see main.html), not a generated ::before or a section background —
+   both of those turned out not to reliably honor max-height/object-fit for
+   a portrait source, and a background paints behind everything including
+   the info plaque instead of being pushed above it the way a real image is.
+   It's hidden by default and only shown as #module-img's sibling when
+   renderer.js leaves the real image on d-none. */
+#module-placeholder-img {
+    display: none;
 }
 
-:root:not([data-bs-theme="light"]) section[aria-label="Module preview"]:has(#module-img.d-none) {
+#module-img.d-none~#module-placeholder-img {
+    display: block;
+}
+
+:root:not([data-bs-theme="light"]) #module-placeholder-img {
     filter: invert(1) hue-rotate(180deg) brightness(.95) sepia(.12);
 }
 
-[data-bs-theme="dark"] section[aria-label="Module preview"]:has(#module-img.d-none) {
+[data-bs-theme="dark"] #module-placeholder-img {
     filter: invert(1) hue-rotate(180deg) brightness(.95) sepia(.12);
 }
 
-[data-bs-theme="light"] section[aria-label="Module preview"]:has(#module-img.d-none) {
+[data-bs-theme="light"] #module-placeholder-img {
     filter: none;
 }
 

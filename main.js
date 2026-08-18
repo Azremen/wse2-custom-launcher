@@ -23,6 +23,7 @@ const MODULE_IMAGE_FILE = 'main.bmp';
 const MODULE_CONFIG_FILE = 'module_config_template.ini';
 const MODULE_MANIFEST_FILE = 'module_manifest.json';
 const MODULE_INI_FILE = 'module.ini';
+const WORKSHOP_COPY_MARKER_FILE = '.wse2-workshop-copy.json';
 const APP_CONFIG_FILE = 'config.json';
 const STEAM_APP_ID = '48700'; // Mount & Blade: Warband
 const ITEM_STATE_INSTALLED = 4; // k_EItemStateInstalled
@@ -31,7 +32,6 @@ const IS_DEV = !app.isPackaged;
 const IS_WINDOWS = process.platform === 'win32';
 const IS_LINUX = process.platform === 'linux';
 const IS_MAC = process.platform === 'darwin';
-const WORKSHOP_LINKS_DISABLED = ['1', 'true', 'yes', 'on', ''].includes(String(process.env.WSE2_DISABLE_WORKSHOP_LINKS ?? 'true').toLowerCase());
 
 // ─── Logger (electron-log) ───────────────────────────────────────────────────
 
@@ -410,9 +410,9 @@ ipcMain.handle('get-version', () => app.getVersion());
 
 ipcMain.handle('open-install-folder', () => shell.openPath(installPath));
 
-ipcMain.handle('launch-game', (_, moduleName, useX64) => {
+ipcMain.handle('launch-game', (_, moduleName, modulePath, useX64) => {
     if (!moduleName) return false;
-    return launchGame(moduleName, !!useX64);
+    return launchGame(moduleName, modulePath, !!useX64);
 });
 
 ipcMain.handle('has-x64-executable', async () => {
@@ -649,11 +649,11 @@ async function resolveExePath(useX64 = false) {
     return candidates[0]; // Return first candidate for a clear "not found" error message
 }
 
-async function launchGame(moduleName, useX64 = false) {
+async function launchGame(moduleName, modulePath = null, useX64 = false) {
     const exePath = await resolveExePath(useX64);
     const workingDir = path.dirname(exePath);
 
-    console.log(`[Launch] Module: "${moduleName}" | Exe: ${exePath} | Platform: ${process.platform}`);
+    console.log(`[Launch] Module: "${moduleName}"${modulePath ? ` | Source: ${modulePath}` : ''} | Exe: ${exePath} | Platform: ${process.platform}`);
 
     try {
         await fs.promises.access(exePath);
@@ -1023,107 +1023,60 @@ async function scanWorkshopItems() {
     return await scanWorkshopItemsViaSteam() ?? scanWorkshopItemsFromDisk();
 }
 
-/**
- * The game engine only loads modules from its own Modules folder, so each
- * workshop item is exposed through a junction/symlink pointing at Steam's copy.
- */
-async function syncWorkshopLinks() {
-    const links = new Map();
-
-    if (WORKSHOP_LINKS_DISABLED) {
-        console.log('[Steam] Workshop symlink support is disabled via WSE2_DISABLE_WORKSHOP_LINKS.');
-        return links;
-    }
-
-    let items;
-    try {
-        items = await scanWorkshopItems();
-    } catch (err) {
-        console.warn('[Steam] Workshop scan failed:', err.message);
-        return links;
-    }
-
-    for (const item of items) {
-        const linkPath = path.join(modulesPath, item.name);
-
-        try {
-            const stat = await fs.promises.lstat(linkPath);
-            if (!stat.isSymbolicLink()) {
-                // A real local module wins over the workshop copy.
-                continue;
-            }
-            if (path.resolve(await fs.promises.readlink(linkPath)) === path.resolve(item.path)) {
-                links.set(item.name, item);
-                continue;
-            }
-            await fs.promises.unlink(linkPath);
-        } catch (err) {
-            if (err.code !== 'ENOENT') {
-                console.warn(`[Steam] Cannot inspect "${item.name}":`, err.message);
-                continue;
-            }
-        }
-
-        try {
-            await fs.promises.symlink(item.path, linkPath, IS_WINDOWS ? 'junction' : 'dir');
-            links.set(item.name, item);
-            console.log(`[Steam] Linked workshop module "${item.name}" (${item.id}).`);
-        } catch (err) {
-            console.warn(`[Steam] Failed to link "${item.name}":`, err.message);
-        }
-    }
-
-    await pruneStaleWorkshopLinks(links);
-    return links;
-}
-
-/** True when a path points inside Steam's workshop content folder for Warband. */
 function isWorkshopContentPath(target) {
     const normalized = path.resolve(target).replace(/\\/g, '/').toLowerCase();
     return normalized.includes(`/steamapps/workshop/content/${STEAM_APP_ID}/`);
 }
 
-/** Drop links we own that no longer match a subscribed workshop item. */
-async function pruneStaleWorkshopLinks(activeLinks) {
-    if (WORKSHOP_LINKS_DISABLED) return;
+function createWorkshopModule(item) {
+    return {
+        name: `${item.name} (Steam Workshop)`,
+        launchName: item.name,
+        version: null,
+        path: item.path,
+        imagePath: null,
+        configExists: false,
+        manifest: null,
+        isWorkshop: true,
+        workshopId: item.id,
+    };
+}
 
+async function removeLegacyWorkshopCopies() {
     let entries;
     try {
         entries = await fs.promises.readdir(modulesPath, { withFileTypes: true });
     } catch { return; }
 
     for (const entry of entries) {
-        if (!entry.isSymbolicLink() || activeLinks.has(entry.name)) continue;
+        if (!entry.isDirectory()) continue;
 
-        const linkPath = path.join(modulesPath, entry.name);
-
-        let target = null;
+        const modulePath = path.join(modulesPath, entry.name);
+        const markerPath = path.join(modulePath, WORKSHOP_COPY_MARKER_FILE);
         try {
-            target = await fs.promises.readlink(linkPath);
-        } catch { /* unreadable link — fall through to the existence check */ }
-
-        let broken = false;
-        try {
-            await fs.promises.access(linkPath);
-        } catch {
-            broken = true;
-        }
-
-        if (!broken && !(target && isWorkshopContentPath(target))) continue;
-
-        await fs.promises.unlink(linkPath).catch(() => { });
-        console.log(`[Steam] Removed stale module link: ${entry.name}`);
+            const marker = JSON.parse(await fs.promises.readFile(markerPath, 'utf8'));
+            if (!marker?.sourcePath || !isWorkshopContentPath(marker.sourcePath)) continue;
+            await fs.promises.rm(modulePath, { recursive: true, force: true });
+            console.log(`[Steam] Removed legacy workshop copy: ${entry.name}`);
+        } catch { /* not a legacy workshop copy */ }
     }
 }
 
 async function scanModules() {
-    const workshopLinks = await syncWorkshopLinks();
+    let workshopItems = [];
+    try {
+        workshopItems = await scanWorkshopItems();
+    } catch (err) {
+        console.warn('[Steam] Workshop scan failed:', err.message);
+    }
 
     try {
         await fs.promises.access(modulesPath);
     } catch {
-        return [];
+        return workshopItems.map(createWorkshopModule);
     }
+
+    await removeLegacyWorkshopCopies();
 
     try {
         const names = await fs.promises.readdir(modulesPath);
@@ -1145,8 +1098,8 @@ async function scanModules() {
                 imagePath: null,
                 configExists: false,
                 manifest: null,
-                isWorkshop: workshopLinks.has(name),
-                workshopId: workshopLinks.get(name)?.id ?? null,
+                isWorkshop: false,
+                workshopId: null,
             };
 
             const versionFile = path.join(fullPath, VERSION_FILE);
@@ -1181,7 +1134,13 @@ async function scanModules() {
 
             return modData;
         }));
-        return results.filter(Boolean);
+        const localResults = results.filter(Boolean);
+        const localNames = new Set(localResults.map(module => module.name));
+        const workshopResults = workshopItems
+            .map(createWorkshopModule)
+            .filter(module => !localNames.has(module.name));
+
+        return [...localResults, ...workshopResults];
     } catch (err) {
         console.error('[Modules] Scan error:', err);
         return [];
@@ -1258,7 +1217,7 @@ async function saveConfigData(modulePath, configData) {
 
         const rel = path.relative(resolvedModules, resolved);
         const isDirectChild = rel && !rel.startsWith('..') && !path.isAbsolute(rel) && !rel.includes(path.sep);
-        if (!isDirectChild) {
+        if (!isDirectChild && !isWorkshopContentPath(resolved)) {
             console.error(`[Security] Blocked config write outside modules path: ${resolved}`);
             throw new Error('Invalid module path');
         }
