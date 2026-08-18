@@ -12,10 +12,21 @@ A custom launcher for Warband Script Enhancer 2 (WSE2) by **Azremen**.
 ### Features
 - **Cross-Platform:** Runs on Windows, Linux, and macOS.
 - **Module Management:** Browse, download, install, and remove WSE2 modules directly from the launcher.
+- **Steam Workshop:** Subscribed Warband workshop mods appear in the module list automatically.
+- **64-bit Support:** Toggle next to the Play button when `mb_warband_wse2_x64.exe` is present.
 - **Enhanced Configuration:** Modern UI with support for Color Pickers, Drop-down Menus, Ranges, and Sliders.
 - **Auto-Updater:** Automatically checks for new launcher versions and prompts to update.
 - **Localization:** Supports English, Turkish, and Russian.
 - **Dark/Light Theme:** Switchable UI theme.
+
+### Steam Workshop
+
+The launcher reads your subscribed items through the Steamworks API, exactly like the official WSE2 launcher. Because the game engine only loads modules from its own `Modules` folder, each workshop item is exposed there as a **junction/symlink** — nothing is copied, and Steam updates apply instantly.
+
+- Steam must be running and the game must be owned by the signed-in account.
+- If Steam is unavailable, the launcher falls back to scanning `steamapps/workshop/content/48700`.
+- Workshop modules cannot be removed from the launcher; manage them through Steam.
+- Unsubscribed items have their links cleaned up on the next launcher start.
 
 ### Installation & Usage
 
@@ -48,33 +59,65 @@ Releases are built automatically via **GitHub Actions** when a version tag is pu
 To build locally:
 ```bash
 npm install
-npm run dist:all   # Linux + Windows
-npm run dist:mac   # macOS only (must run on macOS)
+npm run dist:win    # Windows
+npm run dist:linux  # Linux (see note below)
+npm run dist:mac    # macOS only (must run on macOS)
 ```
+
+> **Building the AppImage on Windows fails** with `EPERM: operation not permitted, symlink`.
+> Enable **Developer Mode** (Settings → Privacy & security → For developers), build from WSL,
+> or simply let GitHub Actions produce the Linux artifact.
+
+### Release Secrets
+
+The workflows in `.github/workflows/` expect these repository secrets
+(**Settings → Secrets and variables → Actions**):
+
+| Secret | Purpose |
+| --- | --- |
+| `GH_TOKEN` | PAT with `Contents: Read and write` on both target repositories |
+| `CSC_LINK` | Base64 of the code signing PFX |
+| `CSC_KEY_PASSWORD` | PFX password |
 
 ### Self-Signed Certificate (Windows Code Signing)
 
-**1. Generate Key and Certificate:**
-```bash
-openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 3650 -nodes -subj "/CN=MyCert"
+> The certificate **must** carry the Code Signing extended key usage, otherwise
+> electron-builder fails with *"Cannot extract publisher name from code signing certificate"*.
+
+**1. Create the certificate (PowerShell):**
+```powershell
+$cert = New-SelfSignedCertificate `
+  -Type CodeSigningCert `
+  -Subject "CN=YourName" `
+  -CertStoreLocation Cert:\CurrentUser\My `
+  -KeyUsage DigitalSignature `
+  -KeyExportPolicy Exportable `
+  -NotAfter (Get-Date).AddYears(5)
+
+$pw = Read-Host "PFX password" -AsSecureString
+Export-PfxCertificate -Cert $cert -FilePath .\wse2-cert.pfx -Password $pw
 ```
 
-**2. Export to PFX:**
-```bash
-openssl pkcs12 -export -out wse2-cert.pfx -inkey key.pem -in cert.pem
+**2. Verify the key usage:**
+```powershell
+(Get-PfxCertificate .\wse2-cert.pfx).EnhancedKeyUsageList
 ```
-Add to your `.env`:
+The output must contain `Code Signing (1.3.6.1.5.5.7.3.3)`.
+
+**3. Local builds** — add to your `.env` (never commit this file):
 ```
+CSC_LINK=wse2-cert.pfx
 CSC_KEY_PASSWORD=yourpassword
 ```
 
-**3. For GitHub Actions:**
-```bash
-base64 wse2-cert.pfx -w 0
+**4. GitHub Actions** — copy the base64 payload to the clipboard:
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes(".\wse2-cert.pfx")) | Set-Clipboard
 ```
-Go to **Repo Settings → Secrets → Actions** and create:
-- `CSC_LINK` → paste the base64 string
-- `CSC_KEY_PASSWORD` → your password
+Paste it into the `CSC_LINK` secret and set `CSC_KEY_PASSWORD`.
+
+> A self-signed certificate does not remove the SmartScreen warning — it only replaces
+> "Unknown publisher" with your name. Use a paid OV/EV certificate for a clean install.
 
 ---
 
@@ -86,10 +129,21 @@ Go to **Repo Settings → Secrets → Actions** and create:
 ### Özellikler
 - **Çoklu Platform:** Windows, Linux ve macOS üzerinde çalışır.
 - **Modül Yönetimi:** WSE2 modüllerini doğrudan başlatıcıdan indirin, kurun ve kaldırın.
+- **Steam Atölyesi:** Abone olduğunuz Warband atölye modları modül listesinde otomatik görünür.
+- **64-bit Desteği:** `mb_warband_wse2_x64.exe` mevcutsa Oynat butonunun yanında aç/kapa anahtarı çıkar.
 - **Gelişmiş Yapılandırma:** Renk Seçiciler, Açılır Menüler, Aralıklar ve Kaydırıcılar içeren modern arayüz.
 - **Otomatik Güncelleme:** Yeni başlatıcı sürümlerini otomatik kontrol eder ve güncelleme önerir.
 - **Yerelleştirme:** Türkçe, İngilizce ve Rusça desteği.
 - **Koyu/Açık Tema:** Değiştirilebilir arayüz teması.
+
+### Steam Atölyesi
+
+Başlatıcı, abone olduğunuz öğeleri resmi WSE2 başlatıcısıyla aynı şekilde Steamworks API üzerinden okur. Oyun motoru yalnızca kendi `Modules` klasöründen modül yükleyebildiği için her atölye öğesi oraya **junction/symlink** olarak bağlanır — dosya kopyalanmaz, Steam güncellemeleri anında yansır.
+
+- Steam açık olmalı ve oyun giriş yapılmış hesapta sahipli olmalıdır.
+- Steam erişilemezse `steamapps/workshop/content/48700` klasörü taranarak devam edilir.
+- Atölye modülleri başlatıcıdan kaldırılamaz; yönetimi Steam üzerinden yapılır.
+- Abonelikten çıkılan öğelerin bağlantıları bir sonraki açılışta temizlenir.
 
 ### Kurulum ve Kullanım
 
@@ -120,33 +174,65 @@ Sürümler bir versiyon etiketi (`v*`) push edildiğinde **GitHub Actions** arac
 
 ```bash
 npm install
-npm run dist:all   # Linux + Windows
-npm run dist:mac   # Sadece macOS (macOS'ta çalıştırılmalı)
+npm run dist:win    # Windows
+npm run dist:linux  # Linux (aşağıdaki nota bakın)
+npm run dist:mac    # Sadece macOS (macOS'ta çalıştırılmalı)
 ```
+
+> **Windows'ta AppImage derlemesi başarısız olur:** `EPERM: operation not permitted, symlink`.
+> **Geliştirici Modu**'nu açın (Ayarlar → Gizlilik ve güvenlik → Geliştiriciler için),
+> WSL içinden derleyin veya Linux çıktısını GitHub Actions'a bırakın.
+
+### Sürüm Secret'ları
+
+`.github/workflows/` altındaki iş akışları şu repo secret'larını bekler
+(**Settings → Secrets and variables → Actions**):
+
+| Secret | Amacı |
+| --- | --- |
+| `GH_TOKEN` | Her iki hedef repoda `Contents: Read and write` yetkisi olan PAT |
+| `CSC_LINK` | İmzalama PFX dosyasının base64 hali |
+| `CSC_KEY_PASSWORD` | PFX parolası |
 
 ### Self-Signed Sertifika (Windows İmzalama)
 
-**1. Anahtar ve Sertifika Oluşturun:**
-```bash
-openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 3650 -nodes -subj "/CN=MyCert"
+> Sertifikada **Code Signing** genişletilmiş anahtar kullanımı bulunmalıdır; aksi halde
+> electron-builder *"Cannot extract publisher name from code signing certificate"* hatası verir.
+
+**1. Sertifikayı oluşturun (PowerShell):**
+```powershell
+$cert = New-SelfSignedCertificate `
+  -Type CodeSigningCert `
+  -Subject "CN=Adınız" `
+  -CertStoreLocation Cert:\CurrentUser\My `
+  -KeyUsage DigitalSignature `
+  -KeyExportPolicy Exportable `
+  -NotAfter (Get-Date).AddYears(5)
+
+$pw = Read-Host "PFX parolası" -AsSecureString
+Export-PfxCertificate -Cert $cert -FilePath .\wse2-cert.pfx -Password $pw
 ```
 
-**2. PFX'e Dönüştürün:**
-```bash
-openssl pkcs12 -export -out wse2-cert.pfx -inkey key.pem -in cert.pem
+**2. Anahtar kullanımını doğrulayın:**
+```powershell
+(Get-PfxCertificate .\wse2-cert.pfx).EnhancedKeyUsageList
 ```
-`.env` dosyasına ekleyin:
+Çıktıda `Code Signing (1.3.6.1.5.5.7.3.3)` görülmelidir.
+
+**3. Yerel derleme** — `.env` dosyanıza ekleyin (bu dosyayı asla commit etmeyin):
 ```
+CSC_LINK=wse2-cert.pfx
 CSC_KEY_PASSWORD=sifreniz
 ```
 
-**3. GitHub Actions İçin:**
-```bash
-base64 wse2-cert.pfx -w 0
+**4. GitHub Actions** — base64 çıktısını panoya kopyalayın:
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes(".\wse2-cert.pfx")) | Set-Clipboard
 ```
-**Repo Ayarları → Secrets → Actions** kısmına gidin:
-- `CSC_LINK` → base64 çıktısını yapıştırın
-- `CSC_KEY_PASSWORD` → şifreniz
+`CSC_LINK` secret'ına yapıştırın ve `CSC_KEY_PASSWORD` değerini girin.
+
+> Self-signed sertifika SmartScreen uyarısını kaldırmaz — sadece "Bilinmeyen yayıncı" yerine
+> adınızı gösterir. Temiz kurulum için ücretli OV/EV sertifikası gerekir.
 
 ---
 
@@ -158,10 +244,21 @@ base64 wse2-cert.pfx -w 0
 ### Особенности
 - **Кроссплатформенность:** Windows, Linux и macOS.
 - **Управление модулями:** Скачивайте, устанавливайте и удаляйте WSE2 модули прямо из лаунчера.
+- **Steam Workshop:** Моды Warband, на которые вы подписаны, появляются в списке автоматически.
+- **Поддержка 64-bit:** Переключатель рядом с кнопкой запуска, если есть `mb_warband_wse2_x64.exe`.
 - **Расширенная конфигурация:** Современный интерфейс с поддержкой выбора цвета, выпадающих списков, диапазонов и ползунков.
 - **Автообновление:** Автоматически проверяет новые версии и предлагает обновиться.
 - **Локализация:** Поддержка русского, английского и турецкого языков.
 - **Тёмная/Светлая тема:** Переключаемая тема интерфейса.
+
+### Steam Workshop
+
+Лаунчер читает ваши подписки через Steamworks API — так же, как официальный лаунчер WSE2. Поскольку движок загружает модули только из своей папки `Modules`, каждый элемент мастерской подключается туда как **junction/symlink** — файлы не копируются, обновления Steam применяются сразу.
+
+- Steam должен быть запущен, а игра — принадлежать текущему аккаунту.
+- Если Steam недоступен, выполняется сканирование `steamapps/workshop/content/48700`.
+- Модули мастерской нельзя удалить из лаунчера — управляйте ими через Steam.
+- Ссылки на отменённые подписки удаляются при следующем запуске.
 
 ### Установка и использование
 
@@ -192,30 +289,61 @@ base64 wse2-cert.pfx -w 0
 
 ```bash
 npm install
-npm run dist:all   # Linux + Windows
-npm run dist:mac   # Только macOS (запускать на macOS)
+npm run dist:win    # Windows
+npm run dist:linux  # Linux (см. примечание ниже)
+npm run dist:mac    # Только macOS (запускать на macOS)
 ```
+
+> **Сборка AppImage на Windows падает** с ошибкой `EPERM: operation not permitted, symlink`.
+> Включите **Режим разработчика**, собирайте из WSL или оставьте Linux-сборку GitHub Actions.
+
+### Секреты для релиза
+
+Рабочие процессы в `.github/workflows/` ожидают следующие секреты репозитория
+(**Settings → Secrets and variables → Actions**):
+
+| Секрет | Назначение |
+| --- | --- |
+| `GH_TOKEN` | PAT с правами `Contents: Read and write` в обоих репозиториях |
+| `CSC_LINK` | Base64 сертификата PFX |
+| `CSC_KEY_PASSWORD` | Пароль от PFX |
 
 ### Self-Signed сертификат (подпись Windows)
 
-**1. Создание ключа и сертификата:**
-```bash
-openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 3650 -nodes -subj "/CN=MyCert"
+> Сертификат обязательно должен иметь назначение **Code Signing**, иначе electron-builder
+> выдаст ошибку *"Cannot extract publisher name from code signing certificate"*.
+
+**1. Создание сертификата (PowerShell):**
+```powershell
+$cert = New-SelfSignedCertificate `
+  -Type CodeSigningCert `
+  -Subject "CN=ВашеИмя" `
+  -CertStoreLocation Cert:\CurrentUser\My `
+  -KeyUsage DigitalSignature `
+  -KeyExportPolicy Exportable `
+  -NotAfter (Get-Date).AddYears(5)
+
+$pw = Read-Host "Пароль PFX" -AsSecureString
+Export-PfxCertificate -Cert $cert -FilePath .\wse2-cert.pfx -Password $pw
 ```
 
-**2. Конвертация в PFX:**
-```bash
-openssl pkcs12 -export -out wse2-cert.pfx -inkey key.pem -in cert.pem
+**2. Проверка:**
+```powershell
+(Get-PfxCertificate .\wse2-cert.pfx).EnhancedKeyUsageList
 ```
-Добавьте в `.env`:
+В выводе должно быть `Code Signing (1.3.6.1.5.5.7.3.3)`.
+
+**3. Локальная сборка** — добавьте в `.env` (не коммитьте этот файл):
 ```
+CSC_LINK=wse2-cert.pfx
 CSC_KEY_PASSWORD=yourpassword
 ```
 
-**3. Для GitHub Actions:**
-```bash
-base64 wse2-cert.pfx -w 0
+**4. GitHub Actions** — скопируйте base64 в буфер обмена:
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes(".\wse2-cert.pfx")) | Set-Clipboard
 ```
-Перейдите в **Repo Settings → Secrets → Actions** и создайте:
-- `CSC_LINK` → вставьте строку base64
-- `CSC_KEY_PASSWORD` → ваш пароль
+Вставьте в секрет `CSC_LINK` и задайте `CSC_KEY_PASSWORD`.
+
+> Self-signed сертификат не убирает предупреждение SmartScreen — он лишь заменяет
+> "Неизвестный издатель" на ваше имя. Для чистой установки нужен платный OV/EV сертификат.

@@ -31,6 +31,7 @@ const IS_DEV = !app.isPackaged;
 const IS_WINDOWS = process.platform === 'win32';
 const IS_LINUX = process.platform === 'linux';
 const IS_MAC = process.platform === 'darwin';
+const WORKSHOP_LINKS_DISABLED = ['1', 'true', 'yes', 'on', ''].includes(String(process.env.WSE2_DISABLE_WORKSHOP_LINKS ?? 'true').toLowerCase());
 
 // ─── Logger (electron-log) ───────────────────────────────────────────────────
 
@@ -1029,6 +1030,11 @@ async function scanWorkshopItems() {
 async function syncWorkshopLinks() {
     const links = new Map();
 
+    if (WORKSHOP_LINKS_DISABLED) {
+        console.log('[Steam] Workshop symlink support is disabled via WSE2_DISABLE_WORKSHOP_LINKS.');
+        return links;
+    }
+
     let items;
     try {
         items = await scanWorkshopItems();
@@ -1079,6 +1085,8 @@ function isWorkshopContentPath(target) {
 
 /** Drop links we own that no longer match a subscribed workshop item. */
 async function pruneStaleWorkshopLinks(activeLinks) {
+    if (WORKSHOP_LINKS_DISABLED) return;
+
     let entries;
     try {
         entries = await fs.promises.readdir(modulesPath, { withFileTypes: true });
