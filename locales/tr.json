@@ -1386,6 +1386,7 @@
         "installed": "Yüklendi",
         "latest": "Son Sürüm",
         "checksum_ok": "Doğrulandı",
+        "steam_workshop": "Steam Atölyesi",
         "updater_downloading": "Başlatma güncellemesi indiriliyor...",
         "cancel_download": "İptal",
         "ok": "Tamam",

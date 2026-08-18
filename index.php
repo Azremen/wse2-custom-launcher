@@ -44,10 +44,10 @@ function readMeta(string $moduleName): array
 }
 
 /**
- * Return the MD5 hash of a ZIP file, using a cached value when the file
+ * Return the hash of a ZIP file, using a cached value when the file
  * has not been modified since the last calculation.
  */
-function resolvemd5(string $zipPath): ?string
+function resolveZipHash(string $zipPath, string $algo): ?string
 {
     if (!is_readable($zipPath)) {
         return null;
@@ -57,7 +57,7 @@ function resolvemd5(string $zipPath): ?string
         mkdir(CACHE_DIR, 0750, true);
     }
 
-    $cacheFile   = CACHE_DIR . '/' . basename($zipPath) . '.md5.json';
+    $cacheFile   = CACHE_DIR . '/' . basename($zipPath) . '.' . $algo . '.json';
     $currentMtime = filemtime($zipPath);
 
     if (is_readable($cacheFile)) {
@@ -71,7 +71,7 @@ function resolvemd5(string $zipPath): ?string
         }
     }
 
-    $hash = md5_file($zipPath);
+    $hash = hash_file($algo, $zipPath);
     file_put_contents(
         $cacheFile,
         json_encode(['mtime' => $currentMtime, 'hash' => $hash]),
@@ -123,7 +123,9 @@ foreach (glob(MODULES_DIR . '/*.zip') ?: [] as $zipPath) {
         'version'     => $meta['version'],
         'description' => $meta['description'],
         'url'         => MODULES_URL_PATH . rawurlencode($filename),
-        'md5'         => resolvemd5($zipPath),
+        // md5 kept only for older launcher builds; sha256 is authoritative.
+        'md5'         => resolveZipHash($zipPath, 'md5'),
+        'sha256'      => resolveZipHash($zipPath, 'sha256'),
         'size'        => $filesize !== false ? $filesize : null,
         'manifest'    => $manifest,
     ];

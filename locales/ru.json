@@ -1386,6 +1386,7 @@
         "installed": "Установлен",
         "latest": "Последняя",
         "checksum_ok": "Проверен",
+        "steam_workshop": "Steam Workshop",
         "updater_downloading": "Загрузка обновления лаунчера...",
         "cancel_download": "Отмена",
         "ok": "ОК",

@@ -1,6 +1,6 @@
 {
   "name": "wse2-launcher",
-  "version": "1.0.9",
+  "version": "1.1.0",
   "description": "Warband Script Enhancer 2 Launcher By Azremen",
   "private": true,
   "repository": {
@@ -104,7 +104,7 @@
   "devDependencies": {
     "@electron/asar": "^4.0.1",
     "dotenv-cli": "^11.0.0",
-    "electron": "^40.2.1",
+    "electron": "^43.4.0",
     "electron-builder": "^26.7.0"
   },
   "dependencies": {
@@ -112,9 +112,9 @@
     "bootstrap": "^5.3.8",
     "electron-log": "^5.4.3",
     "electron-updater": "^6.1.7",
-    "extract-zip": "^2.0.1",
     "ini": "^4.1.1",
-    "jquery": "^4.0.0"
+    "jquery": "^4.0.0",
+    "node-stream-zip": "^1.16.0"
   },
   "allowScripts": {
     "electron@40.10.0": true,

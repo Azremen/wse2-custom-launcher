@@ -1,18 +1,119 @@
-/* ─── Base ───────────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════
+   Hearthfire theme — a torn sheet of vellum behind the launcher, with
+   every panel and control cut from the same parchment. Structural /
+   layout rules are unchanged from the original stylesheet; this pass
+   replaces the visual layer (color, type, borders) and adds the sheet.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ─── Type ────────────────────────────────────────────────────────────── */
+
+@font-face {
+    font-family: 'Petrona';
+    font-style: normal;
+    font-weight: 400 700;
+    font-display: swap;
+    src: url('./libs/fonts/petrona/petrona-latin-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: 'Petrona';
+    font-style: normal;
+    font-weight: 400 700;
+    font-display: swap;
+    src: url('./libs/fonts/petrona/petrona-latin-ext-normal.woff2') format('woff2');
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+    font-family: 'Petrona';
+    font-style: italic;
+    font-weight: 400 700;
+    font-display: swap;
+    src: url('./libs/fonts/petrona/petrona-latin-italic.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: 'Petrona';
+    font-style: italic;
+    font-weight: 400 700;
+    font-display: swap;
+    src: url('./libs/fonts/petrona/petrona-latin-ext-italic.woff2') format('woff2');
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* ─── Tokens ──────────────────────────────────────────────────────────── */
+/* Light is the default palette; OS dark preference and the explicit
+   data-bs-theme="dark"/"light" toggle both override it below. */
+
+:root {
+    --void: #241a10;
+    --paper: #d9c7a0;
+    --paper-edge: #8a6a3e;
+    --paper-stain: rgba(90, 58, 26, .22);
+    --paper-fox: #6b4a24;
+    --paper-fiber: #4a3418;
+    --inset-fill: rgba(44, 28, 16, .09);
+    --inset-fill-strong: rgba(44, 28, 16, .16);
+    --border: #8a7a54;
+    --border-strong: #4b3f27;
+    --text: #2a2113;
+    --text-muted: #5f5236;
+    --brass: #8a6423;
+    --brass-strong: #6e4f1a;
+    --brass-fill: #c99a3f;
+    --danger: #8a3a2b;
+    --danger-fill: #a4453a;
+    --ok: #3f6b3f;
+    --paper-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.18  0 0 0 0 0.12  0 0 0 0 0.05  0 0 0 0.4 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
 
 @media (prefers-color-scheme: dark) {
-    body {
-        background: #333;
-        color: white;
+    :root:not([data-bs-theme="light"]) {
+        --void: #0a0704;
+        --paper: #2b2114;
+        --paper-edge: #1c130a;
+        --paper-stain: rgba(0, 0, 0, .32);
+        --paper-fox: #140d06;
+        --paper-fiber: #0e0904;
+        --inset-fill: rgba(0, 0, 0, .22);
+        --inset-fill-strong: rgba(0, 0, 0, .34);
+        --border: #5c4c2d;
+        --border-strong: #8a744a;
+        --text: #ece2c6;
+        --text-muted: #b6a680;
+        --brass: #d7ab5a;
+        --brass-strong: #e9c37a;
+        --brass-fill: #c99a3f;
+        --danger: #c9695a;
+        --danger-fill: #a4453a;
+        --ok: #7fa877;
     }
 }
 
-@media (prefers-color-scheme: light) {
-    body {
-        background: #ddd;
-        color: black;
-    }
+[data-bs-theme="dark"] {
+    --void: #0a0704;
+    --paper: #2b2114;
+    --paper-edge: #1c130a;
+    --paper-stain: rgba(0, 0, 0, .32);
+    --paper-fox: #140d06;
+    --paper-fiber: #0e0904;
+    --inset-fill: rgba(0, 0, 0, .22);
+    --inset-fill-strong: rgba(0, 0, 0, .34);
+    --border: #5c4c2d;
+    --border-strong: #8a744a;
+    --text: #ece2c6;
+    --text-muted: #b6a680;
+    --brass: #d7ab5a;
+    --brass-strong: #e9c37a;
+    --brass-fill: #c99a3f;
+    --danger: #c9695a;
+    --danger-fill: #a4453a;
+    --ok: #7fa877;
 }
+
+/* ─── Base ───────────────────────────────────────────────────────────────── */
 
 html,
 body {
@@ -21,12 +122,38 @@ body {
     overflow: hidden;
 }
 
+body {
+    background: var(--void);
+    color: var(--text);
+    font-family: 'Petrona', Georgia, 'Times New Roman', serif;
+}
+
+a {
+    color: var(--brass);
+}
+
+/* ─── The sheet ──────────────────────────────────────────────────────────── */
+/* A single torn, burnt-edged piece of vellum behind the whole window.
+   Fixed to the viewport; the app chrome sits above it at z-index 1. */
+
+.paper-sheet {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+    pointer-events: none;
+}
+
 /* ─── Layout ─────────────────────────────────────────────────────────────── */
 
 .container-fluid {
+    position: relative;
+    z-index: 1;
     height: 100vh;
     display: flex;
     flex-direction: column;
+    padding: 22px 28px;
 }
 
 #top-area {
@@ -50,7 +177,7 @@ body {
 
 #footer {
     flex-shrink: 0;
-    padding-bottom: 20px;
+    padding-bottom: 14px;
     background-color: inherit;
     z-index: 10;
 }
@@ -60,7 +187,9 @@ body {
 #list-pos {
     flex: 1;
     overflow-y: auto;
-    border-bottom: 1px solid #555;
+    overflow-x: hidden;
+    border-bottom: 1px solid var(--border);
+    padding-right: 2px;
 }
 
 #list-pos>button {
@@ -74,16 +203,67 @@ body {
     max-width: 100%;
     max-height: 400px;
     object-fit: contain;
+    border: 1px solid var(--border-strong);
+    border-radius: 4px 9px 6px 10px;
+    /* Flex children default to min-height:auto, which refuses to shrink
+       below the image's intrinsic size — that's what was pushing it over
+       the badges/description below. Letting it shrink (and reserving the
+       info block's own space via flex:none) keeps them from overlapping. */
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.module-info {
+    flex: 0 0 auto;
+}
+
+/* A quiet empty state when nothing has a banner yet — a real public-domain
+   woodcut (Dürer, "The Knight on Horseback and the Lansquenet", c. 1496-97,
+   National Gallery of Art, CC0) rather than blank space. Pure CSS, reacts
+   automatically whenever renderer.js toggles the d-none class on the img. */
+section[aria-label="Module preview"]:has(#module-img.d-none) {
+    background-image: url('./assets/knight-placeholder.jpg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: 50% 40%;
+    border-radius: 4px 9px 6px 10px;
+}
+
+:root:not([data-bs-theme="light"]) section[aria-label="Module preview"]:has(#module-img.d-none) {
+    filter: invert(1) hue-rotate(180deg) brightness(.95) sepia(.12);
+}
+
+[data-bs-theme="dark"] section[aria-label="Module preview"]:has(#module-img.d-none) {
+    filter: invert(1) hue-rotate(180deg) brightness(.95) sepia(.12);
+}
+
+[data-bs-theme="light"] section[aria-label="Module preview"]:has(#module-img.d-none) {
+    filter: none;
 }
 
 /* ─── Progress Bar ───────────────────────────────────────────────────────── */
 
 .progress-bar-launcher {
-    height: 30px;
+    height: 26px;
+    background-color: var(--inset-fill-strong) !important;
+    border: 1px solid var(--border-strong);
+    border-radius: 3px 5px 3px 5px;
 }
 
 .progress-bar-fill {
     width: 0%;
+    background-color: var(--brass-fill) !important;
+    color: var(--text) !important;
+}
+
+.updater-progress {
+    height: 6px;
+    background-color: var(--inset-fill-strong) !important;
+}
+
+.updater-progress-bar {
+    width: 0%;
+    background-color: var(--brass-fill) !important;
 }
 
 /* ─── Range Slider Value Badge ───────────────────────────────────────────── */
@@ -96,8 +276,24 @@ body {
 /* ─── Play Button ────────────────────────────────────────────────────────── */
 
 #play-btn {
-    font-size: 24px;
-    border-width: 3px !important;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    border-width: 2px !important;
+    border-radius: 4px 9px 5px 10px !important;
+    background-color: var(--brass-fill) !important;
+    border-color: var(--border-strong) !important;
+    color: #231a0c !important;
+    box-shadow: 0 3px 0 var(--border-strong);
+}
+
+#play-btn:hover {
+    background-color: var(--brass-strong) !important;
+}
+
+#play-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 var(--border-strong);
 }
 
 /* ─── Settings Button ────────────────────────────────────────────────────── */
@@ -107,6 +303,11 @@ body {
     outline: none;
     box-shadow: none;
     padding: 0;
+    color: var(--text-muted) !important;
+}
+
+#settings:hover {
+    color: var(--brass) !important;
 }
 
 /* ─── Locale Select ──────────────────────────────────────────────────────── */
@@ -118,37 +319,40 @@ body {
 /* ─── Scrollbar ──────────────────────────────────────────────────────────── */
 
 ::-webkit-scrollbar {
-    width: 8px;
+    width: 9px;
 }
 
 ::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.1);
+    background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #888;
+    background: var(--border);
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #555;
+    background: var(--border-strong);
 }
 
 /* ─── Module Detail Panel ───────────────────────────────────────────────── */
 
 .module-info {
-    border-top: 1px solid rgba(128, 128, 128, 0.2);
-    padding-top: 0.5rem;
+    background-color: var(--paper) !important;
+    background-image: var(--paper-texture);
+    background-blend-mode: overlay;
+    border: 1px solid var(--border-strong);
+    border-radius: 3px 8px 5px 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .35);
+    padding: .6rem .75rem !important;
 }
 
-/* ─── Updater Progress ───────────────────────────────────────────────────── */
-
-.updater-progress {
-    height: 6px;
+#module-info-name {
+    color: var(--text) !important;
 }
 
-.updater-progress-bar {
-    width: 0%;
+#module-info-desc {
+    color: var(--text-muted) !important;
 }
 
 /* ─── Log Panel ─────────────────────────────────────────────────────────── */
@@ -167,18 +371,18 @@ body {
 
 .log-entry {
     padding: 2px 0;
-    border-bottom: 1px solid rgba(128, 128, 128, 0.15);
+    border-bottom: 1px solid var(--border);
     white-space: pre-wrap;
     word-break: break-all;
     line-height: 1.4;
 }
 
 .log-entry.log-warn {
-    color: #ffc107;
+    color: var(--brass);
 }
 
 .log-entry.log-error {
-    color: #f85149;
+    color: var(--danger-fill);
 }
 
 .log-toggle-btn {
@@ -203,39 +407,235 @@ body {
 .dropdown-menu {
     max-height: 500px;
     overflow-y: auto;
+    background-color: var(--paper) !important;
+    border-color: var(--border-strong) !important;
 }
 
-/* ─── Dark Theme Overrides ───────────────────────────────────────────────── */
+.dropdown-item {
+    color: var(--text) !important;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+    background-color: var(--inset-fill-strong) !important;
+}
+
+/* ─── List group (module list + config sidebar) ─────────────────────────── */
+/* The same carved-parchment-scrap treatment as the design mockup: a
+   textured, bordered chip per row instead of a flat Bootstrap list item. */
+
+.list-group-item {
+    background-color: var(--inset-fill-strong) !important;
+    background-image: var(--paper-texture);
+    background-blend-mode: overlay;
+    background-size: 140px 140px;
+    border: 1px solid var(--border) !important;
+    border-radius: 3px 10px 8px 4px;
+    color: var(--text) !important;
+    margin-bottom: 3px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, .16), inset 0 1px 0 rgba(255, 255, 255, .08);
+}
+
+.list-group-item:nth-child(even) {
+    border-radius: 4px 7px 12px 3px;
+}
+
+.list-group-item:hover {
+    border-color: var(--border-strong) !important;
+    z-index: 1;
+}
+
+.list-group-item.active {
+    background-color: var(--brass-fill) !important;
+    border-color: var(--border-strong) !important;
+    border-left: 4px solid var(--border-strong) !important;
+    color: #231a0c !important;
+    font-weight: 700;
+}
+
+.list-group-item.active .text-muted {
+    color: #4a3a1c !important;
+}
+
+/* Badges rendered inside list rows / detail panel: recolor the plain
+   Bootstrap semantics onto the parchment palette instead of stock hues. */
+
+.badge {
+    font-weight: 600;
+    border-radius: 2px 4px 2px 4px;
+}
+
+.badge.bg-success {
+    background-color: var(--ok) !important;
+}
+
+.badge.bg-warning {
+    background-color: var(--danger-fill) !important;
+    color: #fff !important;
+}
+
+.badge.bg-primary {
+    background-color: var(--brass-fill) !important;
+    color: #231a0c !important;
+}
+
+.badge.bg-secondary {
+    background-color: var(--inset-fill-strong) !important;
+    color: var(--text-muted) !important;
+    border: 1px solid var(--border);
+}
+
+.badge.bg-dark {
+    background-color: var(--border-strong) !important;
+}
+
+/* ─── Buttons ─────────────────────────────────────────────────────────────── */
+
+.btn {
+    border-radius: 3px 5px 4px 5px;
+    font-weight: 600;
+}
+
+.btn-primary {
+    background-color: var(--brass-fill) !important;
+    border-color: var(--border-strong) !important;
+    color: #231a0c !important;
+}
+
+.btn-primary:hover,
+.btn-primary:not(:disabled):active {
+    background-color: var(--brass-strong) !important;
+    border-color: var(--border-strong) !important;
+    color: #231a0c !important;
+}
+
+.btn-danger {
+    background-color: var(--danger-fill) !important;
+    border-color: var(--border-strong) !important;
+}
+
+.btn-secondary,
+.btn-outline-secondary {
+    background-color: var(--inset-fill-strong) !important;
+    border-color: var(--border-strong) !important;
+    color: var(--text) !important;
+}
+
+.btn-secondary:hover,
+.btn-outline-secondary:hover {
+    background-color: var(--paper-stain) !important;
+    color: var(--text) !important;
+}
+
+.btn-outline-danger {
+    color: var(--danger) !important;
+    border-color: var(--danger) !important;
+}
+
+.btn-outline-danger:hover {
+    background-color: var(--danger-fill) !important;
+    color: #fff !important;
+}
+
+.btn-outline-info {
+    color: var(--brass) !important;
+    border-color: var(--brass) !important;
+}
+
+.btn-outline-info:hover {
+    background-color: var(--brass-fill) !important;
+    color: #231a0c !important;
+}
+
+/* ─── Alert ───────────────────────────────────────────────────────────────── */
+
+.alert-warning {
+    background-color: var(--danger-fill) !important;
+    border-color: var(--border-strong) !important;
+    color: #fff !important;
+}
+
+/* ─── Forms ───────────────────────────────────────────────────────────────── */
+
+.form-control,
+.form-select {
+    background-color: var(--inset-fill-strong) !important;
+    border-color: var(--border-strong) !important;
+    color: var(--text) !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--brass) !important;
+    box-shadow: 0 0 0 .2rem var(--paper-stain) !important;
+}
+
+.form-check-input:checked {
+    background-color: var(--brass-fill) !important;
+    border-color: var(--border-strong) !important;
+}
+
+.form-range::-webkit-slider-thumb {
+    background-color: var(--brass-fill);
+}
+
+.form-text {
+    color: var(--text-muted) !important;
+}
+
+/* ─── Modals / Offcanvas ──────────────────────────────────────────────────── */
+
+.modal-content {
+    background-color: var(--paper) !important;
+    background-image: var(--paper-texture);
+    background-blend-mode: overlay;
+    border: 1px solid var(--border-strong) !important;
+    border-radius: 4px 10px 6px 10px;
+    color: var(--text) !important;
+}
+
+.modal-header,
+.modal-footer {
+    border-color: var(--border) !important;
+}
+
+.offcanvas {
+    background-color: var(--paper) !important;
+    background-image: var(--paper-texture);
+    background-blend-mode: overlay;
+    border-color: var(--border-strong) !important;
+    color: var(--text) !important;
+}
+
+/* ─── Dark Theme Overrides ────────────────────────────────────────────────── */
+/* Everything above already reads its color from the tokens, which already
+   flip for dark theme — these just correct a couple of literal Bootstrap
+   utility classes still used directly in the markup. */
 
 [data-bs-theme="dark"] .bg-light {
-    background-color: #2c2f33 !important;
-    border-color: #444 !important;
+    background-color: var(--inset-fill-strong) !important;
+    border-color: var(--border) !important;
 }
 
 [data-bs-theme="dark"] .bg-white {
-    background-color: #23272a !important;
-    color: #fff !important;
+    background-color: var(--paper) !important;
+    color: var(--text) !important;
 }
 
 [data-bs-theme="dark"] .border-end,
 [data-bs-theme="dark"] .border-bottom,
 [data-bs-theme="dark"] .border-top {
-    border-color: #444 !important;
-}
-
-[data-bs-theme="dark"] .list-group-item {
-    background-color: #2c2f33;
-    color: #dfdfdf;
-    border-color: #444;
-}
-
-[data-bs-theme="dark"] .list-group-item:hover,
-[data-bs-theme="dark"] .list-group-item.active {
-    background-color: #7289da;
-    color: white;
-    border-color: #7289da;
+    border-color: var(--border) !important;
 }
 
 [data-bs-theme="dark"] .text-primary {
-    color: #7289da !important;
+    color: var(--brass) !important;
+}
+
+.text-primary {
+    color: var(--brass) !important;
+}
+
+.text-muted {
+    color: var(--text-muted) !important;
 }

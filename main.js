@@ -4,10 +4,11 @@ const { app, BrowserWindow, ipcMain, nativeTheme, globalShortcut, shell, dialog 
 const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const fs = require('fs');
-const extract = require('extract-zip');
+const StreamZip = require('node-stream-zip');
 const ini = require('ini');
 const crypto = require('crypto');
-const { spawn } = require('child_process');
+const os = require('os');
+const { spawn, execFile } = require('child_process');
 const log = require('electron-log');
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -20,7 +21,9 @@ const VERSION_FILE = 'version.json';
 const MODULE_IMAGE_FILE = 'main.bmp';
 const MODULE_CONFIG_FILE = 'module_config_template.ini';
 const MODULE_MANIFEST_FILE = 'module_manifest.json';
+const MODULE_INI_FILE = 'module.ini';
 const APP_CONFIG_FILE = 'config.json';
+const STEAM_APP_ID = '48700'; // Mount & Blade: Warband
 
 const IS_DEV = !app.isPackaged;
 const IS_WINDOWS = process.platform === 'win32';
@@ -483,6 +486,14 @@ ipcMain.handle('remove-module', async (_, modPath) => {
             return true; // Treat as success — it's gone either way
         }
 
+        // Steam Workshop modules are links; deleting recursively would wipe Steam's copy.
+        const linkStat = await fs.promises.lstat(resolved);
+        if (linkStat.isSymbolicLink()) {
+            await fs.promises.unlink(resolved);
+            console.log(`[remove-module] Unlinked workshop module: ${resolved}`);
+            return true;
+        }
+
         await fs.promises.rm(resolved, { recursive: true, force: true });
         console.log(`[remove-module] Removed: ${resolved}`);
         return true;
@@ -785,7 +796,209 @@ async function writeGameLanguage(settings) {
     }
 }
 
+// ─── Steam Workshop ──────────────────────────────────────────────────────────
+
+function querySteamPathFromRegistry() {
+    return new Promise(resolve => {
+        execFile('reg', ['query', 'HKCU\\Software\\Valve\\Steam', '/v', 'SteamPath'], (err, stdout) => {
+            if (err) return resolve(null);
+            const match = /SteamPath\s+REG_SZ\s+(.+)/i.exec(stdout);
+            resolve(match ? match[1].trim() : null);
+        });
+    });
+}
+
+async function findSteamRoots() {
+    const candidates = [];
+
+    if (IS_WINDOWS) {
+        const fromRegistry = await querySteamPathFromRegistry();
+        if (fromRegistry) candidates.push(fromRegistry);
+        const programFiles = process.env['ProgramFiles(x86)'] || process.env.ProgramFiles;
+        if (programFiles) candidates.push(path.join(programFiles, 'Steam'));
+    } else if (IS_MAC) {
+        candidates.push(path.join(os.homedir(), 'Library', 'Application Support', 'Steam'));
+    } else {
+        const home = os.homedir();
+        candidates.push(
+            path.join(home, '.steam', 'steam'),
+            path.join(home, '.local', 'share', 'Steam'),
+            path.join(home, '.var', 'app', 'com.valvesoftware.Steam', 'data', 'Steam'),
+        );
+        // Warband under Wine is usually driven by the Windows Steam client inside the prefix.
+        const { winePrefix } = await loadWineSettings();
+        const prefix = winePrefix || path.join(home, '.wine');
+        candidates.push(path.join(prefix, 'drive_c', 'Program Files (x86)', 'Steam'));
+    }
+
+    const roots = [];
+    for (const candidate of candidates) {
+        if (roots.includes(candidate)) continue;
+        try {
+            const stat = await fs.promises.stat(path.join(candidate, 'steamapps'));
+            if (stat.isDirectory()) roots.push(candidate);
+        } catch { /* not a Steam root */ }
+    }
+    return roots;
+}
+
+/** Parse libraryfolders.vdf to find every Steam library on the machine. */
+async function readSteamLibraries(steamRoot) {
+    const libraries = [steamRoot];
+    const vdfPath = path.join(steamRoot, 'steamapps', 'libraryfolders.vdf');
+
+    try {
+        const raw = await fs.promises.readFile(vdfPath, 'utf-8');
+        for (const match of raw.matchAll(/"path"\s+"([^"]+)"/g)) {
+            const libPath = match[1].replace(/\\\\/g, '\\');
+            if (!libraries.includes(libPath)) libraries.push(libPath);
+        }
+    } catch (err) {
+        if (err.code !== 'ENOENT') console.warn('[Steam] Failed to read libraryfolders.vdf:', err.message);
+    }
+
+    return libraries;
+}
+
+/** A workshop item either is a module folder itself or wraps one extra directory. */
+async function resolveWorkshopModuleRoot(itemDir) {
+    try {
+        await fs.promises.access(path.join(itemDir, MODULE_INI_FILE));
+        return itemDir;
+    } catch { /* look one level deeper */ }
+
+    try {
+        const entries = await fs.promises.readdir(itemDir, { withFileTypes: true });
+        for (const entry of entries.filter(e => e.isDirectory())) {
+            const nested = path.join(itemDir, entry.name);
+            try {
+                await fs.promises.access(path.join(nested, MODULE_INI_FILE));
+                return nested;
+            } catch { /* keep looking */ }
+        }
+    } catch { /* unreadable */ }
+
+    return null;
+}
+
+async function readModuleIniName(moduleRoot) {
+    try {
+        const raw = await fs.promises.readFile(path.join(moduleRoot, MODULE_INI_FILE), 'utf-8');
+        const match = /^\s*module_name\s*=\s*(.+?)\s*$/mi.exec(raw);
+        return match ? match[1].replace(/^"|"$/g, '').trim() : null;
+    } catch {
+        return null;
+    }
+}
+
+function sanitizeModuleFolderName(name) {
+    return name.replace(/[<>:"/\\|?*\x00-\x1f]/g, '').replace(/[. ]+$/, '').trim();
+}
+
+async function scanWorkshopItems() {
+    const items = [];
+    const seen = new Set();
+
+    for (const steamRoot of await findSteamRoots()) {
+        for (const library of await readSteamLibraries(steamRoot)) {
+            const contentDir = path.join(library, 'steamapps', 'workshop', 'content', STEAM_APP_ID);
+
+            let ids;
+            try {
+                ids = await fs.promises.readdir(contentDir);
+            } catch { continue; }
+
+            for (const id of ids) {
+                if (seen.has(id)) continue;
+
+                const moduleRoot = await resolveWorkshopModuleRoot(path.join(contentDir, id));
+                if (!moduleRoot) continue;
+
+                const rawName = await readModuleIniName(moduleRoot);
+                const name = sanitizeModuleFolderName(rawName || '') || `Workshop_${id}`;
+
+                seen.add(id);
+                items.push({ id, name, path: moduleRoot });
+            }
+        }
+    }
+
+    if (items.length) console.log(`[Steam] Found ${items.length} workshop module(s) for app ${STEAM_APP_ID}.`);
+    return items;
+}
+
+/**
+ * The game engine only loads modules from its own Modules folder, so each
+ * workshop item is exposed through a junction/symlink pointing at Steam's copy.
+ */
+async function syncWorkshopLinks() {
+    const links = new Map();
+
+    let items;
+    try {
+        items = await scanWorkshopItems();
+    } catch (err) {
+        console.warn('[Steam] Workshop scan failed:', err.message);
+        return links;
+    }
+
+    for (const item of items) {
+        const linkPath = path.join(modulesPath, item.name);
+
+        try {
+            const stat = await fs.promises.lstat(linkPath);
+            if (!stat.isSymbolicLink()) {
+                // A real local module wins over the workshop copy.
+                continue;
+            }
+            if (path.resolve(await fs.promises.readlink(linkPath)) === path.resolve(item.path)) {
+                links.set(item.name, item);
+                continue;
+            }
+            await fs.promises.unlink(linkPath);
+        } catch (err) {
+            if (err.code !== 'ENOENT') {
+                console.warn(`[Steam] Cannot inspect "${item.name}":`, err.message);
+                continue;
+            }
+        }
+
+        try {
+            await fs.promises.symlink(item.path, linkPath, IS_WINDOWS ? 'junction' : 'dir');
+            links.set(item.name, item);
+            console.log(`[Steam] Linked workshop module "${item.name}" (${item.id}).`);
+        } catch (err) {
+            console.warn(`[Steam] Failed to link "${item.name}":`, err.message);
+        }
+    }
+
+    await pruneDeadWorkshopLinks(links);
+    return links;
+}
+
+/** Drop links left behind by workshop items the user has unsubscribed from. */
+async function pruneDeadWorkshopLinks(activeLinks) {
+    let entries;
+    try {
+        entries = await fs.promises.readdir(modulesPath, { withFileTypes: true });
+    } catch { return; }
+
+    for (const entry of entries) {
+        if (!entry.isSymbolicLink() || activeLinks.has(entry.name)) continue;
+
+        const linkPath = path.join(modulesPath, entry.name);
+        try {
+            await fs.promises.access(linkPath);
+        } catch {
+            await fs.promises.unlink(linkPath).catch(() => { });
+            console.log(`[Steam] Removed dangling module link: ${entry.name}`);
+        }
+    }
+}
+
 async function scanModules() {
+    const workshopLinks = await syncWorkshopLinks();
+
     try {
         await fs.promises.access(modulesPath);
     } catch {
@@ -812,6 +1025,8 @@ async function scanModules() {
                 imagePath: null,
                 configExists: false,
                 manifest: null,
+                isWorkshop: workshopLinks.has(name),
+                workshopId: workshopLinks.get(name)?.id ?? null,
             };
 
             const versionFile = path.join(fullPath, VERSION_FILE);
@@ -1153,13 +1368,15 @@ async function processDownloadedModule(zipPath, meta) {
     try {
         console.log(`[Install] Processing "${meta.name}"...`);
 
-        // Integrity check
-        if (meta.md5) {
+        // Integrity check - prefer SHA-256, fall back to MD5 for legacy servers.
+        const expectedHash = meta.sha256 || meta.md5;
+        if (expectedHash) {
+            const algorithm = meta.sha256 ? 'sha256' : 'md5';
             mainWindow?.webContents.send('download-progress', 100);
-            console.log('[Install] Verifying MD5...');
-            const localHash = await hashFile(zipPath);
-            console.log(`[Install] MD5 - server: ${meta.md5}  local: ${localHash}`);
-            if (localHash !== meta.md5) {
+            console.log(`[Install] Verifying ${algorithm}...`);
+            const localHash = await hashFile(zipPath, algorithm);
+            console.log(`[Install] ${algorithm} - server: ${expectedHash}  local: ${localHash}`);
+            if (localHash !== expectedHash) {
                 throw new Error('Integrity check failed - file may be corrupted.');
             }
         }
@@ -1179,7 +1396,7 @@ async function processDownloadedModule(zipPath, meta) {
         console.log('[Install] Extracting...');
         tempDir = path.join(modulesPath, `_tmp_${Date.now()}`);
         await fs.promises.mkdir(tempDir, { recursive: true });
-        await extract(zipPath, { dir: tempDir });
+        await extractZipSafe(zipPath, tempDir);
 
         // Detect root folder from extracted content
         const topLevel = await fs.promises.readdir(tempDir);
@@ -1260,5 +1477,21 @@ async function processDownloadedModule(zipPath, meta) {
     } finally {
         setTimeout(() => safeUnlink(zipPath), 1000);
         if (tempDir) setTimeout(() => fs.promises.rm(tempDir, { recursive: true, force: true }).catch(() => { }), 1000);
+    }
+}
+
+async function extractZipSafe(zipPath, destDir) {
+    const zip = new StreamZip.async({ file: zipPath });
+    try {
+        const resolvedDest = path.resolve(destDir) + path.sep;
+        for (const entry of Object.values(await zip.entries())) {
+            const target = path.resolve(destDir, entry.name);
+            if (!target.startsWith(resolvedDest)) {
+                throw new Error(`Unsafe zip entry: ${entry.name}`);
+            }
+        }
+        await zip.extract(null, destDir);
+    } finally {
+        await zip.close();
     }
 }

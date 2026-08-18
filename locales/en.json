@@ -1386,6 +1386,7 @@
         "installed": "Installed",
         "latest": "Latest",
         "checksum_ok": "Verified",
+        "steam_workshop": "Steam Workshop",
         "updater_downloading": "Downloading launcher update...",
         "cancel_download": "Cancel",
         "ok": "OK",

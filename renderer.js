@@ -785,11 +785,14 @@ function renderList() {
                 path: installed ? installed.path : null,
                 url: modUrl,
                 md5: rm.md5 || null,
+                sha256: rm.sha256 || null,
                 size: rm.size || null,
                 description: rm.description || null,
                 manifest: rm.manifest || null,
                 img: installed ? installed.imagePath : null,
                 configExists: installed ? installed.configExists : false,
+                isWorkshop: installed ? !!installed.isWorkshop : false,
+                workshopId: installed ? installed.workshopId || null : null,
                 isInstalled: !!installed
             });
         });
@@ -808,6 +811,8 @@ function renderList() {
                 manifest: lm.manifest || null,
                 img: lm.imagePath,
                 configExists: lm.configExists,
+                isWorkshop: !!lm.isWorkshop,
+                workshopId: lm.workshopId || null,
                 isInstalled: true
             });
         }
@@ -888,11 +893,18 @@ function selectModule(mod, $btn) {
         $badges.append($('<span class="badge bg-primary">').text(`${t('ui.latest')}: v${mod.remoteVersion}`));
     }
 
-    if (mod.md5) {
-        const $md5Badge = $('<span class="badge bg-secondary">').text(t('ui.checksum_ok'));
-        $md5Badge.attr('title', `MD5: ${mod.md5}`);
-        $md5Badge.prepend($('<i class="fas fa-shield-alt me-1">'));
-        $badges.append($md5Badge);
+    if (mod.sha256 || mod.md5) {
+        const $hashBadge = $('<span class="badge bg-secondary">').text(t('ui.checksum_ok'));
+        $hashBadge.attr('title', mod.sha256 ? `SHA-256: ${mod.sha256}` : `MD5: ${mod.md5}`);
+        $hashBadge.prepend($('<i class="fas fa-shield-alt me-1">'));
+        $badges.append($hashBadge);
+    }
+
+    if (mod.isWorkshop) {
+        const $workshopBadge = $('<span class="badge bg-info text-dark">').text(t('ui.steam_workshop'));
+        $workshopBadge.attr('title', mod.workshopId ? `Workshop ID: ${mod.workshopId}` : '');
+        $workshopBadge.prepend($('<i class="fab fa-steam me-1">'));
+        $badges.append($workshopBadge);
     }
 
     if (mod.size) {
@@ -917,11 +929,15 @@ function updateModuleButtons(mod) {
     const playBtn = $('#play-btn');
 
     if (mod.isInstalled) {
-        removeBtn.prop('disabled', false).text(t('ui.remove'));
+        // Workshop modules live in Steam's folder — Steam manages their lifecycle.
+        removeBtn.prop('disabled', !!mod.isWorkshop).text(t('ui.remove'));
         playBtn.removeClass('disabled').prop('disabled', false);
         configBtn.prop('disabled', false).text(t('ui.configure'));
 
-        if (mod.remoteVersion && mod.localVersion && mod.remoteVersion !== mod.localVersion) {
+        if (mod.isWorkshop) {
+            installBtn.text(t('ui.install')).prop('disabled', true)
+                .removeClass('btn-success btn-secondary').addClass('btn-primary');
+        } else if (mod.remoteVersion && mod.localVersion && mod.remoteVersion !== mod.localVersion) {
             installBtn.text(t('ui.update')).prop('disabled', false)
                 .removeClass('btn-primary btn-secondary').addClass('btn-success');
         } else {
@@ -948,6 +964,7 @@ function startDownload(url) {
         version: activeModule.remoteVersion,
         size: activeModule.size || null,
         md5: activeModule.md5 || null,
+        sha256: activeModule.sha256 || null,
         manifest: activeModule.manifest || null,
         cleanInstall: isCleanInstall
     });
