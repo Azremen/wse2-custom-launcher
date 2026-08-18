@@ -14,6 +14,7 @@ const log = require('electron-log');
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const GAME_EXE_NAME = 'mb_warband_wse2.exe';
+const GAME_EXE_NAME_X64 = 'mb_warband_wse2_x64.exe';
 const LOG_FILE_NAME = 'wse2-launcher.log';
 const LAUNCH_STABLE_DELAY = 5000; // ms before assuming the game launched successfully
 const WRITE_TEST_FILE_NAME = '.test_write';
@@ -24,6 +25,7 @@ const MODULE_MANIFEST_FILE = 'module_manifest.json';
 const MODULE_INI_FILE = 'module.ini';
 const APP_CONFIG_FILE = 'config.json';
 const STEAM_APP_ID = '48700'; // Mount & Blade: Warband
+const ITEM_STATE_INSTALLED = 4; // k_EItemStateInstalled
 
 const IS_DEV = !app.isPackaged;
 const IS_WINDOWS = process.platform === 'win32';
@@ -407,9 +409,19 @@ ipcMain.handle('get-version', () => app.getVersion());
 
 ipcMain.handle('open-install-folder', () => shell.openPath(installPath));
 
-ipcMain.handle('launch-game', (_, moduleName) => {
+ipcMain.handle('launch-game', (_, moduleName, useX64) => {
     if (!moduleName) return false;
-    return launchGame(moduleName);
+    return launchGame(moduleName, !!useX64);
+});
+
+ipcMain.handle('has-x64-executable', async () => {
+    const exePath = await resolveExePath(true);
+    try {
+        await fs.promises.access(exePath);
+        return true;
+    } catch {
+        return false;
+    }
 });
 
 ipcMain.handle('configWindow', (_, modulePath) => createConfigWindow(modulePath));
@@ -621,11 +633,12 @@ ipcMain.handle('install-dxvk', async () => {
 
 // ─── Game Launch ─────────────────────────────────────────────────────────────
 
-async function resolveExePath() {
+async function resolveExePath(useX64 = false) {
+    const exeName = useX64 ? GAME_EXE_NAME_X64 : GAME_EXE_NAME;
     const candidates = [
-        path.join(modulesPath, '..', GAME_EXE_NAME),
-        path.join(installPath, GAME_EXE_NAME),
-        path.join(process.cwd(), GAME_EXE_NAME),
+        path.join(modulesPath, '..', exeName),
+        path.join(installPath, exeName),
+        path.join(process.cwd(), exeName),
     ];
 
     for (const p of candidates) {
@@ -635,8 +648,8 @@ async function resolveExePath() {
     return candidates[0]; // Return first candidate for a clear "not found" error message
 }
 
-async function launchGame(moduleName) {
-    const exePath = await resolveExePath();
+async function launchGame(moduleName, useX64 = false) {
+    const exePath = await resolveExePath(useX64);
     const workingDir = path.dirname(exePath);
 
     console.log(`[Launch] Module: "${moduleName}" | Exe: ${exePath} | Platform: ${process.platform}`);
@@ -798,6 +811,25 @@ async function writeGameLanguage(settings) {
 
 // ─── Steam Workshop ──────────────────────────────────────────────────────────
 
+/** @type {import('steamworks.js').Client | null} */
+let steamClient = null;
+let steamInitAttempted = false;
+
+function getSteamClient() {
+    if (steamInitAttempted) return steamClient;
+    steamInitAttempted = true;
+
+    try {
+        steamClient = require('steamworks.js').init(Number(STEAM_APP_ID));
+        console.log('[Steam] Steamworks initialised.');
+    } catch (err) {
+        console.log(`[Steam] Steamworks unavailable (${err.message}). Falling back to disk scan.`);
+        steamClient = null;
+    }
+
+    return steamClient;
+}
+
 function querySteamPathFromRegistry() {
     return new Promise(resolve => {
         execFile('reg', ['query', 'HKCU\\Software\\Valve\\Steam', '/v', 'SteamPath'], (err, stdout) => {
@@ -892,10 +924,69 @@ async function readModuleIniName(moduleRoot) {
 }
 
 function sanitizeModuleFolderName(name) {
-    return name.replace(/[<>:"/\\|?*\x00-\x1f]/g, '').replace(/[. ]+$/, '').trim();
+    // Workshop authors use underscores where the display name has spaces.
+    return name
+        .replace(/_/g, ' ')
+        .replace(/[<>:"/\\|?*\x00-\x1f]/g, '')
+        .replace(/\s+/g, ' ')
+        .replace(/[. ]+$/, '')
+        .trim();
 }
 
-async function scanWorkshopItems() {
+/**
+ * Steamworks gives us subscribed items and their real titles directly, which is
+ * what the official WSE2 launcher does. Falls back to scanning Steam's folders
+ * when the client isn't running or the native binding can't load.
+ */
+async function scanWorkshopItemsViaSteam() {
+    const client = getSteamClient();
+    if (!client) return null;
+
+    let ids;
+    try {
+        ids = client.workshop.getSubscribedItems()
+            .filter(id => (client.workshop.state(id) & ITEM_STATE_INSTALLED) !== 0);
+    } catch (err) {
+        console.warn('[Steam] Could not read subscribed items:', err.message);
+        return null;
+    }
+
+    if (!ids.length) return [];
+
+    const folders = new Map();
+    for (const id of ids) {
+        const info = client.workshop.installInfo(id);
+        if (!info?.folder) continue;
+
+        const moduleRoot = await resolveWorkshopModuleRoot(info.folder);
+        if (moduleRoot) folders.set(id.toString(), moduleRoot);
+    }
+
+    const titles = new Map();
+    try {
+        const result = await client.workshop.getItems(ids, { cachedResponseMaxAge: 3600 });
+        for (const item of result.items) {
+            if (item) titles.set(item.publishedFileId.toString(), item.title);
+        }
+    } catch (err) {
+        console.warn('[Steam] Could not fetch workshop titles:', err.message);
+    }
+
+    const items = [];
+    for (const [id, modulePath] of folders) {
+        const rawName = titles.get(id) || await readModuleIniName(modulePath);
+        items.push({
+            id,
+            name: sanitizeModuleFolderName(rawName || '') || `Workshop_${id}`,
+            path: modulePath,
+        });
+    }
+
+    console.log(`[Steam] Steamworks reported ${items.length} installed workshop module(s).`);
+    return items;
+}
+
+async function scanWorkshopItemsFromDisk() {
     const items = [];
     const seen = new Set();
 
@@ -923,8 +1014,12 @@ async function scanWorkshopItems() {
         }
     }
 
-    if (items.length) console.log(`[Steam] Found ${items.length} workshop module(s) for app ${STEAM_APP_ID}.`);
+    if (items.length) console.log(`[Steam] Disk scan found ${items.length} workshop module(s).`);
     return items;
+}
+
+async function scanWorkshopItems() {
+    return await scanWorkshopItemsViaSteam() ?? scanWorkshopItemsFromDisk();
 }
 
 /**
@@ -972,12 +1067,18 @@ async function syncWorkshopLinks() {
         }
     }
 
-    await pruneDeadWorkshopLinks(links);
+    await pruneStaleWorkshopLinks(links);
     return links;
 }
 
-/** Drop links left behind by workshop items the user has unsubscribed from. */
-async function pruneDeadWorkshopLinks(activeLinks) {
+/** True when a path points inside Steam's workshop content folder for Warband. */
+function isWorkshopContentPath(target) {
+    const normalized = path.resolve(target).replace(/\\/g, '/').toLowerCase();
+    return normalized.includes(`/steamapps/workshop/content/${STEAM_APP_ID}/`);
+}
+
+/** Drop links we own that no longer match a subscribed workshop item. */
+async function pruneStaleWorkshopLinks(activeLinks) {
     let entries;
     try {
         entries = await fs.promises.readdir(modulesPath, { withFileTypes: true });
@@ -987,12 +1088,23 @@ async function pruneDeadWorkshopLinks(activeLinks) {
         if (!entry.isSymbolicLink() || activeLinks.has(entry.name)) continue;
 
         const linkPath = path.join(modulesPath, entry.name);
+
+        let target = null;
+        try {
+            target = await fs.promises.readlink(linkPath);
+        } catch { /* unreadable link — fall through to the existence check */ }
+
+        let broken = false;
         try {
             await fs.promises.access(linkPath);
         } catch {
-            await fs.promises.unlink(linkPath).catch(() => { });
-            console.log(`[Steam] Removed dangling module link: ${entry.name}`);
+            broken = true;
         }
+
+        if (!broken && !(target && isWorkshopContentPath(target))) continue;
+
+        await fs.promises.unlink(linkPath).catch(() => { });
+        console.log(`[Steam] Removed stale module link: ${entry.name}`);
     }
 }
 

@@ -5,6 +5,7 @@ const DEFAULT_REMOTE_URL = 'http://gokberkalkis.com:8080/';
 const REMOTE_URL_KEY = 'remoteUrl';
 const LOCALE_KEY = 'locale';
 const THEME_KEY = 'theme';
+const X64_KEY = 'useX64';
 const DEFAULT_LOCALE = 'en';
 
 // ── State ────────────────────────────────────────────────────────────────────
@@ -384,11 +385,23 @@ async function initMainWindow() {
 
     $('#play-btn').on('click', async () => {
         if (activeModule && activeModule.isInstalled) {
-            window.api.launcher.launch(activeModule.name);
+            window.api.launcher.launch(activeModule.name, $('#x64-toggle').is(':checked'));
         } else {
             await showAlert(t("ui.not_installed"));
         }
     });
+
+    // The x64 switch only appears when the 64-bit build sits next to the 32-bit one.
+    (async () => {
+        if (!await window.api.launcher.hasX64()) return;
+
+        $('#x64-wrapper').removeClass('d-none');
+        $('#x64-toggle')
+            .prop('checked', localStorage.getItem(X64_KEY) === 'true')
+            .on('change', function () {
+                localStorage.setItem(X64_KEY, String(this.checked));
+            });
+    })();
 
     $('#settings').on('click', () => {
         bootstrap.Modal.getOrCreateInstance(document.getElementById('settingsModal')).show();

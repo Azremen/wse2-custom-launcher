@@ -29,6 +29,9 @@
     "appId": "com.azremen.wse2-launcher",
     "productName": "wse2-launcher",
     "asar": true,
+    "asarUnpack": [
+      "**/node_modules/steamworks.js/**"
+    ],
     "directories": {
       "output": "dist"
     },
@@ -51,7 +54,13 @@
         "nsis",
         "portable"
       ],
-      "icon": "icons/icon.ico"
+      "icon": "icons/icon.ico",
+      "extraFiles": [
+        {
+          "from": "node_modules/steamworks.js/dist/win64/steam_api64.dll",
+          "to": "steam_api64.dll"
+        }
+      ]
     },
     "nsis": {
       "oneClick": false,
@@ -71,7 +80,13 @@
       ],
       "artifactName": "${productName}-Linux.${ext}",
       "category": "Game",
-      "icon": "icons/icon.png"
+      "icon": "icons/icon.png",
+      "extraFiles": [
+        {
+          "from": "node_modules/steamworks.js/dist/linux64/libsteam_api.so",
+          "to": "libsteam_api.so"
+        }
+      ]
     },
     "publish": [
       {
@@ -92,7 +107,13 @@
         "dmg"
       ],
       "artifactName": "${productName}-Mac.${ext}",
-      "icon": "icons/icon.icns"
+      "icon": "icons/icon.icns",
+      "extraFiles": [
+        {
+          "from": "node_modules/steamworks.js/dist/osx/libsteam_api.dylib",
+          "to": "libsteam_api.dylib"
+        }
+      ]
     }
   },
   "keywords": [
@@ -114,7 +135,8 @@
     "electron-updater": "^6.1.7",
     "ini": "^4.1.1",
     "jquery": "^4.0.0",
-    "node-stream-zip": "^1.16.0"
+    "node-stream-zip": "^1.16.0",
+    "steamworks.js": "^0.4.0"
   },
   "allowScripts": {
     "electron@40.10.0": true,

@@ -1387,6 +1387,8 @@
         "latest": "Son Sürüm",
         "checksum_ok": "Doğrulandı",
         "steam_workshop": "Steam Atölyesi",
+        "x64_mode": "64-bit",
+        "x64_mode_hint": "WSE2'nin 64-bit sürümünü başlat",
         "updater_downloading": "Başlatma güncellemesi indiriliyor...",
         "cancel_download": "İptal",
         "ok": "Tamam",
