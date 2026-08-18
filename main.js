@@ -27,11 +27,13 @@ const WORKSHOP_COPY_MARKER_FILE = '.wse2-workshop-copy.json';
 const APP_CONFIG_FILE = 'config.json';
 const STEAM_APP_ID = '48700'; // Mount & Blade: Warband
 const ITEM_STATE_INSTALLED = 4; // k_EItemStateInstalled
+const PORTABLE_RELEASE_API_URL = 'https://api.github.com/repos/Azremen/wse2-custom-launcher/releases/latest';
 
 const IS_DEV = !app.isPackaged;
 const IS_WINDOWS = process.platform === 'win32';
 const IS_LINUX = process.platform === 'linux';
 const IS_MAC = process.platform === 'darwin';
+const IS_PORTABLE = IS_WINDOWS && Boolean(process.env.PORTABLE_EXECUTABLE_DIR);
 
 // ─── Logger (electron-log) ───────────────────────────────────────────────────
 
@@ -105,9 +107,13 @@ function getBaseDirectory() {
 }
 
 const installPath = getBaseDirectory();
+let gameInstallPath = null;
+let gameInstallPathResolved = false;
 
 async function resolveModulesPath() {
+    const gamePath = await findGameInstallPath();
     const candidates = [
+        gamePath && path.join(gamePath, 'Modules'),
         process.env.PORTABLE_EXECUTABLE_DIR && path.join(process.env.PORTABLE_EXECUTABLE_DIR, 'Modules'),
         path.join(installPath, 'Modules'),
         path.join(process.cwd(), 'Modules'),
@@ -161,6 +167,9 @@ let activeDownloadItem = null;
 
 /** @type {boolean} */
 let pendingUpdateAvailable = false;
+
+/** @type {{ version: string, url: string, name: string } | null} */
+let portableUpdate = null;
 
 const SHARED_WEB_PREFERENCES = {
     preload: path.join(__dirname, 'preload.js'),
@@ -263,6 +272,13 @@ function createConfigWindow(modulePath) {
 // ─── Auto Updater ────────────────────────────────────────────────────────────
 
 function setupAutoUpdater() {
+    if (IS_PORTABLE) {
+        checkPortableForUpdates().catch(err =>
+            console.warn(`[Updater] Portable update check failed: ${err.message}`)
+        );
+        return;
+    }
+
     autoUpdater.autoDownload = false;
     autoUpdater.autoInstallOnAppQuit = false;
 
@@ -285,6 +301,95 @@ function setupAutoUpdater() {
     autoUpdater.checkForUpdates().catch(err =>
         console.warn(`[Updater] Check failed: ${err.message}`)
     );
+}
+
+function isVersionNewer(candidate, current) {
+    const parse = version => String(version).replace(/^v/, '').split('-')[0].split('.').map(part => Number(part) || 0);
+    const candidateParts = parse(candidate);
+    const currentParts = parse(current);
+    const length = Math.max(candidateParts.length, currentParts.length);
+
+    for (let index = 0; index < length; index++) {
+        const difference = (candidateParts[index] || 0) - (currentParts[index] || 0);
+        if (difference !== 0) return difference > 0;
+    }
+
+    return false;
+}
+
+async function checkPortableForUpdates() {
+    const response = await fetch(PORTABLE_RELEASE_API_URL, {
+        headers: { Accept: 'application/vnd.github+json' },
+    });
+    if (!response.ok) throw new Error(`GitHub returned HTTP ${response.status}`);
+
+    const release = await response.json();
+    const version = String(release.tag_name || '').replace(/^v/, '');
+    const asset = release.assets?.find(item => item.name === 'wse2-launcher-Windows-Portable.exe');
+    const hasUpdate = Boolean(version && asset?.browser_download_url && isVersionNewer(version, app.getVersion()));
+
+    portableUpdate = hasUpdate
+        ? { version, url: asset.browser_download_url, name: asset.name }
+        : null;
+
+    if (hasUpdate) {
+        pendingUpdateAvailable = true;
+        mainWindow?.webContents.send('update_available');
+    }
+
+    return { hasUpdate };
+}
+
+async function downloadPortableUpdate() {
+    if (!portableUpdate) {
+        const result = await checkPortableForUpdates();
+        if (!result.hasUpdate || !portableUpdate) return false;
+    }
+
+    const portablePath = process.env.PORTABLE_EXECUTABLE_FILE
+        || path.join(process.env.PORTABLE_EXECUTABLE_DIR, portableUpdate.name);
+    const updatePath = `${portablePath}.update`;
+
+    try {
+        const response = await fetch(portableUpdate.url);
+        if (!response.ok || !response.body) throw new Error(`Download failed with HTTP ${response.status}`);
+
+        const totalBytes = Number(response.headers.get('content-length')) || 0;
+        const file = await fs.promises.open(updatePath, 'w');
+        let receivedBytes = 0;
+
+        try {
+            for await (const chunk of response.body) {
+                await file.write(chunk);
+                receivedBytes += chunk.length;
+                if (totalBytes) {
+                    mainWindow?.webContents.send('update_download_progress', Math.round((receivedBytes / totalBytes) * 100));
+                }
+            }
+        } finally {
+            await file.close();
+        }
+
+        const script = [
+            `$parent = Get-Process -Id ${process.pid} -ErrorAction SilentlyContinue`,
+            'if ($parent) { $parent.WaitForExit() }',
+            `Move-Item -LiteralPath '${updatePath.replace(/'/g, "''")}' -Destination '${portablePath.replace(/'/g, "''")}' -Force`,
+            `Start-Process -FilePath '${portablePath.replace(/'/g, "''")}'`,
+        ].join('; ');
+        const updater = spawn('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden', '-Command', script], {
+            detached: true,
+            stdio: 'ignore',
+            windowsHide: true,
+        });
+        updater.unref();
+        app.quit();
+        return true;
+    } catch (err) {
+        await fs.promises.unlink(updatePath).catch(() => { });
+        console.error('[Updater] Portable update failed:', err.message);
+        mainWindow?.webContents.send('app-error', `Portable update failed: ${err.message}`);
+        return false;
+    }
 }
 
 // ─── Download Handler ────────────────────────────────────────────────────────
@@ -433,9 +538,18 @@ ipcMain.handle('download', (_, url, meta) => {
     mainWindow?.webContents.downloadURL(url);
 });
 
-ipcMain.handle('restart_app', () => autoUpdater.quitAndInstall());
-ipcMain.handle('start_update', () => autoUpdater.downloadUpdate());
+ipcMain.handle('restart_app', () => {
+    if (IS_PORTABLE) return false;
+    autoUpdater.quitAndInstall();
+    return true;
+});
+ipcMain.handle('start_update', () => {
+    if (IS_PORTABLE) return downloadPortableUpdate();
+    return autoUpdater.downloadUpdate();
+});
 ipcMain.handle('check-for-updates', async () => {
+    if (IS_PORTABLE) return checkPortableForUpdates();
+
     try {
         const result = await autoUpdater.checkForUpdates();
         const remoteVersion = result?.updateInfo?.version;
@@ -636,7 +750,9 @@ ipcMain.handle('install-dxvk', async () => {
 
 async function resolveExePath(useX64 = false) {
     const exeName = useX64 ? GAME_EXE_NAME_X64 : GAME_EXE_NAME;
+    const gamePath = await findGameInstallPath();
     const candidates = [
+        gamePath && path.join(gamePath, exeName),
         path.join(modulesPath, '..', exeName),
         path.join(installPath, exeName),
         path.join(process.cwd(), exeName),
@@ -891,6 +1007,80 @@ async function readSteamLibraries(steamRoot) {
     }
 
     return libraries;
+}
+
+function queryWarbandPathFromRegistry() {
+    if (!IS_WINDOWS) return Promise.resolve(null);
+
+    const registryKeys = [
+        'HKCU\\Software\\MountAndBladeWarbandKeys',
+        'HKLM\\Software\\MountAndBladeWarbandKeys',
+        'HKLM\\Software\\WOW6432Node\\MountAndBladeWarbandKeys',
+    ];
+
+    return new Promise(resolve => {
+        let index = 0;
+        const tryNext = () => {
+            if (index >= registryKeys.length) return resolve(null);
+            const key = registryKeys[index++];
+            execFile('reg', ['query', key, '/v', 'install_path'], (err, stdout) => {
+                if (err) return tryNext();
+                const match = /install_path\s+REG_\w+\s+(.+)/i.exec(stdout);
+                resolve(match ? match[1].trim() : null);
+            });
+        };
+        tryNext();
+    });
+}
+
+async function findGameInstallPath() {
+    if (gameInstallPathResolved) return gameInstallPath;
+    gameInstallPathResolved = true;
+
+    const localCandidates = [
+        process.env.PORTABLE_EXECUTABLE_DIR,
+        installPath,
+        process.cwd(),
+    ].filter(Boolean);
+
+    for (const candidate of localCandidates) {
+        try {
+            await fs.promises.access(path.join(candidate, GAME_EXE_NAME));
+            gameInstallPath = candidate;
+            console.log(`[Paths] Warband found next to launcher: ${gameInstallPath}`);
+            return gameInstallPath;
+        } catch { /* try the next location */ }
+    }
+
+    for (const steamRoot of await findSteamRoots()) {
+        for (const library of await readSteamLibraries(steamRoot)) {
+            const manifestPath = path.join(library, 'steamapps', `appmanifest_${STEAM_APP_ID}.acf`);
+            try {
+                const manifest = await fs.promises.readFile(manifestPath, 'utf8');
+                const match = /"installdir"\s+"([^"]+)"/i.exec(manifest);
+                if (!match) continue;
+
+                const candidate = path.join(library, 'steamapps', 'common', match[1]);
+                await fs.promises.access(path.join(candidate, GAME_EXE_NAME));
+                gameInstallPath = candidate;
+                console.log(`[Paths] Warband found in Steam library: ${gameInstallPath}`);
+                return gameInstallPath;
+            } catch { /* game is not installed in this library */ }
+        }
+    }
+
+    const registryPath = await queryWarbandPathFromRegistry();
+    if (registryPath) {
+        try {
+            await fs.promises.access(path.join(registryPath, GAME_EXE_NAME));
+            gameInstallPath = registryPath;
+            console.log(`[Paths] Warband found via Windows registry: ${gameInstallPath}`);
+            return gameInstallPath;
+        } catch { /* registry path is stale */ }
+    }
+
+    console.warn('[Paths] Warband installation could not be detected.');
+    return null;
 }
 
 /** A workshop item either is a module folder itself or wraps one extra directory. */

@@ -26,13 +26,13 @@ The launcher reads your subscribed items through the Steamworks API, exactly lik
 - Steam must be running and the game must be owned by the signed-in account.
 - If Steam is unavailable, the launcher falls back to scanning `steamapps/workshop/content/48700`.
 - Workshop modules cannot be removed from the launcher; manage them through Steam.
-- Unsubscribed items have their links cleaned up on the next launcher start.
+- Unsubscribed items disappear from the launcher on the next refresh.
 
 ### Installation & Usage
 
 #### Windows
-1. **Download** the launcher (Installer or Portable) from the [Releases](../../releases) page.
-2. Place the launcher in your **Mount & Blade Warband** game directory (same folder as `mb_warband_wse2.exe`).
+1. **Installer:** Run the Setup executable and install it in any folder. The launcher detects your Warband installation through Steam or the Windows registry and supports in-app updates.
+2. **Portable:** Place the portable executable next to `mb_warband_wse2.exe`, or let it detect an installed Steam copy. When an update is available, the launcher downloads the latest portable executable, replaces itself after closing, and restarts automatically.
 3. Run the launcher, configure your settings, and click **Launch**.
 
 #### Linux
@@ -142,13 +142,13 @@ Başlatıcı, abone olduğunuz öğeleri resmi WSE2 başlatıcısıyla aynı şe
 - Steam açık olmalı ve oyun giriş yapılmış hesapta sahipli olmalıdır.
 - Steam erişilemezse `steamapps/workshop/content/48700` klasörü taranarak devam edilir.
 - Atölye modülleri başlatıcıdan kaldırılamaz; yönetimi Steam üzerinden yapılır.
-- Abonelikten çıkılan öğelerin bağlantıları bir sonraki açılışta temizlenir.
+- Abonelikten çıkılan öğeler bir sonraki yenilemede başlatıcıdan kaldırılır.
 
 ### Kurulum ve Kullanım
 
 #### Windows
-1. [Releases](../../releases) sayfasından başlatıcıyı **indirin** (Kurulum veya Taşınabilir).
-2. **Mount & Blade Warband** oyun klasörüne koyun (`mb_warband_wse2.exe` ile aynı dizin).
+1. **Kurulum:** Setup EXE dosyasını çalıştırın ve istediğiniz klasöre kurun. Başlatıcı Warband kurulumunu Steam veya Windows kayıt defteri üzerinden algılar ve uygulama içinden güncellenir.
+2. **Taşınabilir:** Portable EXE dosyasını `mb_warband_wse2.exe` yanına koyun ya da Steam kurulumunun algılanmasına izin verin. Güncelleme olduğunda başlatıcı yeni Portable EXE dosyasını indirir, kapandıktan sonra kendini değiştirir ve otomatik yeniden açılır.
 3. Başlatın, ayarları yapılandırın ve **Launch** butonuna basın.
 
 #### Linux
@@ -257,13 +257,13 @@ CSC_KEY_PASSWORD=sifreniz
 - Steam должен быть запущен, а игра — принадлежать текущему аккаунту.
 - Если Steam недоступен, выполняется сканирование `steamapps/workshop/content/48700`.
 - Модули мастерской нельзя удалить из лаунчера — управляйте ими через Steam.
-- Ссылки на отменённые подписки удаляются при следующем запуске.
+- Отменённые подписки исчезают из лаунчера при следующем обновлении списка.
 
 ### Установка и использование
 
 #### Windows
-1. **Скачайте** лаунчер со страницы [Releases](../../releases) (Установщик или Portable).
-2. Поместите в папку **Mount & Blade Warband** (рядом с `mb_warband_wse2.exe`).
+1. **Установщик:** Запустите Setup EXE и установите его в любую папку. Лаунчер определит Warband через Steam или реестр Windows и поддерживает обновления из приложения.
+2. **Portable:** Поместите Portable EXE рядом с `mb_warband_wse2.exe` или разрешите ему обнаружить установленную Steam-копию. При наличии обновления лаунчер загрузит новый Portable EXE, заменит себя после закрытия и автоматически перезапустится.
 3. Запустите, настройте параметры и нажмите **Launch**.
 
 #### Linux
