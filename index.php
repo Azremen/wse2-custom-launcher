@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+// Large ZIP hashing can exceed the default 30s limit; don't let it corrupt output mid-run.
+set_time_limit(0);
+// Keep warnings out of the JSON response body; they still reach the error log.
+ini_set('display_errors', '0');
+
 // ── Configuration ─────────────────────────────────────────────────────────────
 const DEFAULT_VERSION  = '1.0.0';
 const SKIP_FILES       = ['wse2-launcher.zip'];
@@ -44,41 +49,63 @@ function readMeta(string $moduleName): array
 }
 
 /**
- * Return the hash of a ZIP file, using a cached value when the file
- * has not been modified since the last calculation.
+ * Return the MD5 and SHA256 hashes of a ZIP file, using cached values when the
+ * file has not been modified since the last calculation. Both hashes are
+ * computed from a single streamed read to avoid reading the file twice.
  */
-function resolveZipHash(string $zipPath, string $algo): ?string
+function resolveHashes(string $zipPath): array
 {
+    $defaultHashes = ['md5' => null, 'sha256' => null];
+
     if (!is_readable($zipPath)) {
-        return null;
+        return $defaultHashes;
     }
 
     if (!is_dir(CACHE_DIR)) {
-        mkdir(CACHE_DIR, 0750, true);
+        @mkdir(CACHE_DIR, 0755, true);
     }
 
-    $cacheFile   = CACHE_DIR . '/' . basename($zipPath) . '.' . $algo . '.json';
+    $cacheFile   = CACHE_DIR . '/' . basename($zipPath) . '.hashes.json';
     $currentMtime = filemtime($zipPath);
 
     if (is_readable($cacheFile)) {
         $cached = json_decode(file_get_contents($cacheFile), true);
         if (
             is_array($cached)
-            && isset($cached['mtime'], $cached['hash'])
+            && isset($cached['mtime'], $cached['md5'], $cached['sha256'])
             && (int) $cached['mtime'] === $currentMtime
         ) {
-            return $cached['hash'];
+            return ['md5' => $cached['md5'], 'sha256' => $cached['sha256']];
         }
     }
 
-    $hash = hash_file($algo, $zipPath);
-    file_put_contents(
+    $ctxMd5 = hash_init('md5');
+    $ctxSha = hash_init('sha256');
+    $handle = @fopen($zipPath, 'rb');
+
+    if (!$handle) {
+        return $defaultHashes;
+    }
+
+    while (!feof($handle)) {
+        $chunk = fread($handle, 1024 * 1024 * 8);
+        hash_update($ctxMd5, $chunk);
+        hash_update($ctxSha, $chunk);
+    }
+    fclose($handle);
+
+    $result = [
+        'md5'    => hash_final($ctxMd5),
+        'sha256' => hash_final($ctxSha),
+    ];
+
+    @file_put_contents(
         $cacheFile,
-        json_encode(['mtime' => $currentMtime, 'hash' => $hash]),
+        json_encode(['mtime' => $currentMtime, 'md5' => $result['md5'], 'sha256' => $result['sha256']]),
         LOCK_EX
     );
 
-    return $hash ?: null;
+    return $result;
 }
 
 /**
@@ -115,8 +142,9 @@ foreach (glob(MODULES_DIR . '/*.zip') ?: [] as $zipPath) {
     }
 
     $meta     = readMeta($moduleName);
-    $filesize = filesize($zipPath);
+    $filesize = @filesize($zipPath);
     $manifest = readManifest($moduleName);
+    $hashes   = resolveHashes($zipPath);
 
     $modules[] = [
         'name'        => $moduleName,
@@ -124,8 +152,8 @@ foreach (glob(MODULES_DIR . '/*.zip') ?: [] as $zipPath) {
         'description' => $meta['description'],
         'url'         => MODULES_URL_PATH . rawurlencode($filename),
         // md5 kept only for older launcher builds; sha256 is authoritative.
-        'md5'         => resolveZipHash($zipPath, 'md5'),
-        'sha256'      => resolveZipHash($zipPath, 'sha256'),
+        'md5'         => $hashes['md5'],
+        'sha256'      => $hashes['sha256'],
         'size'        => $filesize !== false ? $filesize : null,
         'manifest'    => $manifest,
     ];

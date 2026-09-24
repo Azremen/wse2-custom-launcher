@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' http: https:;">
+        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: http: https: file:; font-src 'self'; connect-src 'self' http: https:;">
     <title>WSE2 Config</title>
 
     <link rel="stylesheet" href="./libs/css/bootstrap.min.css">
@@ -18,7 +18,7 @@
         <div class="row g-0 config-full-height">
 
             <!-- Sidebar -->
-            <aside class="col-3 col-lg-2 bg-light border-end d-flex flex-column config-full-height">
+            <aside class="col-3 col-lg-2 bg-body-tertiary border-end d-flex flex-column config-full-height">
                 <div class="p-3 border-bottom">
                     <h5 class="m-0" data-i18n="ui.settings"></h5>
                 </div>
@@ -26,7 +26,7 @@
                     aria-label="Configuration sections">
                     <!-- Populated by renderer.js -->
                 </nav>
-                <div class="p-2 border-top bg-light d-grid gap-1">
+                <div class="p-2 border-top bg-body-tertiary d-grid gap-1">
                     <button class="btn btn-outline-secondary btn-sm w-100" id="config-back" type="button"
                         data-i18n="ui.back"></button>
                     <button class="btn btn-primary btn-sm w-100" id="config-save" type="button"

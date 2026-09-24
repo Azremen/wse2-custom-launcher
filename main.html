@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' http: https:;">
+        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: http: https: file:; font-src 'self'; connect-src 'self' http: https:;">
     <title>WSE2 Launcher</title>
 
     <link rel="stylesheet" href="./libs/css/bootstrap.min.css">
@@ -71,7 +71,7 @@
 
                 <!-- Left Panel: Module List + Actions -->
                 <aside class="col-3 col-md-4" aria-label="Module list">
-                    <ul class="list-group p-0 mb-0 rounded-0" id="list-pos" role="listbox"
+                    <ul class="list-group p-0 mb-0 rounded-0" id="list-pos"
                         aria-label="Installed modules">
                     </ul>
 
@@ -94,9 +94,9 @@
 
                 <!-- Right Panel: Module Image + Detail Info -->
                 <section class="col-9 col-md-8 d-flex flex-column" aria-label="Module preview">
-                    <img id="module-img" class="module-img d-none" alt="Module banner">
+                    <img id="module-img" class="module-img d-none" alt="Module banner" draggable="false">
                     <img id="module-placeholder-img" class="module-img" src="./assets/knight-placeholder.jpg"
-                        alt="" aria-hidden="true">
+                        alt="" aria-hidden="true" draggable="false">
                     <div id="module-info" class="module-info d-none mt-2">
                         <h6 id="module-info-name" class="mb-1 fw-bold"></h6>
                         <div id="module-info-badges" class="d-flex flex-wrap gap-1 mb-1"></div>

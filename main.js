@@ -162,8 +162,8 @@ let currentConfigModulePath = null;
 /** @type {Map<string, object>} */
 const pendingDownloads = new Map();
 
-/** @type {import('electron').DownloadItem | null} */
-let activeDownloadItem = null;
+/** @type {Map<string, import('electron').DownloadItem>} */
+const activeDownloadItems = new Map();
 
 /** @type {boolean} */
 let pendingUpdateAvailable = false;
@@ -421,7 +421,7 @@ function setupDownloadHandler() {
 
         console.log(`[Download] "${meta.name}" -> ${savePath}`);
         item.setSavePath(savePath);
-        activeDownloadItem = item;
+        if (matchedUrl) activeDownloadItems.set(matchedUrl, item);
 
         item.on('updated', (__, state) => {
             if (state === 'interrupted') {
@@ -446,7 +446,7 @@ function setupDownloadHandler() {
         });
 
         item.once('done', (__, state) => {
-            activeDownloadItem = null;
+            if (matchedUrl) activeDownloadItems.delete(matchedUrl);
 
             if (state === 'completed') {
                 if (matchedUrl) pendingDownloads.delete(matchedUrl);
@@ -563,12 +563,12 @@ ipcMain.handle('check-for-updates', async () => {
 });
 
 ipcMain.handle('cancel-download', () => {
-    if (activeDownloadItem) {
-        try { activeDownloadItem.cancel(); } catch { /* no-op */ }
-        activeDownloadItem = null;
-        return true;
+    let canceled = false;
+    for (const item of activeDownloadItems.values()) {
+        try { item.cancel(); canceled = true; } catch { /* no-op */ }
     }
-    return false;
+    activeDownloadItems.clear();
+    return canceled;
 });
 
 ipcMain.handle('get-auto-launch', () => {
@@ -1210,7 +1210,10 @@ async function scanWorkshopItemsFromDisk() {
 }
 
 async function scanWorkshopItems() {
-    return await scanWorkshopItemsViaSteam() ?? scanWorkshopItemsFromDisk();
+    const steamItems = await scanWorkshopItemsViaSteam();
+    // Fall through to disk scan if Steam returned null (unavailable) or an empty list.
+    if (steamItems && steamItems.length > 0) return steamItems;
+    return await scanWorkshopItemsFromDisk();
 }
 
 function isWorkshopContentPath(target) {

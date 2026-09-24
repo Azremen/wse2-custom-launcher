@@ -39,13 +39,46 @@ contextBridge.exposeInMainWorld('api', {
         getGameLanguages: () => ipcRenderer.invoke('get-game-languages'),
     },
     events: {
-        onDownloadProgress: (callback) => { ipcRenderer.removeAllListeners('download-progress'); ipcRenderer.on('download-progress', (_, value) => callback(value)); },
-        onDownloadComplete: (callback) => { ipcRenderer.removeAllListeners('download-complete'); ipcRenderer.on('download-complete', () => callback()); },
-        onDownloadError: (callback) => { ipcRenderer.removeAllListeners('download-error'); ipcRenderer.on('download-error', (_, error) => callback(error)); },
-        onUpdateAvailable: (callback) => { ipcRenderer.removeAllListeners('update_available'); ipcRenderer.on('update_available', () => callback()); },
-        onUpdateDownloaded: (callback) => { ipcRenderer.removeAllListeners('update_downloaded'); ipcRenderer.on('update_downloaded', () => callback()); },
-        onUpdateProgress: (callback) => { ipcRenderer.removeAllListeners('update_download_progress'); ipcRenderer.on('update_download_progress', (_, pct) => callback(pct)); },
-        onAppLog: (callback) => { ipcRenderer.removeAllListeners('app-log'); ipcRenderer.on('app-log', (_, entry) => callback(entry)); },
-        onAppError: (callback) => { ipcRenderer.removeAllListeners('app-error'); ipcRenderer.on('app-error', (_, msg) => callback(msg)); }
+        // Each on* returns an unsubscribe function instead of nuking all app-wide listeners for the channel.
+        onDownloadProgress: (callback) => {
+            const handler = (_, value) => callback(value);
+            ipcRenderer.on('download-progress', handler);
+            return () => ipcRenderer.removeListener('download-progress', handler);
+        },
+        onDownloadComplete: (callback) => {
+            const handler = () => callback();
+            ipcRenderer.on('download-complete', handler);
+            return () => ipcRenderer.removeListener('download-complete', handler);
+        },
+        onDownloadError: (callback) => {
+            const handler = (_, error) => callback(error);
+            ipcRenderer.on('download-error', handler);
+            return () => ipcRenderer.removeListener('download-error', handler);
+        },
+        onUpdateAvailable: (callback) => {
+            const handler = () => callback();
+            ipcRenderer.on('update_available', handler);
+            return () => ipcRenderer.removeListener('update_available', handler);
+        },
+        onUpdateDownloaded: (callback) => {
+            const handler = () => callback();
+            ipcRenderer.on('update_downloaded', handler);
+            return () => ipcRenderer.removeListener('update_downloaded', handler);
+        },
+        onUpdateProgress: (callback) => {
+            const handler = (_, pct) => callback(pct);
+            ipcRenderer.on('update_download_progress', handler);
+            return () => ipcRenderer.removeListener('update_download_progress', handler);
+        },
+        onAppLog: (callback) => {
+            const handler = (_, entry) => callback(entry);
+            ipcRenderer.on('app-log', handler);
+            return () => ipcRenderer.removeListener('app-log', handler);
+        },
+        onAppError: (callback) => {
+            const handler = (_, msg) => callback(msg);
+            ipcRenderer.on('app-error', handler);
+            return () => ipcRenderer.removeListener('app-error', handler);
+        }
     }
 });

@@ -51,37 +51,56 @@ function getDownloadStatus() {
 // ── Utilities ────────────────────────────────────────────────
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
+let dialogQueue = [];
+let isDialogActive = false;
+
 function showDialog(message, { isConfirm = false } = {}) {
     return new Promise(resolve => {
-        let settled = false;
-        const settle = val => { if (!settled) { settled = true; resolve(val); } };
-
-        const el = document.getElementById('appModal');
-        if (!el) {
-            // Fallback for windows without appModal (e.g. config window)
-            if (isConfirm) {
-                settle(window.confirm(message));
-            } else {
-                window.alert(message);
-                settle(undefined);
-            }
-            return;
-        }
-        const bsModal = bootstrap.Modal.getOrCreateInstance(el);
-
-        $('#appModalBody').text(message);
-        $('#appModalOk').text(t('ui.ok')).off('click').on('click', () => { bsModal.hide(); settle(true); });
-
-        if (isConfirm) {
-            $('#appModalCancel').text(t('ui.cancel')).removeClass('d-none')
-                .off('click').on('click', () => { bsModal.hide(); settle(false); });
-        } else {
-            $('#appModalCancel').addClass('d-none');
-        }
-
-        el.addEventListener('hidden.bs.modal', () => settle(isConfirm ? false : undefined), { once: true });
-        bsModal.show();
+        dialogQueue.push({ message, isConfirm, resolve });
+        processDialogQueue();
     });
+}
+
+// Serializes modal prompts so a new one never overwrites a still-pending Promise.
+function processDialogQueue() {
+    if (isDialogActive || dialogQueue.length === 0) return;
+    isDialogActive = true;
+
+    const { message, isConfirm, resolve } = dialogQueue.shift();
+    let settled = false;
+    const settle = val => { if (!settled) { settled = true; resolve(val); } };
+
+    const el = document.getElementById('appModal');
+    if (!el) {
+        // Fallback for windows without appModal (e.g. config window)
+        if (isConfirm) {
+            settle(window.confirm(message));
+        } else {
+            window.alert(message);
+            settle(undefined);
+        }
+        isDialogActive = false;
+        processDialogQueue();
+        return;
+    }
+    const bsModal = bootstrap.Modal.getOrCreateInstance(el);
+
+    $('#appModalBody').text(message);
+    $('#appModalOk').text(t('ui.ok')).off('click').on('click', () => { bsModal.hide(); settle(true); });
+
+    if (isConfirm) {
+        $('#appModalCancel').text(t('ui.cancel')).removeClass('d-none')
+            .off('click').on('click', () => { bsModal.hide(); settle(false); });
+    } else {
+        $('#appModalCancel').addClass('d-none');
+    }
+
+    el.addEventListener('hidden.bs.modal', () => {
+        settle(isConfirm ? false : undefined);
+        isDialogActive = false;
+        setTimeout(processDialogQueue, 150); // let Bootstrap's close animation finish
+    }, { once: true });
+    bsModal.show();
 }
 
 const showAlert = msg => showDialog(msg, { isConfirm: false });
@@ -784,10 +803,12 @@ function renderList() {
                 if (rm.url.startsWith('http://') || rm.url.startsWith('https://')) {
                     modUrl = rm.url;
                 } else {
-                    // Relative URL - append to base config
-                    // For now, if you use relative paths, they must be relative to the specific REMOTE_URL set above.
-                    // If you want to host files elsewhere, put the FULL URL in modules.json
-                    modUrl = REMOTE_URL + rm.url;
+                    // Resolve against REMOTE_URL so stray/missing slashes don't 404
+                    try {
+                        modUrl = new URL(rm.url, REMOTE_URL).href;
+                    } catch (e) {
+                        modUrl = REMOTE_URL + rm.url.replace(/^\/+/, '');
+                    }
                 }
             }
 
@@ -1197,7 +1218,7 @@ function renderConfigForm(schema, values) {
 
                 if (fieldDef.step) {
                     $input.attr('step', fieldDef.step);
-                } else if (fieldDef.inputType === 'float' || !Number.isInteger(fieldDef['default-value'])) {
+                } else if (fieldDef.inputType === 'float' || (typeof fieldDef['default-value'] === 'number' && !Number.isInteger(fieldDef['default-value']))) {
                     $input.attr('step', '0.01');
                 } else {
                     $input.attr('step', '1');
@@ -1238,8 +1259,11 @@ function renderConfigForm(schema, values) {
 
                 if (colorVal.startsWith('0x') || colorVal.startsWith('0X')) {
                     let hex = colorVal.substring(2);
-                    // Strip alpha if 0xAARRGGBB (8 chars)
-                    if (hex.length > 6) hex = hex.substring(hex.length - 6);
+                    // Preserve the original alpha byte so saving doesn't invent a new one
+                    if (hex.length === 8) {
+                        $input.data('original-alpha', hex.substring(0, 2));
+                        hex = hex.substring(2);
+                    }
                     while (hex.length < 6) hex = '0' + hex;
                     colorVal = '#' + hex;
                 }
@@ -1320,11 +1344,10 @@ function collectFormData(schema) {
             } else if ($el.attr('type') === 'color') {
                 let hex = $el.val();
                 if (hex.startsWith('#')) {
-                    const defaultVal = fieldDef ? String(fieldDef['default-value'] || '') : '';
-                    // Restore alpha prefix if default was 0xAARRGGBB
-                    if (defaultVal.startsWith('0x') && defaultVal.length === 10) {
-                        const alpha = defaultVal.substring(2, 4).toLowerCase();
-                        val = '0x' + alpha + hex.substring(1).toLowerCase();
+                    // Use the alpha captured from the original INI value, not the schema default
+                    const origAlpha = $el.data('original-alpha');
+                    if (origAlpha) {
+                        val = '0x' + origAlpha.toLowerCase() + hex.substring(1).toLowerCase();
                     } else {
                         val = '0x' + hex.substring(1).toLowerCase();
                     }

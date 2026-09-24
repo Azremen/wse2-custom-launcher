@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+// Hashing gigabyte-sized mods can run long; don't let PHP's default limits cut it off.
+set_time_limit(0);
+ini_set('memory_limit', '512M');
+
 $baseDir = __DIR__ . '/Modules';
 $skipFiles = ['wse2-launcher.zip'];
 $errors = [];
@@ -86,7 +90,8 @@ function manifestFromZip(string $zipPath): ?array
 
         $hashCtxSha256 = hash_init('sha256');
         while (!feof($stream)) {
-            $chunk = fread($stream, 8192);
+            // 1 MB chunks instead of 8 KB cut the loop iteration count by ~99%.
+            $chunk = fread($stream, 1048576);
             if ($chunk !== false && $chunk !== '') {
                 hash_update($hashCtxSha256, $chunk);
             }
@@ -132,15 +137,21 @@ foreach (glob($baseDir . '/*.zip') ?: [] as $zipPath) {
     }
 
     $moduleName = pathinfo($filename, PATHINFO_FILENAME);
+    $manifestPath = $baseDir . '/' . $moduleName . '.manifest.json';
+    $expectedManifests[] = $manifestPath;
+
+    // Skip archives whose manifest is already newer than the zip itself.
+    if (file_exists($manifestPath) && filemtime($manifestPath) >= filemtime($zipPath)) {
+        fwrite(STDOUT, "Skipped {$filename} (manifest is up-to-date)\n");
+        continue;
+    }
+
     $manifest = manifestFromZip($zipPath);
 
     if ($manifest === null) {
         $errors[] = "{$filename}: could not read archive";
         continue;
     }
-
-    $manifestPath = $baseDir . '/' . $moduleName . '.manifest.json';
-    $expectedManifests[] = $manifestPath;
 
     if (!writeAtomicJson($manifestPath, $manifest)) {
         $errors[] = "{$filename}: failed to write manifest";
