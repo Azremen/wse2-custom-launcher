@@ -22,8 +22,6 @@ jobs:
       - run: npm ci
       
       - name: Build Linux
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: npm run dist:linux -- --publish never
 
       - name: Upload Linux Artifacts
@@ -47,8 +45,7 @@ jobs:
       
       - name: Build Windows
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          WIN_CSC_LINK: ${{ secrets.CSC_LINK }} 
+          WIN_CSC_LINK: ${{ secrets.CSC_LINK }}
           WIN_CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
         run: npm run dist:win -- --publish never
 
@@ -72,8 +69,6 @@ jobs:
       - run: npm ci
       
       - name: Build macOS
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: npm run dist:mac -- --publish never
 
       - name: Upload Mac Artifacts
@@ -125,27 +120,10 @@ jobs:
       - name: Publish to Private Repository
         uses: ncipollo/release-action@v1
         with:
-          token: ${{ secrets.GH_TOKEN }}
+          token: ${{ github.token }}
           tag: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           body: "Full release with source code."
-          allowUpdates: true
-          artifacts: "release_assets/*"
-          makeLatest: true
-
-      # -----------------------------------------------------------------------
-      # B. Publish to PUBLIC Repo (Binaries Only)
-      # -----------------------------------------------------------------------
-      - name: Publish to Public Repository
-        uses: ncipollo/release-action@v1
-        with:
-          owner: Azremen
-          repo: wse2-custom-launcher 
-          token: ${{ secrets.GH_TOKEN }}
-          tag: ${{ github.ref_name }}
-          commit: "main"
-          name: Release ${{ github.ref_name }}
-          body: "Automated release build."
           allowUpdates: true
           artifacts: "release_assets/*"
           makeLatest: true

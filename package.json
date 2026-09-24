@@ -88,20 +88,6 @@
         }
       ]
     },
-    "publish": [
-      {
-        "provider": "github",
-        "owner": "Azremen",
-        "repo": "wse2-custom-launcher",
-        "releaseType": "release"
-      },
-      {
-        "provider": "github",
-        "owner": "Azremen",
-        "repo": "WSE2-Launcher",
-        "releaseType": "release"
-      }
-    ],
     "mac": {
       "target": [
         "dmg"
