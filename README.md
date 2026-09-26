@@ -87,7 +87,7 @@ The workflows in `.github/workflows/` expect these repository secrets
 ```powershell
 $cert = New-SelfSignedCertificate `
   -Type CodeSigningCert `
-  -Subject "CN=YourName" `
+  -Subject "CN=YourName, E=your@email.com" `
   -CertStoreLocation Cert:\CurrentUser\My `
   -KeyUsage DigitalSignature `
   -KeyExportPolicy Exportable `
@@ -202,7 +202,7 @@ npm run dist:mac    # Sadece macOS (macOS'ta çalıştırılmalı)
 ```powershell
 $cert = New-SelfSignedCertificate `
   -Type CodeSigningCert `
-  -Subject "CN=Adınız" `
+  -Subject "CN=Adınız, E=eposta@adresiniz.com" `
   -CertStoreLocation Cert:\CurrentUser\My `
   -KeyUsage DigitalSignature `
   -KeyExportPolicy Exportable `
@@ -316,7 +316,7 @@ npm run dist:mac    # Только macOS (запускать на macOS)
 ```powershell
 $cert = New-SelfSignedCertificate `
   -Type CodeSigningCert `
-  -Subject "CN=ВашеИмя" `
+  -Subject "CN=ВашеИмя, E=ваш@email.com" `
   -CertStoreLocation Cert:\CurrentUser\My `
   -KeyUsage DigitalSignature `
   -KeyExportPolicy Exportable `
