@@ -13,6 +13,7 @@ let REMOTE_URL = localStorage.getItem(REMOTE_URL_KEY) || DEFAULT_REMOTE_URL;
 let localModules = [];
 let remoteModules = [];
 let activeModule = null;
+let multiplayerBusy = false;
 let currentLocale = DEFAULT_LOCALE;
 let translations = {};
 
@@ -388,7 +389,7 @@ async function initMainWindow() {
                 activeModule = null;
                 $('#module-img').addClass('d-none').attr('src', '');
                 $('#module-info').addClass('d-none');
-                $('#btn-remove, #btn-configure, #play-btn').addClass('disabled').prop('disabled', true);
+                $('#btn-remove, #btn-configure, #play-btn, #btn-connect, #btn-dedicated').addClass('disabled').prop('disabled', true);
                 $('#btn-install').text(t('ui.install')).prop('disabled', true)
                     .removeClass('btn-success btn-secondary').addClass('btn-primary');
                 await refreshModuleList();
@@ -404,11 +405,13 @@ async function initMainWindow() {
 
     $('#play-btn').on('click', async () => {
         if (activeModule && activeModule.isInstalled) {
-                window.api.launcher.launch(activeModule.launchName || activeModule.name, activeModule.path, $('#x64-toggle').is(':checked'));
+            window.api.launcher.launch(activeModule.launchName || activeModule.name, activeModule.path, $('#x64-toggle').is(':checked'));
         } else {
             await showAlert(t("ui.not_installed"));
         }
     });
+
+    await initMultiplayer();
 
     // The x64 switch only appears when the 64-bit build sits next to the 32-bit one.
     (async () => {
@@ -698,7 +701,7 @@ async function initMainWindow() {
 
     // Receive launch / non-download errors from main process
     window.api.events.onAppError(async (msg) => {
-        await showAlert(msg);
+        await showAlert(t(msg));
     });
 
     // Initial Render
@@ -715,7 +718,7 @@ async function initMainWindow() {
     })();
 
     // Initial State of Play Button
-    $('#play-btn').addClass('disabled');
+    $('#play-btn, #btn-connect, #btn-dedicated').addClass('disabled').prop('disabled', true);
 
     // Auto-launch toggle
     try {
@@ -725,6 +728,143 @@ async function initMainWindow() {
     $('#chk-auto-launch').on('change', async function () {
         await window.api.launcher.setAutoLaunch($(this).is(':checked'));
     });
+}
+
+async function initMultiplayer() {
+    let settings = { connection: { host: '', port: '' }, dedicated: { exePath: '', commandFile: '', configFile: '' } };
+    try {
+        const result = await window.api.multiplayer.getSettings();
+        if (!result.success) throw new Error(result.error);
+        settings = result.settings;
+        $('#connect-host').val(settings.connection.host);
+        $('#connect-port').val(settings.connection.port);
+        $('#dedicated-exe').val(settings.dedicated.exePath);
+        $('#dedicated-command').val(settings.dedicated.commandFile);
+        $('#dedicated-config').val(settings.dedicated.configFile);
+    } catch (err) {
+        await showAlert(t('ui.multiplayer.errors.settings'));
+    }
+
+    function showFeedback(selector, message, success = false) {
+        $(selector).toggleClass('text-danger', !success).toggleClass('text-success', success).text(t(message));
+    }
+
+    function syncServerExe() {
+        const campaign = /(?:^|[\\/])mb_warband_wse2_dedicated_campaign(?:_x64)?\.exe$/i.test($('#dedicated-exe').val().trim());
+        $('#dedicated-command').prop('required', !campaign);
+    }
+    $('#dedicated-exe').on('input change', syncServerExe);
+    syncServerExe();
+
+    $('#btn-edit-server-config').on('click', async function () {
+        $(this).prop('disabled', true);
+        try {
+            const result = await window.api.multiplayer.editConfig($('#dedicated-config').val().trim(), $('#dedicated-exe').val().trim());
+            if (!result.success) throw new Error(result.error);
+            if (result.path) $('#dedicated-config').val(result.path);
+        } catch (err) {
+            showFeedback('#dedicated-feedback', /^ui\.multiplayer\.errors\.[a-z_]+$/.test(err.message) ? err.message : 'ui.multiplayer.errors.config_editor');
+        } finally {
+            $(this).prop('disabled', false);
+        }
+    });
+
+    $('#btn-import-server-args').on('click', async function () {
+        $(this).prop('disabled', true);
+        try {
+            const result = await window.api.multiplayer.importArguments();
+            if (!result.success) throw new Error(result.error);
+            if (result.args !== null) {
+                $('#dedicated-args').val(result.args);
+                $('#dedicated-feedback').text('');
+            }
+        } catch (err) {
+            showFeedback('#dedicated-feedback', /^ui\.multiplayer\.errors\.[a-z_]+$/.test(err.message) ? err.message : 'ui.multiplayer.errors.arguments_file');
+        } finally {
+            $(this).prop('disabled', false);
+        }
+    });
+
+    for (const [button, modal, feedback] of [
+        ['#btn-connect', 'connectModal', '#connect-feedback'],
+        ['#btn-dedicated', 'dedicatedModal', '#dedicated-feedback'],
+    ]) {
+        $(button).on('click', () => {
+            if (!activeModule?.isInstalled || multiplayerBusy) return;
+            $('.multiplayer-module').text(activeModule.name);
+            $(feedback).text('');
+            bootstrap.Modal.getOrCreateInstance(document.getElementById(modal)).show();
+        });
+    }
+
+    const fileInputs = { exePath: '#dedicated-exe', commandFile: '#dedicated-command', configFile: '#dedicated-config' };
+    $('[data-server-file]').on('click', async function () {
+        try {
+            const result = await window.api.multiplayer.browse(this.dataset.serverFile);
+            if (!result.success) throw new Error(result.error);
+            if (result.path) {
+                $(fileInputs[this.dataset.serverFile]).val(result.path);
+                syncServerExe();
+            }
+        } catch {
+            showFeedback('#dedicated-feedback', 'ui.multiplayer.errors.browse');
+        }
+    });
+
+    async function submit(kind) {
+        if (multiplayerBusy) return;
+        const feedback = kind === 'connection' ? '#connect-feedback' : '#dedicated-feedback';
+        const mod = activeModule;
+        if (!mod?.isInstalled) {
+            showFeedback(feedback, 'ui.not_installed');
+            return;
+        }
+        multiplayerBusy = true;
+        $('#btn-connect-launch, #btn-dedicated-launch').prop('disabled', true);
+        updateModuleButtons(mod);
+        $(feedback).text('');
+        try {
+            const connection = {
+                host: $('#connect-host').val().trim(),
+                port: $('#connect-port').val(),
+                password: $('#connect-password').val(),
+            };
+            const dedicated = {
+                exePath: $('#dedicated-exe').val().trim(),
+                commandFile: $('#dedicated-command').val().trim(),
+                configFile: $('#dedicated-config').val().trim(),
+                extraArgs: $('#dedicated-args').val(),
+            };
+            const nextSettings = {
+                ...settings,
+                [kind]: kind === 'connection'
+                    ? { host: connection.host, port: connection.port }
+                    : { exePath: dedicated.exePath, commandFile: dedicated.commandFile, configFile: dedicated.configFile },
+            };
+            const saved = await window.api.multiplayer.saveSettings(nextSettings);
+            if (!saved.success) throw new Error(saved.error);
+            settings = nextSettings;
+            const name = mod.launchName || mod.name;
+            const result = kind === 'connection'
+                ? await window.api.launcher.connect(name, mod.path, $('#x64-toggle').is(':checked'), connection)
+                : await window.api.multiplayer.launchDedicated(name, dedicated);
+            if (!result.success) throw new Error(result.error);
+            if (kind === 'connection') {
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('connectModal')).hide();
+            } else {
+                showFeedback(feedback, 'ui.multiplayer.started', true);
+            }
+        } catch (err) {
+            const key = /^ui\.multiplayer\.errors\.[a-z_]+$/.test(err.message) ? err.message : 'ui.multiplayer.errors.launch';
+            showFeedback(feedback, key);
+        } finally {
+            multiplayerBusy = false;
+            $('#btn-connect-launch, #btn-dedicated-launch').prop('disabled', false);
+            if (activeModule) updateModuleButtons(activeModule);
+        }
+    }
+    $('#connect-form').on('submit', event => { event.preventDefault(); submit('connection'); });
+    $('#dedicated-form').on('submit', event => { event.preventDefault(); submit('dedicated'); });
 }
 
 async function refreshModuleList() {
@@ -766,21 +906,24 @@ async function refreshModuleList() {
             $('#list-pos .active').removeClass('active');
             $('#module-img').addClass('d-none').attr('src', '');
             $('#module-info').addClass('d-none');
+            $('#play-btn, #btn-connect, #btn-dedicated').prop('disabled', true);
         } else {
             // Rebuild the merged mod object with latest data so buttons are correct
             const installed = freshLocal || null;
             const remote = freshRemote || null;
             activeModule = {
                 ...activeModule,
+                launchName: installed ? installed.launchName || installed.name : activeModule.launchName,
                 localVersion: installed ? installed.version : null,
                 path: installed ? installed.path : null,
-                img: installed ? installed.imagePath : null,
+                img: installed ? installed.imageUrl : null,
                 configExists: installed ? installed.configExists : false,
                 isInstalled: !!installed,
                 remoteVersion: remote ? remote.version : activeModule.remoteVersion,
                 manifest: remote ? (remote.manifest || null) : (activeModule.manifest || null),
                 url: remote ? (activeModule.url || null) : null,
             };
+            updateModuleImage(activeModule);
             updateModuleButtons(activeModule);
         }
     }
@@ -814,6 +957,7 @@ function renderList() {
 
             displayList.push({
                 name: rm.name,
+                launchName: installed ? installed.launchName || installed.name : rm.name,
                 remoteVersion: rm.version,
                 localVersion: installed ? installed.version : null,
                 path: installed ? installed.path : null,
@@ -823,7 +967,7 @@ function renderList() {
                 size: rm.size || null,
                 description: rm.description || null,
                 manifest: rm.manifest || null,
-                img: installed ? installed.imagePath : null,
+                img: installed ? installed.imageUrl : null,
                 configExists: installed ? installed.configExists : false,
                 isWorkshop: installed ? !!installed.isWorkshop : false,
                 workshopId: installed ? installed.workshopId || null : null,
@@ -838,12 +982,13 @@ function renderList() {
         if (!inRemote) {
             displayList.push({
                 name: lm.name,
+                launchName: lm.launchName || lm.name,
                 remoteVersion: null,
                 localVersion: lm.version,
                 path: lm.path,
                 url: null,
                 manifest: lm.manifest || null,
-                img: lm.imagePath,
+                img: lm.imageUrl,
                 configExists: lm.configExists,
                 isWorkshop: !!lm.isWorkshop,
                 workshopId: lm.workshopId || null,
@@ -883,6 +1028,14 @@ function renderList() {
     });
 }
 
+function updateModuleImage(mod) {
+    if (mod.img) {
+        $('#module-img').attr('src', mod.img).removeClass('d-none');
+    } else {
+        $('#module-img').addClass('d-none').attr('src', '');
+    }
+}
+
 function selectModule(mod, $btn) {
     activeModule = mod;
     $('#list-pos .active').removeClass('active');
@@ -901,12 +1054,7 @@ function selectModule(mod, $btn) {
     }
     $('#chk-clean-install').prop('checked', defaultClean);
 
-    // Update Image
-    if (mod.img) {
-        $('#module-img').attr('src', mod.img).removeClass('d-none');
-    } else {
-        $('#module-img').addClass('d-none');
-    }
+    updateModuleImage(mod);
 
     // Module Detail Panel
     const $info = $('#module-info');
@@ -957,6 +1105,9 @@ function selectModule(mod, $btn) {
 }
 
 function updateModuleButtons(mod) {
+    $('#btn-connect, #btn-dedicated')
+        .prop('disabled', !mod.isInstalled || multiplayerBusy)
+        .toggleClass('disabled', !mod.isInstalled || multiplayerBusy);
     const installBtn = $('#btn-install');
     const removeBtn = $('#btn-remove');
     const configBtn = $('#btn-configure');
@@ -1039,24 +1190,39 @@ async function initConfigWindow() {
         window.api.config.close();
     });
 
-    $('#config-save').on('click', async () => {
-        // Collect data
-        if (!currentConfig || !modulePath) return;
-
-        const newData = collectFormData(currentConfig.schema);
-        const success = await window.api.config.save(modulePath, newData);
-        if (success) {
-            await showAlert(t("msg_config_saved"));
-            window.api.config.close();
-        } else {
-            await showAlert(t("msg_config_failed"));
+    $('#config-save, #config-save-as').prop('disabled', true).on('click', async function () {
+        if (!currentConfig || (currentConfig.mode !== 'server' && !modulePath)) return;
+        if (currentConfig.mode === 'server') {
+            const invalid = $('#configTabsContent input, #configTabsContent select').toArray().find(input => !input.checkValidity());
+            if (invalid) {
+                const pane = invalid.closest('.tab-pane');
+                bootstrap.Tab.getOrCreateInstance(document.querySelector(`#config-sidebar a[href="#${pane.id}"]`)).show();
+                await showAlert(t('ui.multiplayer.errors.config_values'));
+                return;
+            }
+        }
+        $('#config-save, #config-save-as').prop('disabled', true);
+        try {
+            const newData = collectFormData(currentConfig.schema);
+            const result = await window.api.config.save(modulePath, newData, this.id === 'config-save-as');
+            if (currentConfig.mode === 'server' && result.canceled) return;
+            if (currentConfig.mode === 'server' ? result.success : result) {
+                await showAlert(t('msg_config_saved'));
+                window.api.config.close();
+            } else {
+                await showAlert(t(result.error || 'msg_config_failed'));
+            }
+        } catch {
+            await showAlert(t(currentConfig.mode === 'server' ? 'ui.multiplayer.errors.config_save' : 'msg_config_failed'));
+        } finally {
+            $('#config-save, #config-save-as').prop('disabled', false);
         }
     });
 
     // Load Data
     const data = await window.api.config.get(); // Main process remembers the path
     if (data.error) {
-        await showAlert('Error loading config: ' + data.error);
+        await showAlert(t(data.error));
         return;
     }
 
@@ -1067,7 +1233,11 @@ async function initConfigWindow() {
     currentConfig = data;
     modulePath = data.modulePath;
 
-    if (!modulePath) {
+    if (data.mode === 'server') {
+        $('#config-save-as').removeClass('d-none');
+        $('#server-config-file').removeClass('d-none').text(data.filePath || t('ui.multiplayer.new_config'));
+        $('#server-config-note').removeClass('d-none');
+    } else if (!modulePath) {
         console.warn('Module Path missing in config load!');
     }
 
@@ -1075,6 +1245,7 @@ async function initConfigWindow() {
     _configData = data;
 
     renderConfigForm(data.schema, data.values);
+    $('#config-save, #config-save-as').prop('disabled', false);
 }
 
 function renderConfigForm(schema, values) {
@@ -1088,9 +1259,10 @@ function renderConfigForm(schema, values) {
     const sections = Object.keys(schema).sort();
 
     sections.forEach((section, index) => {
-        const paneId = section.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase(); // CamelCase to kebab-case
+        const paneId = `config-section-${index}`;
         const tabId = `${paneId}-tab`;
-        const sectionLabel = t(`ui.tab.${paneId.replace(/-/g, '_')}`) || section;
+        const sectionKey = `ui.tab.${section.replace(/([a-z])([A-Z])/g, '$1_$2').toLowerCase()}`;
+        const sectionLabel = t(sectionKey) === sectionKey ? section : t(sectionKey);
 
         const isActive = index === 0;
 
@@ -1113,7 +1285,8 @@ function renderConfigForm(schema, values) {
 
         if (!fields) { console.warn("No fields for", section); return; }
 
-        for (const [key, fieldDef] of Object.entries(fields)) {
+        for (const [fieldIndex, [key, fieldDef]] of Object.entries(fields).entries()) {
+            const fieldId = `field-${index}-${fieldIndex}`;
             // Check if value exists, else default, else empty
             let val = fieldDef['default-value'];
             if (values && values[section] && values[section][key] !== undefined) {
@@ -1125,7 +1298,7 @@ function renderConfigForm(schema, values) {
             const labelText = t(labelKey);
             const $label = $('<label>')
                 .addClass('col-sm-4 col-form-label')
-                .attr({ 'data-i18n': labelKey, for: `field-${section}-${key}` })
+                .attr({ 'data-i18n': labelKey, for: fieldId })
                 .text(labelText);
 
             // Set title (tooltip)
@@ -1176,6 +1349,7 @@ function renderConfigForm(schema, values) {
 
                 // Data binding for saving
                 $rangeInput.data('section', section).data('key', key);
+                $rangeInput.attr('id', fieldId);
 
                 // IMPORTANT: We need to ensure collectFormData can find this input.
                 // It searches for '#configTabsContent input'.
@@ -1271,11 +1445,14 @@ function renderConfigForm(schema, values) {
                 $input.val(colorVal);
 
             } else {
-                $input = $('<input type="text" class="form-control">');
+                $input = $('<input class="form-control">').attr('type', fieldDef.inputType === 'password' ? 'password' : 'text');
+                if (fieldDef.inputType === 'password') $input.attr('autocomplete', 'off');
                 $input.val(val);
             }
 
             if ($input) {
+                $input.attr('id', fieldId);
+                if (_configData?.mode === 'server' && $input.attr('type') === 'number') $input.prop('required', true);
                 // Store metadata on input for saving
                 $input.data('section', section);
                 $input.data('key', key);
@@ -1305,8 +1482,7 @@ function renderConfigForm(schema, values) {
 
     // Set Initial Title and Active State
     if (sections.length > 0) {
-        const firstSection = sections[0];
-        const paneId = firstSection.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+        const paneId = 'config-section-0';
         const tabId = `#${paneId}-tab`;
 
         // Force bootstrap to recognize the active tab
@@ -1316,18 +1492,17 @@ function renderConfigForm(schema, values) {
             tab.show();
         }
 
-        const firstLabel = t(`ui.tab.${paneId.replace(/-/g, '_')}`) || firstSection;
-        $('#config-section-title').text(firstLabel);
+        $('#config-section-title').text($sidebar.find('a').first().text());
     }
 }
 
 function collectFormData(schema) {
-    const data = {};
+    const data = Object.create(null);
     if (!schema) return data; // Add safety check
 
     // Initialize sections
     for (const section of Object.keys(schema)) {
-        data[section] = {};
+        data[section] = Object.create(null);
     }
 
     $('#configTabsContent input:not([type="radio"]), #configTabsContent select').each(function () {

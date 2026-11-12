@@ -14,9 +14,18 @@ contextBridge.exposeInMainWorld('api', {
         cancelDownload: () => ipcRenderer.invoke('cancel-download'),
         openFolder: () => ipcRenderer.invoke('open-install-folder'),
         launch: (moduleName, modulePath, useX64) => ipcRenderer.invoke('launch-game', moduleName, modulePath, useX64),
+        connect: (moduleName, modulePath, useX64, connection) => ipcRenderer.invoke('connect-game', moduleName, modulePath, useX64, connection),
         hasX64: () => ipcRenderer.invoke('has-x64-executable'),
         getAutoLaunch: () => ipcRenderer.invoke('get-auto-launch'),
         setAutoLaunch: (val) => ipcRenderer.invoke('set-auto-launch', val),
+    },
+    multiplayer: {
+        getSettings: () => ipcRenderer.invoke('get-multiplayer-settings'),
+        saveSettings: (settings) => ipcRenderer.invoke('save-multiplayer-settings', settings),
+        browse: (kind) => ipcRenderer.invoke('browse-server-file', kind),
+        launchDedicated: (moduleName, settings) => ipcRenderer.invoke('launch-dedicated', moduleName, settings),
+        editConfig: (filePath, exePath) => ipcRenderer.invoke('open-server-config', filePath, exePath),
+        importArguments: () => ipcRenderer.invoke('import-server-arguments'),
     },
     modules: {
         list: () => ipcRenderer.invoke('get-modules'),
@@ -27,7 +36,7 @@ contextBridge.exposeInMainWorld('api', {
         open: (path) => ipcRenderer.invoke('configWindow', path),
         close: () => ipcRenderer.invoke('configWindowBack'),
         get: (modulePath) => ipcRenderer.invoke('get-config-data', modulePath),
-        save: (modulePath, data) => ipcRenderer.invoke('save-config-data', { modulePath, configData: data })
+        save: (modulePath, data, saveAs = false) => ipcRenderer.invoke('save-config-data', { modulePath, configData: data, saveAs })
     },
     wine: {
         getSettings: () => ipcRenderer.invoke('get-wine-settings'),

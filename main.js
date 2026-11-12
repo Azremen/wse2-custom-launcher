@@ -3,13 +3,18 @@
 const { app, BrowserWindow, ipcMain, nativeTheme, globalShortcut, shell, dialog } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const path = require('path');
+const { pathToFileURL } = require('url');
 const fs = require('fs');
 const StreamZip = require('node-stream-zip');
 const ini = require('ini');
 const crypto = require('crypto');
 const os = require('os');
 const { spawn, execFile } = require('child_process');
+const { promisify } = require('util');
+const { createInterface } = require('readline');
 const log = require('electron-log');
+const multiplayer = require('./multiplayer');
+const serverConfig = require('./server-config');
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -158,6 +163,7 @@ let cfgWindow = null;
 
 /** @type {string | null} */
 let currentConfigModulePath = null;
+let currentServerConfig = null;
 
 /** @type {Map<string, object>} */
 const pendingDownloads = new Map();
@@ -266,7 +272,11 @@ function createConfigWindow(modulePath) {
     }
 
     cfgWindow.once('ready-to-show', () => cfgWindow.show());
-    cfgWindow.on('closed', () => { cfgWindow = null; });
+    cfgWindow.on('closed', () => {
+        cfgWindow = null;
+        currentConfigModulePath = null;
+        currentServerConfig = null;
+    });
 }
 
 // ─── Auto Updater ────────────────────────────────────────────────────────────
@@ -285,8 +295,7 @@ function setupAutoUpdater() {
     autoUpdater.on('error', err =>
         console.warn(`[Updater] Non-fatal error: ${err.message}`)
     );
-    autoUpdater.on('update-available', () =>
-    {
+    autoUpdater.on('update-available', () => {
         pendingUpdateAvailable = true;
         mainWindow?.webContents.send('update_available');
     }
@@ -515,9 +524,24 @@ ipcMain.handle('get-version', () => app.getVersion());
 
 ipcMain.handle('open-install-folder', () => shell.openPath(installPath));
 
-ipcMain.handle('launch-game', (_, moduleName, modulePath, useX64) => {
-    if (!moduleName) return false;
-    return launchGame(moduleName, modulePath, !!useX64);
+ipcMain.handle('launch-game', async (_, moduleName, modulePath, useX64) => {
+    try {
+        return await launchGame(moduleName, modulePath, !!useX64);
+    } catch (err) {
+        const result = multiplayerFailure(err);
+        mainWindow?.webContents.send('app-error', result.error);
+        return false;
+    }
+});
+
+ipcMain.handle('connect-game', async (_, moduleName, modulePath, useX64, connection) => {
+    try {
+        const target = await multiplayer.resolveConnection(connection);
+        const success = await launchGame(moduleName, modulePath, !!useX64, target);
+        return { success, error: success ? null : 'ui.multiplayer.errors.launch' };
+    } catch (err) {
+        return multiplayerFailure(err);
+    }
 });
 
 ipcMain.handle('has-x64-executable', async () => {
@@ -630,8 +654,37 @@ ipcMain.handle('remove-module', async (_, modPath) => {
     }
 });
 
-ipcMain.handle('get-config-data', (_, selectedPath) => readConfigData(selectedPath));
-ipcMain.handle('save-config-data', (_, { modulePath, configData }) => saveConfigData(modulePath, configData));
+ipcMain.handle('get-config-data', (event, selectedPath) => {
+    if (!currentServerConfig) return readConfigData(selectedPath);
+    if (event.sender !== cfgWindow?.webContents) return { error: 'ui.multiplayer.errors.config_editor' };
+    return readServerConfigData();
+});
+ipcMain.handle('save-config-data', (event, { modulePath, configData, saveAs }) => {
+    if (!currentServerConfig) return saveConfigData(modulePath, configData);
+    if (event.sender !== cfgWindow?.webContents) return multiplayerFailure(new Error('ui.multiplayer.errors.config_editor'));
+    return saveServerConfigData(configData, !!saveAs);
+});
+
+ipcMain.handle('open-server-config', async (_, filePath, exePath) => {
+    try {
+        if (cfgWindow) throw new Error('ui.multiplayer.errors.config_editor');
+        if (typeof filePath !== 'string' || (filePath && (!path.isAbsolute(filePath) || path.extname(filePath).toLowerCase() !== '.ini'))) {
+            throw new Error('ui.multiplayer.errors.config_path');
+        }
+        const context = {
+            filePath, isNew: true, schema: null, saved: false,
+            defaultPath: filePath || (typeof exePath === 'string' && path.isAbsolute(exePath)
+                ? path.join(path.dirname(exePath), 'server_config.ini') : 'server_config.ini'),
+        };
+        currentServerConfig = context;
+        createConfigWindow(null);
+        await new Promise(resolve => cfgWindow.once('closed', resolve));
+        return { success: true, path: context.saved ? context.filePath : null };
+    } catch (err) {
+        if (!cfgWindow) currentServerConfig = null;
+        return multiplayerFailure(err);
+    }
+});
 
 // Wine settings — persisted in userData/wine-settings.json
 const WINE_SETTINGS_FILE = path.join(app.getPath('userData'), 'wine-settings.json');
@@ -659,6 +712,126 @@ async function saveWineSettings(settings) {
 ipcMain.handle('get-wine-settings', () => loadWineSettings());
 
 ipcMain.handle('set-wine-settings', (_, settings) => saveWineSettings(settings));
+
+const MULTIPLAYER_SETTINGS_FILE = path.join(app.getPath('userData'), 'multiplayer-settings.json');
+
+function multiplayerFailure(err) {
+    const error = /^ui\.multiplayer\.errors\.[a-z_]+$/.test(err.message)
+        ? err.message : 'ui.multiplayer.errors.launch';
+    const code = typeof err.code === 'string' || typeof err.code === 'number' ? ` (${String(err.code).replace(/[^a-z0-9_-]/gi, '')})` : '';
+    console.error(`[Multiplayer] ${error}${code}`);
+    return { success: false, error };
+}
+
+ipcMain.handle('get-multiplayer-settings', async () => {
+    try {
+        return { success: true, settings: multiplayer.savedSettings(JSON.parse(await fs.promises.readFile(MULTIPLAYER_SETTINGS_FILE, 'utf8'))) };
+    } catch (err) {
+        if (err.code === 'ENOENT') return { success: true, settings: multiplayer.savedSettings({}) };
+        console.error('[Multiplayer] Failed to read settings:', err.message);
+        return { success: false, error: 'ui.multiplayer.errors.settings' };
+    }
+});
+
+ipcMain.handle('save-multiplayer-settings', async (_, value) => {
+    try {
+        const settings = multiplayer.savedSettings(value);
+        await fs.promises.writeFile(MULTIPLAYER_SETTINGS_FILE, JSON.stringify(settings, null, 4), 'utf8');
+        return { success: true };
+    } catch (err) {
+        if (/^ui\.multiplayer\.errors\.[a-z_]+$/.test(err.message)) return multiplayerFailure(err);
+        console.error('[Multiplayer] Failed to save settings:', err.code);
+        return { success: false, error: 'ui.multiplayer.errors.settings' };
+    }
+});
+
+ipcMain.handle('browse-server-file', async (_, kind) => {
+    const filters = {
+        exePath: [{ name: 'WSE2 Dedicated Server', extensions: ['exe'] }],
+        commandFile: [{ name: 'Server commands', extensions: ['txt'] }],
+        configFile: [{ name: 'WSE2 configuration', extensions: ['ini'] }],
+    };
+    if (!Object.hasOwn(filters, kind)) return multiplayerFailure(new Error('ui.multiplayer.errors.invalid_input'));
+    const result = await dialog.showOpenDialog(mainWindow, { properties: ['openFile'], filters: filters[kind] });
+    return { success: true, path: result.canceled ? null : result.filePaths[0] };
+});
+
+ipcMain.handle('import-server-arguments', async () => {
+    try {
+        const result = await dialog.showOpenDialog(mainWindow, {
+            properties: ['openFile'], filters: [{ name: 'Launch arguments', extensions: ['txt'] }],
+        });
+        if (result.canceled || !result.filePaths.length) return { success: true, args: null };
+        const raw = new TextDecoder('utf-8', { fatal: true }).decode(await fs.promises.readFile(result.filePaths[0]));
+        return { success: true, args: multiplayer.extraArgs(raw).join('\n') };
+    } catch (err) {
+        if (/^ui\.multiplayer\.errors\./.test(err.message)) return multiplayerFailure(err);
+        console.error('[Dedicated] Cannot import argument file:', err.code);
+        return { success: false, error: 'ui.multiplayer.errors.arguments_file' };
+    }
+});
+
+async function findLaunchTool(command) {
+    const candidates = path.isAbsolute(command)
+        ? [command] : (process.env.PATH || '').split(path.delimiter).filter(Boolean).map(dir => path.join(dir, command));
+    for (const candidate of candidates) {
+        try {
+            await fs.promises.access(candidate, fs.constants.X_OK);
+            if ((await fs.promises.stat(candidate)).isFile()) return candidate;
+        } catch (err) {
+            if (!['ENOENT', 'EACCES', 'ENOTDIR'].includes(err.code)) throw err;
+        }
+    }
+    return null;
+}
+
+ipcMain.handle('launch-dedicated', async (_, moduleName, value) => {
+    try {
+        if (!IS_WINDOWS && !IS_LINUX) throw new Error('ui.multiplayer.errors.platform');
+        const settings = await multiplayer.dedicatedSettings(value, moduleName);
+        let command = settings.exePath;
+        let args;
+        const env = { ...process.env };
+        if (IS_WINDOWS) {
+            command = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
+            args = multiplayer.windowsConsoleArgs(settings, multiplayer.dedicatedArgs(settings, moduleName));
+            await promisify(execFile)(command, args, { cwd: settings.cwd, env, windowsHide: true, timeout: 15000 });
+        } else {
+            const wine = await loadWineSettings();
+            if (wine.winePrefix) env.WINEPREFIX = wine.winePrefix;
+            const wineExe = await findLaunchTool(wine.winePath || 'wine');
+            if (!wineExe) throw new Error('ui.multiplayer.errors.wine_tools');
+            const wineconsole = await findLaunchTool(path.join(path.dirname(wineExe), 'wineconsole'));
+            const winepath = await findLaunchTool(path.join(path.dirname(wineExe), 'winepath'));
+            if (!wineconsole || !winepath) throw new Error('ui.multiplayer.errors.wine_tools');
+            const convert = async file => {
+                const converted = (await promisify(execFile)(winepath, ['-w', file], { env, timeout: 30000 })).stdout.trim();
+                if (!converted || /[\x00-\x1f]/.test(converted)) throw new Error('ui.multiplayer.errors.wine_tools');
+                return converted;
+            };
+            const converted = {
+                ...settings,
+                commandFile: settings.commandFile ? await convert(settings.commandFile) : '',
+                configFile: settings.configFile ? await convert(settings.configFile) : '',
+            };
+            const terminal = await findLaunchTool('xterm') || await findLaunchTool('x-terminal-emulator');
+            if (!terminal) throw new Error('ui.multiplayer.errors.terminal');
+            command = terminal;
+            args = ['-e', wineconsole, '--backend=curses', settings.exePath, ...multiplayer.dedicatedArgs(converted, moduleName)];
+            await new Promise((resolve, reject) => {
+                const child = spawn(command, args, {
+                    cwd: settings.cwd, env, detached: true, stdio: 'ignore', shell: false,
+                });
+                child.once('error', reject);
+                child.once('spawn', () => { child.unref(); resolve(); });
+            });
+        }
+        console.log(`[Dedicated] Started "${moduleName}" using ${settings.exePath}`);
+        return { success: true };
+    } catch (err) {
+        return multiplayerFailure(err);
+    }
+});
 
 ipcMain.handle('get-game-languages', async () => {
     const exePath = await resolveExePath();
@@ -762,10 +935,11 @@ async function resolveExePath(useX64 = false) {
         try { await fs.promises.access(p); return p; } catch { /* not found */ }
     }
 
-    return candidates[0]; // Return first candidate for a clear "not found" error message
+    return candidates.find(Boolean); // Return a concrete path for a clear "not found" error message
 }
 
-async function launchGame(moduleName, modulePath = null, useX64 = false) {
+async function launchGame(moduleName, modulePath = null, useX64 = false, connection = null) {
+    const args = multiplayer.clientArgs(moduleName, connection);
     const exePath = await resolveExePath(useX64);
     const workingDir = path.dirname(exePath);
 
@@ -776,7 +950,7 @@ async function launchGame(moduleName, modulePath = null, useX64 = false) {
     } catch {
         const msg = `Executable not found: ${exePath}`;
         console.error(`[Launch] ${msg}`);
-        mainWindow?.webContents.send('app-error', msg);
+        if (!connection) mainWindow?.webContents.send('app-error', msg);
         return false;
     }
 
@@ -790,13 +964,13 @@ async function launchGame(moduleName, modulePath = null, useX64 = false) {
         // Spread module name words as separate argv elements + windowsVerbatimArguments
         // so Node.js doesn't add quotes. Mirrors how the C++ launcher calls CreateProcess.
         command = exePath;
-        finalArgs = ['--module', ...moduleName.split(' '), '--no-intro'];
+        finalArgs = args.map(multiplayer.quoteWindowsArgument);
     } else {
         // Wine joins argv with spaces when building the Windows command line,
         // so spreading module name words avoids unwanted quoting.
         wineSettings = launchSettings;
         command = wineSettings.winePath || 'wine';
-        finalArgs = [exePath, '--module', ...moduleName.split(' '), '--no-intro'];
+        finalArgs = [exePath, ...args];
     }
 
     const env = await buildLaunchEnv(wineSettings);
@@ -810,7 +984,8 @@ async function launchGame(moduleName, modulePath = null, useX64 = false) {
         const displayCmd = IS_WINDOWS
             ? `${command} ${finalArgs.join(' ')}`
             : `${command} ${finalArgs.map(a => /\s/.test(a) ? `"${a}"` : a).join(' ')}`;
-        console.log(`[Launch] Spawning: ${displayCmd}`);
+        const safeMessage = value => multiplayer.redact(value, connection?.password);
+        console.log(`[Launch] Spawning: ${safeMessage(displayCmd)}`);
 
         const gameProcess = spawn(command, finalArgs, {
             cwd: workingDir,
@@ -819,20 +994,22 @@ async function launchGame(moduleName, modulePath = null, useX64 = false) {
             stdio: ['ignore', 'pipe', 'pipe'],
             windowsVerbatimArguments: IS_WINDOWS,
         });
+        const started = new Promise(resolve => {
+            gameProcess.once('spawn', () => resolve(true));
+            gameProcess.once('error', () => resolve(false));
+        });
 
-        gameProcess.stdout.on('data', data =>
-            data.toString().trim().split('\n').forEach(l => console.log(`[GAME/OUT] ${l}`))
+        createInterface({ input: gameProcess.stdout }).on('line', line =>
+            console.log(`[GAME/OUT] ${safeMessage(line)}`)
         );
-        gameProcess.stderr.on('data', data =>
-            data.toString().trim().split('\n').forEach(l => {
-                if (/^(fixme:|info:|warn:)/.test(l)) console.warn(`[GAME/WINE] ${l}`);
-                else console.error(`[GAME/ERR] ${l}`);
-            })
-        );
+        createInterface({ input: gameProcess.stderr }).on('line', line => {
+            if (/^(fixme:|info:|warn:)/.test(line)) console.warn(`[GAME/WINE] ${safeMessage(line)}`);
+            else console.error(`[GAME/ERR] ${safeMessage(line)}`);
+        });
         gameProcess.on('error', err => {
             clearTimeout(stableTimer);
-            console.error('[Launch] Spawn error:', err);
-            mainWindow?.webContents.send('app-error', `Failed to launch: ${err.message}`);
+            console.error('[Launch] Spawn error:', safeMessage(err.message));
+            if (!connection) mainWindow?.webContents.send('app-error', `Failed to launch: ${err.message}`);
         });
 
         const stableTimer = setTimeout(() => {
@@ -854,10 +1031,10 @@ async function launchGame(moduleName, modulePath = null, useX64 = false) {
             }
         });
 
-        return true;
+        return started;
     } catch (err) {
-        console.error('[Launch] Failed to spawn process:', err);
-        mainWindow?.webContents.send('app-error', `Failed to launch: ${err.message}`);
+        console.error('[Launch] Failed to spawn process:', multiplayer.redact(err.message, connection?.password));
+        if (!connection) mainWindow?.webContents.send('app-error', `Failed to launch: ${err.message}`);
         return false;
     }
 }
@@ -1221,13 +1398,24 @@ function isWorkshopContentPath(target) {
     return normalized.includes(`/steamapps/workshop/content/${STEAM_APP_ID}/`);
 }
 
-function createWorkshopModule(item) {
+async function getModuleImageUrl(modulePath) {
+    const imagePath = path.join(modulePath, MODULE_IMAGE_FILE);
+    try {
+        await fs.promises.access(imagePath);
+        return pathToFileURL(imagePath).href;
+    } catch (err) {
+        if (err.code !== 'ENOENT') console.warn(`[Modules] Cannot access image for "${modulePath}":`, err);
+        return null;
+    }
+}
+
+async function createWorkshopModule(item) {
     return {
         name: `${item.name} (Steam Workshop)`,
         launchName: item.name,
         version: null,
         path: item.path,
-        imagePath: null,
+        imageUrl: await getModuleImageUrl(item.path),
         configExists: false,
         manifest: null,
         isWorkshop: true,
@@ -1266,7 +1454,7 @@ async function scanModules() {
     try {
         await fs.promises.access(modulesPath);
     } catch {
-        return workshopItems.map(createWorkshopModule);
+        return Promise.all(workshopItems.map(createWorkshopModule));
     }
 
     await removeLegacyWorkshopCopies();
@@ -1288,7 +1476,7 @@ async function scanModules() {
                 name,
                 version: null,
                 path: fullPath,
-                imagePath: null,
+                imageUrl: null,
                 configExists: false,
                 manifest: null,
                 isWorkshop: false,
@@ -1303,11 +1491,7 @@ async function scanModules() {
                 if (err.code !== 'ENOENT') console.error(`[Modules] Failed to parse ${VERSION_FILE} for "${name}":`, err);
             }
 
-            const imgPath = path.join(fullPath, MODULE_IMAGE_FILE);
-            try {
-                await fs.promises.access(imgPath);
-                modData.imagePath = imgPath;
-            } catch { /* no image */ }
+            modData.imageUrl = await getModuleImageUrl(fullPath);
 
             try {
                 await fs.promises.access(path.join(fullPath, MODULE_CONFIG_FILE));
@@ -1329,8 +1513,7 @@ async function scanModules() {
         }));
         const localResults = results.filter(Boolean);
         const localNames = new Set(localResults.map(module => module.name));
-        const workshopResults = workshopItems
-            .map(createWorkshopModule)
+        const workshopResults = (await Promise.all(workshopItems.map(createWorkshopModule)))
             .filter(module => !localNames.has(module.name));
 
         return [...localResults, ...workshopResults];
@@ -1341,6 +1524,62 @@ async function scanModules() {
 }
 
 // ─── Config ──────────────────────────────────────────────────────────────────
+
+async function readServerConfigData() {
+    try {
+        const schema = JSON.parse(await fs.promises.readFile(path.join(__dirname, APP_CONFIG_FILE), 'utf8'));
+        let raw = '';
+        if (currentServerConfig.filePath) {
+            try {
+                raw = await fs.promises.readFile(currentServerConfig.filePath, 'utf8');
+                currentServerConfig.isNew = false;
+            } catch (err) {
+                if (err.code !== 'ENOENT') throw err;
+            }
+        }
+        const data = serverConfig.editorData(schema, raw);
+        currentServerConfig.schema = data.schema;
+        return { ...data, mode: 'server', filePath: currentServerConfig.filePath, isNew: currentServerConfig.isNew };
+    } catch (err) {
+        console.error('[Server Config] Read failed:', err.code || err.name);
+        return { error: 'ui.multiplayer.errors.config_read' };
+    }
+}
+
+async function saveServerConfigData(values, saveAs) {
+    try {
+        const context = currentServerConfig;
+        if (!context?.schema) throw new Error('ui.multiplayer.errors.config_editor');
+        let filePath = context.filePath;
+        if (saveAs || context.isNew) {
+            const result = await dialog.showSaveDialog(cfgWindow, {
+                defaultPath: filePath || context.defaultPath,
+                filters: [{ name: 'WSE2 server configuration', extensions: ['ini'] }],
+            });
+            if (result.canceled || !result.filePath) return { success: false, canceled: true };
+            filePath = result.filePath;
+        }
+        if (!path.isAbsolute(filePath) || path.extname(filePath).toLowerCase() !== '.ini') {
+            throw new Error('ui.multiplayer.errors.config_path');
+        }
+        let raw = '';
+        if (context.filePath) {
+            try { raw = await fs.promises.readFile(context.filePath, 'utf8'); }
+            catch (err) { if (err.code !== 'ENOENT') throw err; }
+        }
+        const contents = serverConfig.serializeConfig(raw, context.schema, values);
+        await fs.promises.writeFile(filePath, contents, 'utf8');
+        context.filePath = filePath;
+        context.saved = true;
+        context.isNew = false;
+        console.log(`[Server Config] Saved: ${filePath}`);
+        return { success: true };
+    } catch (err) {
+        if (/^ui\.multiplayer\.errors\./.test(err.message)) return multiplayerFailure(err);
+        console.error('[Server Config] Save failed:', err.code || err.name);
+        return { success: false, error: 'ui.multiplayer.errors.config_save' };
+    }
+}
 
 async function readConfigData(selectedModulePath) {
     try {

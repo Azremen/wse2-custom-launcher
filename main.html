@@ -90,6 +90,12 @@
                         <label class="form-check-label small text-white" for="chk-clean-install"
                             data-i18n="ui.clean_install"></label>
                     </div>
+                    <div class="d-flex gap-1 mt-2">
+                        <button class="btn btn-outline-secondary btn-sm flex-fill" id="btn-connect" type="button"
+                            disabled data-i18n="ui.multiplayer.connect"></button>
+                        <button class="btn btn-outline-secondary btn-sm flex-fill" id="btn-dedicated" type="button"
+                            disabled data-i18n="ui.multiplayer.dedicated"></button>
+                    </div>
                 </aside>
 
                 <!-- Right Panel: Module Image + Detail Info -->
@@ -305,6 +311,79 @@
                 </div>
 
             </div>
+        </div>
+    </div>
+
+    <div class="modal" id="connectModal" tabindex="-1" aria-labelledby="connectModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" id="connect-form">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="connectModalLabel" data-i18n="ui.multiplayer.connect"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small multiplayer-module"></p>
+                    <label class="form-label" for="connect-host" data-i18n="ui.multiplayer.host"></label>
+                    <input class="form-control mb-2" id="connect-host" type="text" required maxlength="253"
+                        autocomplete="off" spellcheck="false">
+                    <label class="form-label" for="connect-port" data-i18n="ui.multiplayer.port"></label>
+                    <input class="form-control mb-2" id="connect-port" type="number" required min="1" max="65535" step="1">
+                    <label class="form-label" for="connect-password" data-i18n="ui.multiplayer.password"></label>
+                    <input class="form-control" id="connect-password" type="password" autocomplete="off">
+                    <p class="form-text" data-i18n="ui.multiplayer.connection_hint"></p>
+                    <div id="connect-feedback" class="small text-danger" role="status" aria-live="polite"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" id="btn-connect-launch" type="submit"
+                        data-i18n="ui.multiplayer.connect"></button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="dedicatedModal" tabindex="-1" aria-labelledby="dedicatedModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <form class="modal-content" id="dedicated-form">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="dedicatedModalLabel" data-i18n="ui.multiplayer.dedicated"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small multiplayer-module"></p>
+                    <label class="form-label" for="dedicated-exe" data-i18n="ui.multiplayer.exe"></label>
+                    <div class="input-group mb-2">
+                        <input class="form-control" id="dedicated-exe" type="text" required autocomplete="off" spellcheck="false">
+                        <button class="btn btn-outline-secondary" type="button" data-server-file="exePath"
+                            data-i18n="ui.wine.browse"></button>
+                    </div>
+                    <label class="form-label" for="dedicated-command" data-i18n="ui.multiplayer.command_file"></label>
+                    <div class="input-group mb-2">
+                        <input class="form-control" id="dedicated-command" type="text" required autocomplete="off" spellcheck="false">
+                        <button class="btn btn-outline-secondary" type="button" data-server-file="commandFile"
+                            data-i18n="ui.wine.browse"></button>
+                    </div>
+                    <label class="form-label" for="dedicated-config" data-i18n="ui.multiplayer.config_file"></label>
+                    <div class="input-group mb-2">
+                        <input class="form-control" id="dedicated-config" type="text" autocomplete="off" spellcheck="false">
+                        <button class="btn btn-outline-secondary" type="button" data-server-file="configFile"
+                            data-i18n="ui.wine.browse"></button>
+                        <button class="btn btn-outline-secondary" type="button" id="btn-edit-server-config"
+                            data-i18n="ui.multiplayer.edit_config"></button>
+                    </div>
+                    <label class="form-label" for="dedicated-args" data-i18n="ui.multiplayer.extra_args"></label>
+                    <div class="mb-2">
+                        <button class="btn btn-outline-secondary btn-sm" type="button" id="btn-import-server-args"
+                            data-i18n="ui.multiplayer.import_args"></button>
+                    </div>
+                    <textarea class="form-control" id="dedicated-args" rows="3" spellcheck="false"></textarea>
+                    <p class="form-text" data-i18n="ui.multiplayer.dedicated_hint"></p>
+                    <div id="dedicated-feedback" class="small" role="status" aria-live="polite"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" id="btn-dedicated-launch" type="submit"
+                        data-i18n="ui.multiplayer.start_server"></button>
+                </div>
+            </form>
         </div>
     </div>
 

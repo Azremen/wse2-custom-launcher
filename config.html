@@ -29,8 +29,10 @@
                 <div class="p-2 border-top bg-body-tertiary d-grid gap-1">
                     <button class="btn btn-outline-secondary btn-sm w-100" id="config-back" type="button"
                         data-i18n="ui.back"></button>
-                    <button class="btn btn-primary btn-sm w-100" id="config-save" type="button"
+                    <button class="btn btn-primary btn-sm w-100" id="config-save" type="button" disabled
                         data-i18n="ui.save"></button>
+                    <button class="btn btn-outline-secondary btn-sm w-100 d-none" id="config-save-as" type="button" disabled
+                        data-i18n="ui.multiplayer.save_as"></button>
                 </div>
             </aside>
 
@@ -38,6 +40,8 @@
             <main class="col-9 col-lg-10 d-flex flex-column config-full-height">
                 <header class="p-3 border-bottom">
                     <h4 id="config-section-title" class="m-0 text-primary"></h4>
+                    <p id="server-config-file" class="small text-break mb-0 d-none"></p>
+                    <p id="server-config-note" class="form-text mb-0 d-none" data-i18n="ui.multiplayer.editor_hint"></p>
                 </header>
                 <div class="p-3 flex-grow-1 overflow-auto">
                     <div class="tab-content" id="configTabsContent">
