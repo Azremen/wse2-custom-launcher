@@ -1360,12 +1360,17 @@
     "x,y": "x,y",
     "Сorrect legs position for riders on steep slopes.": "Dik yokuşlarda binici bacak pozisyonunu düzelt.",
     "ui": {
+        "download_transfer": "İndiriliyor · {speed} · {remaining}",
+        "download_estimating": "Hız ölçülüyor…",
+        "download_eta_unknown": "Kalan süre bilinmiyor",
+        "download_eta_seconds": "Yaklaşık {seconds} sn kaldı",
         "multiplayer": {
             "connect": "Bağlan",
             "dedicated": "Dedicated Server",
             "host": "Sunucu IPv4 adresi veya hostname",
             "port": "Port",
             "password": "Giriş parolası (isteğe bağlı)",
+            "connect_campaign": "Campaign sunucusu (--campaign)",
             "connection_hint": "Seçili mod ve client 64-bit ayarı kullanılır. Parola kaydedilmez; ancak işletim sisteminin süreç komut satırında görünebilir.",
             "exe": "WSE2 dedicated / campaign exe (32-bit veya 64-bit)",
             "command_file": "Sunucu komut dosyası (-r, .txt; campaign için isteğe bağlı)",
@@ -1382,6 +1387,7 @@
             "errors": {
                 "invalid_input": "Geçersiz girdi. Kontrol karakterleri kullanılamaz.",
                 "invalid_module": "Seçili mod adı geçersiz.",
+                "workshop_title": "Steam Atölyesi başlığı alınamadı. Bu modu başlatmadan önce Steam'i açıp başlatıcıyı yeniden açın.",
                 "invalid_address": "Port veya URL öneki olmadan geçerli bir IPv4 adresi ya da hostname girin.",
                 "invalid_port": "1 ile 65535 arasında bir tam sayı port girin.",
                 "dns": "Hostname için IPv4 adresi çözümlenemedi.",

@@ -50,7 +50,7 @@ contextBridge.exposeInMainWorld('api', {
     events: {
         // Each on* returns an unsubscribe function instead of nuking all app-wide listeners for the channel.
         onDownloadProgress: (callback) => {
-            const handler = (_, value) => callback(value);
+            const handler = (_, progress) => callback(progress);
             ipcRenderer.on('download-progress', handler);
             return () => ipcRenderer.removeListener('download-progress', handler);
         },

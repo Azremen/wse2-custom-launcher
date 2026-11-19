@@ -330,6 +330,10 @@
                     <input class="form-control mb-2" id="connect-port" type="number" required min="1" max="65535" step="1">
                     <label class="form-label" for="connect-password" data-i18n="ui.multiplayer.password"></label>
                     <input class="form-control" id="connect-password" type="password" autocomplete="off">
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" id="connect-campaign" type="checkbox">
+                        <label class="form-check-label" for="connect-campaign" data-i18n="ui.multiplayer.connect_campaign"></label>
+                    </div>
                     <p class="form-text" data-i18n="ui.multiplayer.connection_hint"></p>
                     <div id="connect-feedback" class="small text-danger" role="status" aria-live="polite"></div>
                 </div>

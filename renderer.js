@@ -34,7 +34,7 @@ let $progressBar = null;
 let $downloadStatus = null;
 
 function getProgressBar() {
-    if (!$progressBar) $progressBar = $('.progress-bar');
+    if (!$progressBar) $progressBar = $('#prg-bar .progress-bar');
     return $progressBar;
 }
 
@@ -128,6 +128,7 @@ async function processDownloadQueue() {
         console.error('[Download] Failed to start download:', err);
         isDownloading = false;
         $('#btn-cancel-download').addClass('d-none');
+        updateProgressBar();
         await showAlert(t('msg_download_failed') + String(err));
         // Continue with next item in queue
         processDownloadQueue();
@@ -379,7 +380,7 @@ async function initMainWindow() {
         downloadQueue = [];
         isDownloading = false;
         $('#btn-cancel-download').addClass('d-none');
-        updateProgressBar(0);
+        updateProgressBar();
     });
 
     $('#btn-remove').on('click', async () => {
@@ -405,7 +406,7 @@ async function initMainWindow() {
 
     $('#play-btn').on('click', async () => {
         if (activeModule && activeModule.isInstalled) {
-            window.api.launcher.launch(activeModule.launchName || activeModule.name, activeModule.path, $('#x64-toggle').is(':checked'));
+            window.api.launcher.launch(activeModule.launchName, activeModule.path, $('#x64-toggle').is(':checked'));
         } else {
             await showAlert(t("ui.not_installed"));
         }
@@ -616,18 +617,18 @@ async function initMainWindow() {
     });
 
     // 3. Event Listeners
-    window.api.events.onDownloadProgress((perc) => {
-        updateProgressBar(perc);
+    window.api.events.onDownloadProgress((progress) => {
+        if (isDownloading) updateProgressBar(progress);
     });
 
     window.api.events.onDownloadComplete(async () => {
-        isDownloading = false;
         $('#btn-cancel-download').addClass('d-none');
         getProgressBar().addClass('bg-success').text(t('ui.done'));
         getProgressBar().removeClass('progress-bar-striped progress-bar-animated');
         getDownloadStatus().text(t('msg_download_success'));
         await delay(1000);
-        updateProgressBar(0);
+        updateProgressBar();
+        isDownloading = false;
         await showAlert(t('msg_download_complete'));
         await refreshModuleList();
         await processDownloadQueue();
@@ -637,8 +638,8 @@ async function initMainWindow() {
         isDownloading = false;
         $('#btn-cancel-download').addClass('d-none');
         downloadQueue = [];
+        updateProgressBar();
         await showAlert(t("msg_download_failed") + String(err));
-        updateProgressBar(0);
     });
 
     window.api.events.onUpdateAvailable(async () => {
@@ -828,6 +829,7 @@ async function initMultiplayer() {
                 host: $('#connect-host').val().trim(),
                 port: $('#connect-port').val(),
                 password: $('#connect-password').val(),
+                campaign: $('#connect-campaign').is(':checked'),
             };
             const dedicated = {
                 exePath: $('#dedicated-exe').val().trim(),
@@ -844,10 +846,9 @@ async function initMultiplayer() {
             const saved = await window.api.multiplayer.saveSettings(nextSettings);
             if (!saved.success) throw new Error(saved.error);
             settings = nextSettings;
-            const name = mod.launchName || mod.name;
             const result = kind === 'connection'
-                ? await window.api.launcher.connect(name, mod.path, $('#x64-toggle').is(':checked'), connection)
-                : await window.api.multiplayer.launchDedicated(name, dedicated);
+                ? await window.api.launcher.connect(mod.launchName, mod.path, $('#x64-toggle').is(':checked'), connection)
+                : await window.api.multiplayer.launchDedicated(mod.dedicatedName || mod.launchName, dedicated);
             if (!result.success) throw new Error(result.error);
             if (kind === 'connection') {
                 bootstrap.Modal.getOrCreateInstance(document.getElementById('connectModal')).hide();
@@ -897,8 +898,11 @@ async function refreshModuleList() {
 
     // Sync activeModule with refreshed data so buttons/state stay accurate
     if (activeModule) {
-        const freshLocal = localModules.find(m => m.name === activeModule.name);
-        const freshRemote = Array.isArray(remoteModules) ? remoteModules.find(m => m.name === activeModule.name) : null;
+        const freshLocal = activeModule.isWorkshop
+            ? localModules.find(m => m.isWorkshop && m.workshopId === activeModule.workshopId)
+            : localModules.find(m => !m.isWorkshop && m.name === activeModule.name);
+        const freshRemote = !activeModule.isWorkshop && Array.isArray(remoteModules)
+            ? remoteModules.find(m => m.name === activeModule.name) : null;
 
         if (!freshLocal && !freshRemote) {
             // Module no longer exists at all — clear selection
@@ -913,7 +917,8 @@ async function refreshModuleList() {
             const remote = freshRemote || null;
             activeModule = {
                 ...activeModule,
-                launchName: installed ? installed.launchName || installed.name : activeModule.launchName,
+                launchName: installed?.isWorkshop ? installed.launchName : installed?.name || activeModule.launchName,
+                dedicatedName: installed?.dedicatedName,
                 localVersion: installed ? installed.version : null,
                 path: installed ? installed.path : null,
                 img: installed ? installed.imageUrl : null,
@@ -939,7 +944,7 @@ function renderList() {
     // Add all remote modules
     if (remoteModules && Array.isArray(remoteModules)) {
         remoteModules.forEach(rm => {
-            const installed = localModules.find(lm => lm.name === rm.name);
+            const installed = localModules.find(lm => !lm.isWorkshop && lm.name === rm.name);
 
             let modUrl = null;
             if (rm.url) {
@@ -978,11 +983,12 @@ function renderList() {
 
     // Add local modules not in remote
     localModules.forEach(lm => {
-        const inRemote = Array.isArray(remoteModules) && remoteModules.find(rm => rm.name === lm.name);
+        const inRemote = !lm.isWorkshop && Array.isArray(remoteModules) && remoteModules.find(rm => rm.name === lm.name);
         if (!inRemote) {
             displayList.push({
                 name: lm.name,
-                launchName: lm.launchName || lm.name,
+                launchName: lm.isWorkshop ? lm.launchName : lm.name,
+                dedicatedName: lm.dedicatedName,
                 remoteVersion: null,
                 localVersion: lm.version,
                 path: lm.path,
@@ -1020,7 +1026,9 @@ function renderList() {
         $btn.on('click', () => selectModule(mod, $btn));
 
         // Restore active highlight if this module was selected
-        if (activeModule && mod.name === activeModule.name) {
+        if (activeModule && (mod.isWorkshop
+            ? activeModule.isWorkshop && mod.workshopId === activeModule.workshopId
+            : !activeModule.isWorkshop && mod.name === activeModule.name)) {
             $btn.addClass('active');
         }
 
@@ -1155,11 +1163,13 @@ function startDownload(url) {
     });
 }
 
-function updateProgressBar(perc) {
+function updateProgressBar(progress = null) {
     const $bar = getProgressBar();
     const $status = getDownloadStatus();
+    const $track = $('#prg-bar');
 
-    if (perc === 0) {
+    if (!progress) {
+        $track.attr('aria-valuenow', 0);
         $bar.css('width', '0%').text('');
         $bar.removeClass('bg-success progress-bar-striped progress-bar-animated');
         $status.text('');
@@ -1169,12 +1179,22 @@ function updateProgressBar(perc) {
     $bar.addClass('progress-bar-striped progress-bar-animated');
     $bar.removeClass('bg-success');
 
-    if (perc >= 99.9) {
+    const { percent, bytesPerSecond, remainingSeconds } = progress;
+    if (percent === null) $track.removeAttr('aria-valuenow');
+    else $track.attr('aria-valuenow', Math.round(percent));
+
+    if (percent === 100) {
         $bar.css('width', '100%').text('100%');
         $status.text(t('ui.verifying_extracting'));
     } else {
-        $bar.css('width', perc + '%').text(Math.round(perc) + '%');
-        $status.text(t('msg_downloading'));
+        const number = new Intl.NumberFormat(currentLocale, { maximumFractionDigits: 1 });
+        const speed = bytesPerSecond === null ? t('ui.download_estimating')
+            : bytesPerSecond >= 1024 ** 2 ? `${number.format(bytesPerSecond / 1024 ** 2)} MiB/s`
+                : `${number.format(bytesPerSecond / 1024)} KiB/s`;
+        const remaining = remainingSeconds === null ? t('ui.download_eta_unknown')
+            : t('ui.download_eta_seconds', { seconds: number.format(remainingSeconds) });
+        $bar.css('width', percent === null ? '100%' : `${percent}%`).text(percent === null ? '' : `${Math.round(percent)}%`);
+        $status.text(t('ui.download_transfer', { speed, remaining }));
     }
 }
 

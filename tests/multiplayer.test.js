@@ -32,6 +32,18 @@ test('direct connect resolves IPv4 hostnames and validates address, port and pas
     }
     await assert.rejects(multiplayer.resolveConnection({ host: 'localhost', port: 7240 }, async () => { throw new Error('DNS'); }), /errors.dns/);
     await assert.rejects(multiplayer.resolveConnection({ host: '127.0.0.1', port: 7240, password: 'a\nb' }), /invalid_input/);
+    await assert.rejects(multiplayer.resolveConnection({ host: '127.0.0.1', port: 7240, campaign: 'false' }), /invalid_input/);
+});
+
+test('campaign direct connect adds its switch only when selected', async () => {
+    for (const campaign of [true, false]) {
+        const connection = await multiplayer.resolveConnection({ host: '127.0.0.1', port: 7240, password: 'example', campaign });
+        const args = multiplayer.clientArgs('NativeCoop', connection);
+        assert.deepEqual(args, [
+            '--module', 'NativeCoop', '--no-intro', '--address', '127.0.0.1:7240', '--password', 'example',
+            ...(campaign ? ['--campaign'] : []),
+        ]);
+    }
 });
 
 test('dedicated arguments preserve one argument per line and reject overrides and module traversal', () => {
@@ -153,6 +165,77 @@ function mainHarness(root, platform, spawnError = false) {
     return { handlers, launches, messages, context, dialogs };
 }
 
+test('download progress estimates bytes per second and rounds remaining time up', async t => {
+    const { root } = await fixture(t);
+    const { context } = mainHarness(root, 'win32');
+    let time = 0;
+    const measure = context.createDownloadMeter(0, () => time);
+    assert.deepEqual({ ...measure(0, 1000) }, { percent: 0, bytesPerSecond: null, remainingSeconds: null });
+    time = 499;
+    assert.equal(measure(200, 1000).bytesPerSecond, null);
+    time = 500;
+    assert.deepEqual({ ...measure(200, 1000) }, { percent: 20, bytesPerSecond: 400, remainingSeconds: 2 });
+    time = 1000;
+    assert.deepEqual({ ...measure(800, 1000) }, { percent: 80, bytesPerSecond: 1200, remainingSeconds: 1 });
+    time = 1500;
+    assert.deepEqual({ ...measure(800, 1000) }, { percent: 80, bytesPerSecond: 0, remainingSeconds: null });
+});
+
+test('download progress shows speed without a size and drops a stale estimate when bytes reset', async t => {
+    const { root } = await fixture(t);
+    const { context } = mainHarness(root, 'win32');
+    let time = 0;
+    const measure = context.createDownloadMeter(1000, () => time);
+    time = 500;
+    assert.deepEqual({ ...measure(2000, 0) }, { percent: null, bytesPerSecond: 2000, remainingSeconds: null });
+    time = 600;
+    assert.deepEqual({ ...measure(0, 2000) }, { percent: 0, bytesPerSecond: null, remainingSeconds: null });
+    time = 1100;
+    const progress = measure(2000, 2000);
+    assert.ok(progress.percent < 100);
+    assert.equal(progress.bytesPerSecond, 4000);
+});
+
+test('Workshop launches use the exact Steam title and suffix, not the display or INI name', async t => {
+    const { root } = await fixture(t);
+    const { handlers, context, launches } = mainHarness(root, 'win32');
+    const modulePath = path.join(root, 'steamapps', 'workshop', 'content', '48700', '42');
+    fs.mkdirSync(modulePath, { recursive: true });
+    fs.writeFileSync(path.join(modulePath, 'module.ini'), 'module_name = Native');
+    const title = 'Native_Expansion Reforged!';
+    const steamItems = [{ publishedFileId: 42n, title }];
+    context.getSteamClient = () => ({
+        workshop: {
+            getSubscribedItems: () => [42n],
+            state: () => 4,
+            installInfo: () => ({ folder: modulePath }),
+            getItems: async () => ({ items: steamItems }),
+        },
+    });
+    const [item] = await context.scanWorkshopItemsViaSteam();
+    const mod = await context.createWorkshopModule(item);
+    const localPath = path.join(root, 'Modules', title);
+    fs.mkdirSync(localPath, { recursive: true });
+    fs.writeFileSync(path.join(localPath, 'module.ini'), '');
+    assert.equal(await handlers.get('launch-game')(null, title, localPath, false), true);
+    assert.deepEqual(Array.from(launches.at(-1).args), ['--module', 'Native_Expansion', 'Reforged!', '--no-intro']);
+
+    const expected = ['--module', 'Native_Expansion', 'Reforged!', '(Steam', 'Workshop)', '--no-intro'];
+    assert.equal(await handlers.get('launch-game')(null, mod.launchName, mod.path, false), true);
+    assert.deepEqual(Array.from(launches.at(-1).args), expected);
+    const connect = handlers.get('connect-game');
+    assert.equal((await connect(null, mod.launchName, mod.path, true, { host: '127.0.0.1', port: 7240 })).success, true);
+    assert.deepEqual(Array.from(launches.at(-1).args), [...expected, '--address', '127.0.0.1:7240']);
+
+    steamItems.length = 0;
+    const [fallbackItem] = await context.scanWorkshopItemsViaSteam();
+    const fallback = await context.createWorkshopModule(fallbackItem);
+    assert.equal((await connect(null, fallback.launchName, fallback.path, false, { host: '127.0.0.1', port: 7240 })).error,
+        'ui.multiplayer.errors.workshop_title');
+    assert.equal(await handlers.get('launch-game')(null, fallback.launchName, fallback.path, false), false);
+    assert.equal(launches.length, 3);
+});
+
 test('Windows IPC launches client x86/x64 and an encoded server console, persists no password', async t => {
     const { root, settings } = await fixture(t);
     const { handlers, launches, messages } = mainHarness(root, 'win32');
@@ -167,6 +250,9 @@ test('Windows IPC launches client x86/x64 and an encoded server console, persist
         last.child.stderr.write('top "sec');
         last.child.stderr.write('ret"\n');
         assert.equal(messages.join('\n').includes('top "secret"'), false);
+        assert.equal(last.args.includes('--campaign'), false);
+        assert.equal((await handlers.get('connect-game')(null, 'Native Expansion', null, x64, { host: '127.0.0.1', port: 7240, campaign: true })).success, true);
+        assert.deepEqual(Array.from(launches.at(-1).args), ['--module', 'Native', 'Expansion', '--no-intro', '--address', '127.0.0.1:7240', '--campaign']);
     }
     const result = await handlers.get('launch-dedicated')(null, 'Native Expansion', settings);
     assert.equal(result.success, true);
@@ -215,6 +301,8 @@ test('Linux uses Wine prefix, Windows file paths and a detached terminal; missin
         assert.equal(path.basename(client.args[0]), x64 ? 'mb_warband_wse2_x64.exe' : 'mb_warband_wse2.exe');
         assert.deepEqual(Array.from(client.args.slice(1)), ['--module', 'Native', 'Expansion', '--no-intro', '--address', '127.0.0.1:7240']);
         assert.equal(client.options.env.WINEPREFIX, path.join(root, 'prefix'));
+        assert.equal((await handlers.get('connect-game')(null, 'Native Expansion', null, x64, { host: '127.0.0.1', port: 7240, campaign: true })).success, true);
+        assert.deepEqual(Array.from(launches.at(-1).args.slice(1)), ['--module', 'Native', 'Expansion', '--no-intro', '--address', '127.0.0.1:7240', '--campaign']);
     }
     fs.unlinkSync(path.join(root, 'xterm'));
     assert.equal((await handlers.get('launch-dedicated')(null, 'Native Expansion', settings)).error, 'ui.multiplayer.errors.terminal');

@@ -403,6 +403,34 @@ async function downloadPortableUpdate() {
 
 // ─── Download Handler ────────────────────────────────────────────────────────
 
+function createDownloadMeter(initialBytes, now = () => performance.now()) {
+    let sampleBytes = initialBytes;
+    let sampleTime = now();
+    let bytesPerSecond = null;
+
+    return (received, total) => {
+        const time = now();
+        const elapsed = time - sampleTime;
+        if (received < sampleBytes) {
+            sampleBytes = received;
+            sampleTime = time;
+            bytesPerSecond = null;
+        } else if (elapsed >= 500) {
+            bytesPerSecond = (received - sampleBytes) * 1000 / elapsed;
+            sampleBytes = received;
+            sampleTime = time;
+        }
+
+        const hasTotal = Number.isFinite(total) && total > 0;
+        return {
+            percent: hasTotal ? Math.min(received / total * 100, 99) : null,
+            bytesPerSecond,
+            remainingSeconds: hasTotal && bytesPerSecond > 0
+                ? Math.ceil(Math.max(0, total - received) / bytesPerSecond) : null,
+        };
+    };
+}
+
 function setupDownloadHandler() {
     mainWindow.webContents.session.on('will-download', (_, item) => {
         const urlChain = item.getURLChain();
@@ -432,8 +460,21 @@ function setupDownloadHandler() {
         item.setSavePath(savePath);
         if (matchedUrl) activeDownloadItems.set(matchedUrl, item);
 
+        let measure = createDownloadMeter(item.getReceivedBytes());
+        function reportProgress(reset = false) {
+            const received = item.getReceivedBytes();
+            const total = item.getTotalBytes();
+            if (reset) measure = createDownloadMeter(received);
+            const progress = measure(received, total > 0 ? total : Number(meta.size));
+            mainWindow?.webContents.send('download-progress', progress);
+        }
+        reportProgress();
+
+        let resumePending = false;
         item.on('updated', (__, state) => {
             if (state === 'interrupted') {
+                resumePending = true;
+                reportProgress(true);
                 console.warn(`[Download] Interrupted: ${meta.name}`);
                 if (item.canResume()) {
                     try {
@@ -445,12 +486,10 @@ function setupDownloadHandler() {
                 }
                 return;
             }
-            if (state === 'progressing' && !item.isPaused()) {
-                const total = item.getTotalBytes();
-                const received = item.getReceivedBytes();
-                const expected = total > 0 ? total : Number(meta.size || 0);
-                const pct = expected > 0 ? Math.min((received / expected) * 100, 99.9) : 0;
-                mainWindow?.webContents.send('download-progress', pct);
+            if (state === 'progressing') {
+                const paused = item.isPaused();
+                reportProgress(paused || resumePending);
+                resumePending = paused;
             }
         });
 
@@ -459,6 +498,7 @@ function setupDownloadHandler() {
 
             if (state === 'completed') {
                 if (matchedUrl) pendingDownloads.delete(matchedUrl);
+                mainWindow?.webContents.send('download-progress', { percent: 100 });
                 processDownloadedModule(savePath, meta);
             } else if (state === 'interrupted' && matchedUrl && meta._retryCount < 1) {
                 meta._retryCount += 1;
@@ -939,7 +979,9 @@ async function resolveExePath(useX64 = false) {
 }
 
 async function launchGame(moduleName, modulePath = null, useX64 = false, connection = null) {
-    const args = multiplayer.clientArgs(moduleName, connection);
+    const isWorkshop = modulePath && isWorkshopContentPath(modulePath);
+    if (isWorkshop && !moduleName) throw new Error('ui.multiplayer.errors.workshop_title');
+    const args = multiplayer.clientArgs(moduleName, connection, isWorkshop);
     const exePath = await resolveExePath(useX64);
     const workingDir = path.dirname(exePath);
 
@@ -1342,10 +1384,12 @@ async function scanWorkshopItemsViaSteam() {
 
     const items = [];
     for (const [id, modulePath] of folders) {
-        const rawName = titles.get(id) || await readModuleIniName(modulePath);
+        const title = titles.get(id);
+        const rawName = title || await readModuleIniName(modulePath);
         items.push({
             id,
             name: sanitizeModuleFolderName(rawName || '') || `Workshop_${id}`,
+            title,
             path: modulePath,
         });
     }
@@ -1410,9 +1454,11 @@ async function getModuleImageUrl(modulePath) {
 }
 
 async function createWorkshopModule(item) {
+    const suffix = ' (Steam Workshop)';
     return {
-        name: `${item.name} (Steam Workshop)`,
-        launchName: item.name,
+        name: `${item.name}${suffix}`,
+        launchName: item.title ? `${item.title}${suffix}` : null,
+        dedicatedName: item.name,
         version: null,
         path: item.path,
         imageUrl: await getModuleImageUrl(item.path),
@@ -1512,9 +1558,7 @@ async function scanModules() {
             return modData;
         }));
         const localResults = results.filter(Boolean);
-        const localNames = new Set(localResults.map(module => module.name));
-        const workshopResults = (await Promise.all(workshopItems.map(createWorkshopModule)))
-            .filter(module => !localNames.has(module.name));
+        const workshopResults = await Promise.all(workshopItems.map(createWorkshopModule));
 
         return [...localResults, ...workshopResults];
     } catch (err) {
@@ -1883,7 +1927,6 @@ async function processDownloadedModule(zipPath, meta) {
         const expectedHash = meta.sha256 || meta.md5;
         if (expectedHash) {
             const algorithm = meta.sha256 ? 'sha256' : 'md5';
-            mainWindow?.webContents.send('download-progress', 100);
             console.log(`[Install] Verifying ${algorithm}...`);
             const localHash = await hashFile(zipPath, algorithm);
             console.log(`[Install] ${algorithm} - server: ${expectedHash}  local: ${localHash}`);

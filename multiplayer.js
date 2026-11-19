@@ -17,9 +17,10 @@ function text(value, required = true) {
     return value;
 }
 
-function moduleArgs(name) {
+function moduleArgs(name, isWorkshop = false) {
     text(name);
-    if (/[<>:"/\\|?*]/.test(name) || name.split(' ').some(word => word.startsWith('--') || /^-[mr]$/i.test(word)) || name === '.' || name === '..') fail('invalid_module');
+    const invalidChars = isWorkshop ? /["/\\]|^[a-z]:/i : /[<>:"/\\|?*]/;
+    if (invalidChars.test(name) || name.split(' ').some(word => word.startsWith('--') || /^-[mr]$/i.test(word)) || name === '.' || name === '..') fail('invalid_module');
     // WSE2's launcher passes multi-word module names without quotes.
     return ['--module', ...name.split(' ')];
 }
@@ -39,6 +40,7 @@ function connectionSettings(value) {
 async function resolveConnection(value, resolve = lookup) {
     const settings = connectionSettings(value);
     const password = value.password === undefined ? '' : text(value.password, false);
+    if (value.campaign !== undefined && typeof value.campaign !== 'boolean') fail('invalid_input');
     let address = settings.host;
     if (net.isIP(address) !== 4) {
         try {
@@ -48,14 +50,15 @@ async function resolveConnection(value, resolve = lookup) {
         }
     }
     if (net.isIP(address) !== 4) fail('dns');
-    return { address: `${address}:${settings.port}`, password };
+    return { address: `${address}:${settings.port}`, password, campaign: value.campaign === true };
 }
 
-function clientArgs(name, connection = null) {
-    const args = [...moduleArgs(name), '--no-intro'];
+function clientArgs(name, connection = null, isWorkshop = false) {
+    const args = [...moduleArgs(name, isWorkshop), '--no-intro'];
     if (connection) {
         args.push('--address', connection.address);
         if (connection.password) args.push('--password', connection.password);
+        if (connection.campaign) args.push('--campaign');
     }
     return args;
 }

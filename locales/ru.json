@@ -1360,12 +1360,17 @@
     "x,y": "x,y",
     "Сorrect legs position for riders on steep slopes.": "Корректировать ноги всадника на крутых склонах.",
     "ui": {
+        "download_transfer": "Загрузка · {speed} · {remaining}",
+        "download_estimating": "Измерение скорости…",
+        "download_eta_unknown": "Оставшееся время неизвестно",
+        "download_eta_seconds": "Осталось ≈ {seconds} с",
         "multiplayer": {
             "connect": "Подключиться",
             "dedicated": "Выделенный сервер",
             "host": "IPv4-адрес или имя сервера",
             "port": "Порт",
             "password": "Пароль входа (необязательно)",
+            "connect_campaign": "Сервер кампании (--campaign)",
             "connection_hint": "Используются выбранный модуль и настройка 64-bit клиента. Пароль не сохраняется, но может быть виден в командной строке процесса ОС.",
             "exe": "WSE2 dedicated / campaign exe (32-bit или 64-bit)",
             "command_file": "Файл команд (-r, .txt; необязателен для campaign)",
@@ -1382,6 +1387,7 @@
             "errors": {
                 "invalid_input": "Недопустимые данные. Управляющие символы запрещены.",
                 "invalid_module": "Недопустимое имя выбранного модуля.",
+                "workshop_title": "Название мода из мастерской Steam недоступно. Запустите Steam и перезапустите лаунчер перед запуском мода.",
                 "invalid_address": "Введите корректный IPv4-адрес или имя сервера без порта и схемы URL.",
                 "invalid_port": "Введите целый порт от 1 до 65535.",
                 "dns": "Не удалось определить IPv4-адрес сервера.",

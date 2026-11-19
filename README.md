@@ -11,7 +11,7 @@ A custom launcher for Warband Script Enhancer 2 (WSE2) by **Azremen**.
 
 ### Features
 - **Cross-Platform:** Runs on Windows, Linux, and macOS.
-- **Module Management:** Browse, download, install, and remove WSE2 modules directly from the launcher.
+- **Module Management:** Browse, download, install, and remove WSE2 modules. Downloads show the transfer speed and estimated seconds remaining when the file size is known.
 - **Steam Workshop:** Subscribed Warband workshop mods appear in the module list automatically.
 - **64-bit Support:** Toggle next to the Play button when `mb_warband_wse2_x64.exe` is present.
 - **Direct Connect:** Launch the selected module with a server IPv4 address/hostname, port and optional join password.
@@ -30,10 +30,11 @@ The launcher reads your subscribed items through the Steamworks API, exactly lik
 - Workshop modules cannot be removed from the launcher; manage them through Steam.
 - Unsubscribed items disappear from the launcher on the next refresh.
 - When a Workshop module is selected, its `main.bmp` is loaded from the Steam module folder; a missing image uses the launcher placeholder.
+- Starting a Workshop module uses its exact Steam title followed by ` (Steam Workshop)`. If Steam cannot provide the title, the launcher reports an error instead of guessing from the local files.
 
 ### Direct connect and dedicated server
 
-Select an installed module, then use **Connect** for a single IPv4 address or hostname, port (1–65535), and optional **join** password. Hostnames resolve to IPv4. The client uses the existing 64-bit switch; **PLAY** still starts normally.
+Select an installed module, then use **Connect** for a single IPv4 address or hostname, port (1–65535), and optional **join** password. For a campaign server, enable **Campaign server (--campaign)**; the launcher does not detect the server type automatically and the choice is not saved between sessions. Hostnames resolve to IPv4. The client uses the existing 64-bit switch; **PLAY** still starts normally.
 
 **Dedicated Server** accepts `mb_warband_wse2_dedicated.exe`, `mb_warband_wse2_dedicated_x64.exe`, `mb_warband_wse2_dedicated_campaign.exe` or `mb_warband_wse2_dedicated_campaign_x64.exe`. Select a server command file (`-r`, e.g. `Native.txt`; optional for campaign executables) and an optional WSE2 settings file (`--config-path`, e.g. `server_config.ini`). These are two different files. The selected module must also be installed in `Modules/<module name>` beside the server executable; Workshop modules are not copied automatically. Campaign modules must support campaign hosting; the launcher does not manage worlds or savegames.
 
@@ -49,6 +50,7 @@ Replace the example option with a switch supported by your installed WSE2/module
 Example commands (shown without a join password):
 ```text
 mb_warband_wse2.exe --module Native --no-intro --address 127.0.0.1:7240
+mb_warband_wse2.exe --module NativeCoop --no-intro --address 127.0.0.1:7240 --campaign
 mb_warband_wse2_dedicated.exe --config-path server_config.ini -r Native.txt --module Native
 mb_warband_wse2_dedicated_campaign_x64.exe --config-path server_config.ini --module NativeCoop
 ```
@@ -58,7 +60,7 @@ mb_warband_wse2_dedicated_campaign_x64.exe --config-path server_config.ini --mod
 - A separate server console stays open after the launcher closes. Check that console for startup errors; “process started” does not guarantee that the server is ready. Stop the server through its console.
 - On Linux, configure Wine and its prefix in Settings. Install `wineconsole` and `winepath` alongside that Wine executable, plus `xterm` or an `x-terminal-emulator` supporting `-e command args`.
 - Address/port and server file paths are saved under Electron's user-data directory in `multiplayer-settings.json`. Join passwords and extra arguments are session-only. Join passwords are masked in launcher logs, but the operating system may expose them in process arguments.
-- The launch switches follow the [official WSE2 documentation](https://forums.taleworlds.com/index.php?threads/warband-script-enhancer-2.384882/) and [dedicated example](https://github.com/Ruslan-700/WSE2-Releases/blob/master/Warband/Native_WSE2_dedicated.bat). Actual auto-connect, special-character parsing and Linux/Wine console behavior still require validation with your installed WSE2 version.
+- Other launch switches follow the [official WSE2 documentation](https://forums.taleworlds.com/index.php?threads/warband-script-enhancer-2.384882/) and [dedicated example](https://github.com/Ruslan-700/WSE2-Releases/blob/master/Warband/Native_WSE2_dedicated.bat). The `--campaign` switch was reported by the WSE2 developer; actual auto-connect, campaign behavior, special-character parsing and Linux/Wine console behavior still require validation with your installed WSE2 version.
 
 ### Installation & Usage
 
@@ -185,7 +187,7 @@ Paste it into the `CSC_LINK` secret and set `CSC_KEY_PASSWORD`.
 
 ### Özellikler
 - **Çoklu Platform:** Windows, Linux ve macOS üzerinde çalışır.
-- **Modül Yönetimi:** WSE2 modüllerini doğrudan başlatıcıdan indirin, kurun ve kaldırın.
+- **Modül Yönetimi:** WSE2 modüllerini indirin, kurun ve kaldırın. İndirme sırasında hız ve dosya boyutu biliniyorsa tahmini kalan saniye gösterilir.
 - **Steam Atölyesi:** Abone olduğunuz Warband atölye modları modül listesinde otomatik görünür.
 - **64-bit Desteği:** `mb_warband_wse2_x64.exe` mevcutsa Oynat butonunun yanında aç/kapa anahtarı çıkar.
 - **Doğrudan Bağlantı:** Seçili modu sunucu IPv4 adresi/hostname, port ve isteğe bağlı giriş parolasıyla başlatın.
@@ -204,10 +206,11 @@ Başlatıcı, abone olduğunuz öğeleri resmi WSE2 başlatıcısıyla aynı şe
 - Atölye modülleri başlatıcıdan kaldırılamaz; yönetimi Steam üzerinden yapılır.
 - Abonelikten çıkılan öğeler bir sonraki yenilemede başlatıcıdan kaldırılır.
 - Atölye modu seçildiğinde `main.bmp` Steam'deki mod klasöründen yüklenir; dosya yoksa varsayılan görsel gösterilir.
+- Atölye modu, Steam'deki özgün başlığı ve ` (Steam Workshop)` ekiyle başlatılır. Başlık Steam'den alınamazsa başlatıcı yerel dosyalardan tahmin etmek yerine hata gösterir.
 
 ### Doğrudan bağlantı ve dedicated server
 
-Kurulu bir mod seçip **Bağlan** üzerinden IPv4 adresi/hostname, port (1–65535) ve isteğe bağlı **giriş** parolası girin. Hostname IPv4'e çözümlenir. Mevcut client 64-bit anahtarı kullanılır; **Oyna** normal başlatmayı sürdürür.
+Kurulu bir mod seçip **Bağlan** üzerinden IPv4 adresi/hostname, port (1–65535) ve isteğe bağlı **giriş** parolası girin. Campaign sunucusu için **Campaign sunucusu (--campaign)** seçeneğini işaretleyin; launcher sunucu türünü otomatik algılamaz ve seçim oturumlar arasında saklanmaz. Hostname IPv4'e çözümlenir. Mevcut client 64-bit anahtarı kullanılır; **Oyna** normal başlatmayı sürdürür.
 
 **Dedicated Server** için `mb_warband_wse2_dedicated.exe`, `mb_warband_wse2_dedicated_x64.exe`, `mb_warband_wse2_dedicated_campaign.exe` veya `mb_warband_wse2_dedicated_campaign_x64.exe` seçilebilir. Sunucu komut dosyası (`-r`, ör. `Native.txt`) normal dedicated için zorunlu, campaign için isteğe bağlıdır. WSE2 ayar dosyası (`--config-path`, ör. `server_config.ini`) isteğe bağlıdır ve komut dosyasından farklıdır. Seçili mod sunucu exe'sinin yanındaki `Modules/<mod adı>` içinde de kurulu olmalıdır; Workshop dosyaları otomatik kopyalanmaz. Campaign modu sunucu olarak çalışmayı desteklemelidir; launcher world/kayıt dosyası yönetmez.
 
@@ -223,6 +226,7 @@ value with spaces
 Örnek komutlar (giriş parolası olmadan):
 ```text
 mb_warband_wse2.exe --module Native --no-intro --address 127.0.0.1:7240
+mb_warband_wse2.exe --module NativeCoop --no-intro --address 127.0.0.1:7240 --campaign
 mb_warband_wse2_dedicated.exe --config-path server_config.ini -r Native.txt --module Native
 mb_warband_wse2_dedicated_campaign_x64.exe --config-path server_config.ini --module NativeCoop
 ```
@@ -232,7 +236,7 @@ mb_warband_wse2_dedicated_campaign_x64.exe --config-path server_config.ini --mod
 - Sunucu ayrı konsolda, launcher kapandıktan sonra da çalışır. Başlatma hatalarını konsoldan kontrol edin; süreç oluşturulması sunucunun hazır olduğu anlamına gelmez. Sunucuyu kendi konsolundan kapatın.
 - Linux'ta Ayarlar'dan Wine ve prefix'i seçin. Wine exe'si yanında `wineconsole` ve `winepath`, ayrıca `xterm` veya `-e command args` destekleyen `x-terminal-emulator` gereklidir.
 - Adres/port ve sunucu yolları Electron kullanıcı verisi klasöründeki `multiplayer-settings.json` içinde saklanır. Giriş parolası ve ek argümanlar yalnız oturumda tutulur. Parola launcher loglarında maskelenir; işletim sisteminin süreç argümanlarında görünebilir.
-- Anahtarlar [resmî WSE2 belgesini](https://forums.taleworlds.com/index.php?threads/warband-script-enhancer-2.384882/) ve [dedicated örneğini](https://github.com/Ruslan-700/WSE2-Releases/blob/master/Warband/Native_WSE2_dedicated.bat) izler. Gerçek otomatik bağlantı, özel karakterlerin işlenmesi ve Linux/Wine konsol davranışı kullandığınız WSE2 sürümüyle ayrıca doğrulanmalıdır.
+- Diğer anahtarlar [resmî WSE2 belgesini](https://forums.taleworlds.com/index.php?threads/warband-script-enhancer-2.384882/) ve [dedicated örneğini](https://github.com/Ruslan-700/WSE2-Releases/blob/master/Warband/Native_WSE2_dedicated.bat) izler. `--campaign` anahtarı WSE2 geliştiricisi tarafından bildirilmiştir; gerçek otomatik bağlantı, campaign davranışı, özel karakterlerin işlenmesi ve Linux/Wine konsol davranışı kullandığınız WSE2 sürümüyle ayrıca doğrulanmalıdır.
 
 ### Kurulum ve Kullanım
 
@@ -346,7 +350,7 @@ CSC_KEY_PASSWORD=sifreniz
 
 ### Особенности
 - **Кроссплатформенность:** Windows, Linux и macOS.
-- **Управление модулями:** Скачивайте, устанавливайте и удаляйте WSE2 модули прямо из лаунчера.
+- **Управление модулями:** Скачивайте, устанавливайте и удаляйте модули WSE2. При загрузке отображается скорость и, если известен размер файла, примерное время до окончания в секундах.
 - **Steam Workshop:** Моды Warband, на которые вы подписаны, появляются в списке автоматически.
 - **Поддержка 64-bit:** Переключатель рядом с кнопкой запуска, если есть `mb_warband_wse2_x64.exe`.
 - **Прямое подключение:** Запуск выбранного модуля с IPv4-адресом/именем сервера, портом и необязательным паролем входа.
@@ -365,10 +369,11 @@ CSC_KEY_PASSWORD=sifreniz
 - Модули мастерской нельзя удалить из лаунчера — управляйте ими через Steam.
 - Отменённые подписки исчезают из лаунчера при следующем обновлении списка.
 - При выборе модуля Workshop его `main.bmp` загружается из папки Steam; если изображения нет, используется стандартная заглушка.
+- Мод мастерской запускается с точным названием из Steam и суффиксом ` (Steam Workshop)`. Если Steam не возвращает название, лаунчер сообщает об ошибке, не подставляя имя из локальных файлов.
 
 ### Прямое подключение и выделенный сервер
 
-Выберите установленный модуль и нажмите **Подключиться**: укажите IPv4-адрес или имя сервера, порт (1–65535) и необязательный пароль **входа**. Имя сервера преобразуется в IPv4. Используется переключатель 64-bit клиента; обычный запуск не меняется.
+Выберите установленный модуль и нажмите **Подключиться**: укажите IPv4-адрес или имя сервера, порт (1–65535) и необязательный пароль **входа**. Для сервера кампании включите **Сервер кампании (--campaign)**; лаунчер не определяет тип сервера автоматически и не сохраняет этот выбор между сеансами. Имя сервера преобразуется в IPv4. Используется переключатель 64-bit клиента; обычный запуск не меняется.
 
 Для **Выделенного сервера** выберите `mb_warband_wse2_dedicated.exe`, `mb_warband_wse2_dedicated_x64.exe`, `mb_warband_wse2_dedicated_campaign.exe` или `mb_warband_wse2_dedicated_campaign_x64.exe`. Файл команд (`-r`, например `Native.txt`) обязателен для обычного dedicated, но необязателен для campaign. Файл настроек WSE2 (`--config-path`, например `server_config.ini`) необязателен и отличается от файла команд. Выбранный модуль должен быть установлен также в `Modules/<имя модуля>` рядом с exe сервера; файлы Workshop автоматически не копируются. Модуль должен поддерживать campaign-сервер; управление мирами/сохранениями не предусмотрено.
 
@@ -384,6 +389,7 @@ value with spaces
 Примеры команд (без пароля входа):
 ```text
 mb_warband_wse2.exe --module Native --no-intro --address 127.0.0.1:7240
+mb_warband_wse2.exe --module NativeCoop --no-intro --address 127.0.0.1:7240 --campaign
 mb_warband_wse2_dedicated.exe --config-path server_config.ini -r Native.txt --module Native
 mb_warband_wse2_dedicated_campaign_x64.exe --config-path server_config.ini --module NativeCoop
 ```
@@ -393,7 +399,7 @@ mb_warband_wse2_dedicated_campaign_x64.exe --config-path server_config.ini --mod
 - Сервер работает в отдельной консоли после закрытия лаунчера. Проверяйте ошибки в консоли: запуск процесса не означает готовность сервера. Останавливайте сервер через его консоль.
 - В Linux настройте Wine и prefix. Рядом с Wine нужны `wineconsole` и `winepath`, а также `xterm` или `x-terminal-emulator` с поддержкой `-e command args`.
 - Адрес/порт и пути сохраняются в `multiplayer-settings.json` в каталоге пользовательских данных Electron. Пароль входа и дополнительные аргументы хранятся только в сеансе. Пароль маскируется в журнале, но может быть виден в аргументах процесса ОС.
-- Ключи соответствуют [официальной документации WSE2](https://forums.taleworlds.com/index.php?threads/warband-script-enhancer-2.384882/) и [примеру сервера](https://github.com/Ruslan-700/WSE2-Releases/blob/master/Warband/Native_WSE2_dedicated.bat). Автоподключение, специальные символы и консоль Linux/Wine требуют проверки с вашей версией WSE2.
+- Остальные ключи соответствуют [официальной документации WSE2](https://forums.taleworlds.com/index.php?threads/warband-script-enhancer-2.384882/) и [примеру сервера](https://github.com/Ruslan-700/WSE2-Releases/blob/master/Warband/Native_WSE2_dedicated.bat). Ключ `--campaign` указан разработчиком WSE2; автоподключение, режим кампании, специальные символы и консоль Linux/Wine требуют проверки с вашей версией WSE2.
 
 ### Установка и использование
 
