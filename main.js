@@ -360,28 +360,75 @@ function portableUpdaterScript(portablePath, updatePath, parentPid = process.pid
     return `
 $ErrorActionPreference = 'Stop'
 $data = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('${data}')) | ConvertFrom-Json
+$logPath = $data.portablePath + '.update.log'
 try {
     $parent = Get-Process -Id $data.parentPid -ErrorAction SilentlyContinue
+    'Updater ready; waiting for launcher shutdown.' | Out-File -LiteralPath $logPath -Encoding utf8
+    [Console]::WriteLine('ready')
     if ($parent -and -not $parent.WaitForExit(60000)) { throw 'Launcher did not exit within 60 seconds.' }
     $deadline = [DateTime]::UtcNow.AddSeconds(60)
+    $wrapperName = [IO.Path]::GetFileNameWithoutExtension($data.portablePath)
+    # NSIS cleans up the extracted launcher after Electron exits.
+    while (Get-Process -Name $wrapperName -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $data.portablePath }) {
+        if ([DateTime]::UtcNow -ge $deadline) { throw 'Portable wrapper did not exit within 60 seconds.' }
+        Start-Sleep -Milliseconds 500
+    }
     while ($true) {
         try {
-            Move-Item -LiteralPath $data.updatePath -Destination $data.portablePath -Force -ErrorAction Stop
+            [IO.File]::Replace($data.updatePath, $data.portablePath, [NullString]::Value)
             break
         } catch {
-            if ([DateTime]::UtcNow -ge $deadline) { throw }
+            $win32Error = $_.Exception.GetBaseException().HResult -band 0xffff
+            if ($win32Error -notin @(5, 32, 33) -or
+                [DateTime]::UtcNow -ge $deadline) { throw }
             Start-Sleep -Milliseconds 500
         }
     }
+    'Portable executable replaced; restarting.' | Out-File -LiteralPath $logPath -Encoding utf8 -Append -ErrorAction Continue
     Start-Process -FilePath $data.portablePath -WorkingDirectory (Split-Path -LiteralPath $data.portablePath)
 } catch {
-    $message = 'Portable update failed: ' + $_.Exception.Message + [Environment]::NewLine + 'Downloaded file: ' + $data.updatePath
-    $logPath = $data.portablePath + '.update.log'
-    $message | Out-File -LiteralPath $logPath -Encoding utf8 -Append
+    $message = 'Portable update failed: ' + $_.Exception.Message
+    if (Test-Path -LiteralPath $data.updatePath) { $message += [Environment]::NewLine + 'Downloaded file: ' + $data.updatePath }
+    $message | Out-File -LiteralPath $logPath -Encoding utf8 -Append -ErrorAction Continue
     Add-Type -AssemblyName System.Windows.Forms
     [System.Windows.Forms.MessageBox]::Show($message, 'WSE2 Launcher update') | Out-Null
     exit 1
 }`;
+}
+
+function waitForPortableUpdater(updater) {
+    return new Promise((resolve, reject) => {
+        const output = createInterface({ input: updater.stdout });
+        const onClose = code => finish(new Error(`Portable updater exited before it was ready (code ${code}).`));
+        const finish = (err) => {
+            clearTimeout(timeout);
+            updater.removeListener('close', onClose);
+            output.close();
+            updater.stdout.destroy();
+            if (err) reject(err);
+            else resolve();
+        };
+        const timeout = setTimeout(() => {
+            finish(new Error('Portable updater did not signal readiness.'));
+            updater.kill();
+        }, 15000);
+        updater.once('error', finish);
+        updater.once('close', onClose);
+        output.on('line', line => {
+            if (line === 'ready') finish();
+        });
+    });
+}
+
+function startPortableUpdater(portablePath, updatePath, parentPid = process.pid) {
+    const script = Buffer.from(portableUpdaterScript(portablePath, updatePath, parentPid), 'utf16le').toString('base64');
+    // Closing the readiness pipe and unref'ing lets Electron exit without Windows detached mode.
+    const updater = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden', '-EncodedCommand', script], {
+        stdio: ['ignore', 'pipe', 'ignore'],
+        windowsHide: true,
+        cwd: path.dirname(portablePath),
+    });
+    return waitForPortableUpdater(updater).then(() => updater.unref());
 }
 
 async function downloadPortableUpdate() {
@@ -393,6 +440,7 @@ async function downloadPortableUpdate() {
     const portablePath = process.env.PORTABLE_EXECUTABLE_FILE
         || path.join(process.env.PORTABLE_EXECUTABLE_DIR, portableUpdate.name);
     const updatePath = `${portablePath}.update`;
+    let downloadComplete = false;
 
     try {
         const response = await fetch(portableUpdate.url);
@@ -416,24 +464,14 @@ async function downloadPortableUpdate() {
         if (!receivedBytes || (totalBytes && receivedBytes !== totalBytes)) {
             throw new Error('The portable update download is incomplete.');
         }
+        downloadComplete = true;
         mainWindow?.webContents.send('update_download_progress', { percent: 100, bytesPerSecond: null, remainingSeconds: null });
 
-        const script = Buffer.from(portableUpdaterScript(portablePath, updatePath), 'utf16le').toString('base64');
-        const updater = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden', '-EncodedCommand', script], {
-            detached: true,
-            stdio: 'ignore',
-            windowsHide: true,
-            cwd: path.dirname(portablePath),
-        });
-        await new Promise((resolve, reject) => {
-            updater.once('error', reject);
-            updater.once('spawn', resolve);
-        });
-        updater.unref();
+        await startPortableUpdater(portablePath, updatePath);
         app.quit();
         return true;
     } catch (err) {
-        await fs.promises.unlink(updatePath).catch(() => { });
+        if (!downloadComplete) await fs.promises.unlink(updatePath).catch(() => { });
         console.error('[Updater] Portable update failed:', err.message);
         mainWindow?.webContents.send('app-error', `Portable update failed: ${err.message}`);
         return false;

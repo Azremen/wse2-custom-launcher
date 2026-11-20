@@ -74,7 +74,7 @@ test('saved settings exclude passwords and extra arguments; Windows logging mask
 
 async function fixture(t) {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wse2-multiplayer-'));
-    t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+    t.after(() => fs.promises.rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
     fs.mkdirSync(path.join(root, 'Modules', 'Native Expansion'), { recursive: true });
     for (const file of ['mb_warband_wse2_dedicated.exe', 'mb_warband_wse2_dedicated_x64.exe',
         'mb_warband_wse2_dedicated_campaign.exe', 'mb_warband_wse2_dedicated_campaign_x64.exe', 'mb_warband_wse2.exe',
@@ -124,7 +124,14 @@ function mainHarness(root, platform, spawnError = false, env = {}) {
             child.stderr = new PassThrough();
             child.unref = () => { child.unreferenced = true; };
             launches.push({ command, args, options, child });
-            process.nextTick(() => child.emit(spawnError ? 'error' : 'spawn', spawnError ? new Error('spawn failed') : undefined));
+            process.nextTick(() => {
+                if (spawnError === true) return child.emit('error', new Error('spawn failed'));
+                child.emit('spawn');
+                if (args.includes('-EncodedCommand') && options.stdio?.[1] === 'pipe') {
+                    if (spawnError === 'early exit') child.emit('close', 1);
+                    else child.stdout.write('ready\r\n');
+                }
+            });
             return child;
         },
         execFile(command, args, options, callback) {
@@ -263,11 +270,12 @@ test('module and launcher download UI share localized speed and ETA and clear st
     }
 });
 
-test('portable update quits only after the helper spawns, and rejects incomplete downloads', async t => {
+test('portable update quits only after the helper is ready, preserving completed downloads on helper failures', async t => {
     const { root } = await fixture(t);
     const portablePath = path.join(root, "Launcher's portable.exe");
-    for (const scenario of ['success', 'spawn failure', 'incomplete']) {
-        const { handlers, context, launches, app, messages } = mainHarness(root, 'win32', scenario === 'spawn failure', {
+    for (const scenario of ['success', 'spawn failure', 'early exit', 'incomplete']) {
+        const spawnError = scenario === 'early exit' ? scenario : scenario === 'spawn failure';
+        const { handlers, context, launches, app, messages } = mainHarness(root, 'win32', spawnError, {
             PORTABLE_EXECUTABLE_DIR: root,
             PORTABLE_EXECUTABLE_FILE: portablePath,
         });
@@ -285,11 +293,13 @@ test('portable update quits only after the helper spawns, and rejects incomplete
         if (scenario === 'success') {
             assert.equal(launches[0].child.unreferenced, true);
             assert.equal(launches[0].options.cwd, root);
+        } else {
+            assert.ok(messages.some(message => message.includes('Portable update failed')));
+        }
+        if (scenario === 'incomplete') assert.equal(fs.existsSync(`${portablePath}.update`), false);
+        else {
             assert.equal(fs.readFileSync(`${portablePath}.update`, 'utf8'), 'MZok');
             fs.unlinkSync(`${portablePath}.update`);
-        } else {
-            assert.equal(fs.existsSync(`${portablePath}.update`), false);
-            assert.ok(messages.some(message => message.includes('Portable update failed')));
         }
     }
 });
@@ -299,7 +309,6 @@ test('portable updater waits for a locked EXE, replaces it and starts the new ex
     timeout: 30000,
 }, async t => {
     const { execFileSync, spawn } = require('node:child_process');
-    const { promisify } = require('node:util');
     const { root } = await fixture(t);
     const dir = path.join(root, "Portable's Türkçe folder");
     fs.mkdirSync(dir);
@@ -342,12 +351,11 @@ class Stub {
         }
     };
     await waitFor(readyPath);
-    const { context } = mainHarness(root, 'win32');
+    const context = vm.createContext({ Buffer, path, process, spawn, setTimeout, clearTimeout, createInterface: require('node:readline').createInterface });
+    const mainSource = fs.readFileSync(path.join(__dirname, '..', 'main.js'), 'utf8');
+    vm.runInContext(mainSource.slice(mainSource.indexOf('function portableUpdaterScript('), mainSource.indexOf('async function downloadPortableUpdate(')), context);
     // The Electron parent is already gone, but the portable wrapper still locks the EXE.
-    const script = context.portableUpdaterScript(portablePath, updatePath, 2147483647);
-    await promisify(require('node:child_process').execFile)('powershell.exe',
-        ['-NoProfile', '-NonInteractive', '-EncodedCommand', Buffer.from(script, 'utf16le').toString('base64')],
-        { windowsHide: true, timeout: 15000 });
+    await context.startPortableUpdater(portablePath, updatePath, 2147483647);
     await waitFor(startedPath);
     assert.deepEqual(fs.readFileSync(portablePath), replacement);
     assert.equal(fs.existsSync(updatePath), false);
