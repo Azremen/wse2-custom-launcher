@@ -113,6 +113,8 @@ function mainHarness(root, platform, spawnError = false, env = {}) {
     const handlers = new Map();
     const launches = [];
     const messages = [];
+    const autoUpdater = new EventEmitter();
+    autoUpdater.checkForUpdates = async () => ({});
     const logger = { transports: { file: {}, console: {} } };
     for (const level of ['info', 'warn', 'error']) logger[level] = (...args) => messages.push(args.join(' '));
     const childProcess = {
@@ -151,7 +153,7 @@ function mainHarness(root, platform, spawnError = false, env = {}) {
         require(name) {
             if (name === 'electron') return electron;
             if (name === 'electron-log') return logger;
-            if (name === 'electron-updater') return { autoUpdater: {} };
+            if (name === 'electron-updater') return { autoUpdater };
             if (name === 'child_process') return childProcess;
             if (name === './multiplayer') return multiplayer;
             if (name === './server-config') return require('../server-config');
@@ -160,14 +162,106 @@ function mainHarness(root, platform, spawnError = false, env = {}) {
         },
         __dirname: root,
         process: { ...process, platform, env: { ...process.env, PATH: root, ...env }, on() { } },
-        console: {}, Buffer, URL, TextDecoder,
+        console: {}, Buffer, URL, TextDecoder, performance,
         setTimeout() { return 1; }, clearTimeout() { },
     });
     vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'main.js'), 'utf8'), context);
     context.findGameInstallPath = async () => root;
     context.loadWineSettings = async () => ({ winePath: path.join(root, 'wine'), winePrefix: path.join(root, 'prefix') });
-    return { handlers, launches, messages, context, dialogs, app: electron.app };
+    return { handlers, launches, messages, context, dialogs, app: electron.app, autoUpdater };
 }
+
+test('installed launcher updates report speed and ETA, including unknown size and stalled transfers', async t => {
+    const { root } = await fixture(t);
+    const { context, autoUpdater } = mainHarness(root, 'win32', false, { PORTABLE_EXECUTABLE_DIR: '' });
+    const events = [];
+    context.testWindow = { webContents: { send: (channel, progress) => events.push({ channel, ...progress }) } };
+    vm.runInContext('mainWindow = testWindow', context);
+    context.setupAutoUpdater();
+    autoUpdater.emit('download-progress', { percent: 25.5, bytesPerSecond: 400, transferred: 255, total: 1000 });
+    assert.deepEqual(events.pop(), { channel: 'update_download_progress', percent: 25.5, bytesPerSecond: 400, remainingSeconds: 2 });
+    autoUpdater.emit('download-progress', { bytesPerSecond: 400, transferred: 255, total: 0 });
+    assert.deepEqual(events.pop(), { channel: 'update_download_progress', percent: null, bytesPerSecond: 400, remainingSeconds: null });
+    autoUpdater.emit('download-progress', { percent: 50, bytesPerSecond: 0, transferred: 500, total: 1000 });
+    assert.equal(events.pop().remainingSeconds, null);
+});
+
+test('portable updates report speed with or without a size and reset metrics on the next download', async t => {
+    const { root } = await fixture(t);
+    const { context, handlers } = mainHarness(root, 'win32', false, {
+        PORTABLE_EXECUTABLE_DIR: root,
+        PORTABLE_EXECUTABLE_FILE: path.join(root, 'portable.exe'),
+    });
+    let time = 0;
+    context.performance = { now: () => time };
+    const events = [];
+    context.testWindow = { webContents: { send: (channel, progress) => {
+        if (channel === 'update_download_progress') events.push({ ...progress });
+    } } };
+    vm.runInContext('mainWindow = testWindow', context);
+    for (const knownSize of [true, false]) {
+        events.length = 0;
+        context.fetch = async url => url.includes('/releases/latest') ? {
+            ok: true, json: async () => ({
+                tag_name: 'v1.0.1',
+                assets: [{ name: 'wse2-launcher-Windows-Portable.exe', browser_download_url: 'https://example.invalid/portable.exe' }],
+            }),
+        } : {
+            ok: true, headers: { get: () => knownSize ? '8' : null },
+            body: (async function* () {
+                for (let i = 0; i < 2; i++) {
+                    time += 500;
+                    yield Buffer.from('MZok');
+                }
+            })(),
+        };
+        assert.equal(await handlers.get('start_update')(), true);
+        assert.deepEqual(events[0], { percent: knownSize ? 0 : null, bytesPerSecond: null, remainingSeconds: null });
+        assert.deepEqual(events[1], { percent: knownSize ? 50 : null, bytesPerSecond: 8, remainingSeconds: knownSize ? 1 : null });
+        assert.deepEqual(events.at(-1), { percent: 100, bytesPerSecond: null, remainingSeconds: null });
+    }
+});
+
+test('module and launcher download UI share localized speed and ETA and clear stale estimates', () => {
+    const elements = new Map();
+    const $ = selector => {
+        if (!elements.has(selector)) {
+            elements.set(selector, {
+                length: 1, attrs: {}, styles: {}, value: '',
+                ready() {},
+                attr(name, value) { this.attrs[name] = value; return this; },
+                removeAttr(name) { delete this.attrs[name]; return this; },
+                css(name, value) { this.styles[name] = value; return this; },
+                text(value) { this.value = value; return this; },
+                addClass() { return this; }, removeClass() { return this; },
+            });
+        }
+        return elements.get(selector);
+    };
+    const context = vm.createContext({ $, document: {}, localStorage: { getItem: () => null }, Intl });
+    vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'renderer.js'), 'utf8'), context);
+    for (const locale of ['en', 'tr', 'ru']) {
+        context.testTranslations = require(`../locales/${locale}.json`);
+        context.testLocale = locale;
+        vm.runInContext('translations = testTranslations; currentLocale = testLocale', context);
+        const progress = { percent: 50, bytesPerSecond: 2 * 1024 ** 2, remainingSeconds: 12 };
+        context.updateLauncherProgress(progress);
+        context.updateProgressBar(progress);
+        const status = $('#updater-download-status').value;
+        assert.match(status, /2 MiB\/s/);
+        assert.ok(status.includes(context.t('ui.download_eta_seconds', { seconds: 12 })));
+        assert.equal($('#download-status').value, status);
+        context.updateLauncherProgress({ percent: null, bytesPerSecond: 512, remainingSeconds: null });
+        assert.match($('#updater-download-status').value, /0[.,]5 KiB\/s/);
+        assert.ok($('#updater-download-status').value.includes(context.t('ui.download_eta_unknown')));
+        assert.equal($('#updater-progress-bar').attrs['aria-valuenow'], undefined);
+        context.updateLauncherProgress({ percent: 100, bytesPerSecond: null, remainingSeconds: null });
+        assert.equal($('#updater-download-status').value, context.t('ui.done'));
+        context.updateLauncherProgress();
+        assert.ok($('#updater-download-status').value.includes(context.t('ui.download_estimating')));
+        assert.equal($('#updater-progress-bar').styles.width, '0%');
+    }
+});
 
 test('portable update quits only after the helper spawns, and rejects incomplete downloads', async t => {
     const { root } = await fixture(t);

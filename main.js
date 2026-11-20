@@ -300,9 +300,15 @@ function setupAutoUpdater() {
         mainWindow?.webContents.send('update_available');
     }
     );
-    autoUpdater.on('download-progress', (info) =>
-        mainWindow?.webContents.send('update_download_progress', Math.round(info.percent))
-    );
+    autoUpdater.on('download-progress', (info) => {
+        const bytesPerSecond = Number.isFinite(info.bytesPerSecond) && info.bytesPerSecond >= 0 ? info.bytesPerSecond : null;
+        mainWindow?.webContents.send('update_download_progress', {
+            percent: Number.isFinite(info.percent) ? Math.min(Math.max(info.percent, 0), 99) : null,
+            bytesPerSecond,
+            remainingSeconds: info.total > 0 && Number.isFinite(info.total) && Number.isFinite(info.transferred) && bytesPerSecond > 0
+                ? Math.ceil(Math.max(0, info.total - info.transferred) / bytesPerSecond) : null,
+        });
+    });
     autoUpdater.on('update-downloaded', () =>
         mainWindow?.webContents.send('update_downloaded')
     );
@@ -395,14 +401,14 @@ async function downloadPortableUpdate() {
         const totalBytes = Number(response.headers.get('content-length')) || 0;
         const file = await fs.promises.open(updatePath, 'w');
         let receivedBytes = 0;
+        const measure = createDownloadMeter(0);
+        mainWindow?.webContents.send('update_download_progress', measure(0, totalBytes));
 
         try {
             for await (const chunk of response.body) {
                 await file.write(chunk);
                 receivedBytes += chunk.length;
-                if (totalBytes) {
-                    mainWindow?.webContents.send('update_download_progress', Math.round((receivedBytes / totalBytes) * 100));
-                }
+                mainWindow?.webContents.send('update_download_progress', measure(receivedBytes, totalBytes));
             }
         } finally {
             await file.close();
@@ -410,6 +416,7 @@ async function downloadPortableUpdate() {
         if (!receivedBytes || (totalBytes && receivedBytes !== totalBytes)) {
             throw new Error('The portable update download is incomplete.');
         }
+        mainWindow?.webContents.send('update_download_progress', { percent: 100, bytesPerSecond: null, remainingSeconds: null });
 
         const script = Buffer.from(portableUpdaterScript(portablePath, updatePath), 'utf16le').toString('base64');
         const updater = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden', '-EncodedCommand', script], {

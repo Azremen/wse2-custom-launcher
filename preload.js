@@ -75,7 +75,7 @@ contextBridge.exposeInMainWorld('api', {
             return () => ipcRenderer.removeListener('update_downloaded', handler);
         },
         onUpdateProgress: (callback) => {
-            const handler = (_, pct) => callback(pct);
+            const handler = (_, progress) => callback(progress);
             ipcRenderer.on('update_download_progress', handler);
             return () => ipcRenderer.removeListener('update_download_progress', handler);
         },

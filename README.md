@@ -17,7 +17,7 @@ A custom launcher for Warband Script Enhancer 2 (WSE2) by **Azremen**.
 - **Direct Connect:** Launch the selected module with a server IPv4 address/hostname, port and optional join password.
 - **Dedicated Server:** Start a local WSE2 server in a separate console on Windows or Linux/Wine, with command/config files and extra arguments.
 - **Enhanced Configuration:** Modern UI with support for Color Pickers, Drop-down Menus, Ranges, and Sliders.
-- **Auto-Updater:** Automatically checks for new launcher versions and prompts to update.
+- **Auto-Updater:** Automatically checks for new launcher versions and prompts to update. Both portable and installed launcher update downloads show transfer speed and estimated seconds remaining below the update progress bar, just like module downloads. If the file size is unavailable, speed is still shown and the remaining time is marked unknown.
 - **Localization:** Supports English, Turkish, and Russian.
 - **Dark/Light Theme:** Switchable UI theme.
 
@@ -193,7 +193,7 @@ Paste it into the `CSC_LINK` secret and set `CSC_KEY_PASSWORD`.
 - **Doğrudan Bağlantı:** Seçili modu sunucu IPv4 adresi/hostname, port ve isteğe bağlı giriş parolasıyla başlatın.
 - **Dedicated Server:** Windows veya Linux/Wine üzerinde komut/config dosyaları ve ek argümanlarla yerel WSE2 sunucusunu ayrı konsolda başlatın.
 - **Gelişmiş Yapılandırma:** Renk Seçiciler, Açılır Menüler, Aralıklar ve Kaydırıcılar içeren modern arayüz.
-- **Otomatik Güncelleme:** Yeni başlatıcı sürümlerini otomatik kontrol eder ve güncelleme önerir.
+- **Otomatik Güncelleme:** Yeni başlatıcı sürümlerini otomatik kontrol eder ve güncelleme önerir. Mod indirmelerinde olduğu gibi, portable ve kurulumlu başlatıcı güncellemelerinde de güncelleme çubuğunun altında indirme hızı ve tahmini kalan saniye gösterilir. Dosya boyutu bilinmiyorsa hız gösterilmeye devam eder, kalan süre bilinmiyor olarak belirtilir.
 - **Yerelleştirme:** Türkçe, İngilizce ve Rusça desteği.
 - **Koyu/Açık Tema:** Değiştirilebilir arayüz teması.
 
@@ -356,7 +356,7 @@ CSC_KEY_PASSWORD=sifreniz
 - **Прямое подключение:** Запуск выбранного модуля с IPv4-адресом/именем сервера, портом и необязательным паролем входа.
 - **Выделенный сервер:** Запуск локального WSE2-сервера в отдельной консоли Windows или Linux/Wine с файлами команд/конфигурации и дополнительными аргументами.
 - **Расширенная конфигурация:** Современный интерфейс с поддержкой выбора цвета, выпадающих списков, диапазонов и ползунков.
-- **Автообновление:** Автоматически проверяет новые версии и предлагает обновиться.
+- **Автообновление:** Автоматически проверяет новые версии и предлагает обновиться. При загрузке обновлений portable-версии и установленного лаунчера под индикатором отображаются скорость и примерное оставшееся время в секундах, как и при загрузке модулей. Если размер файла неизвестен, скорость отображается, а оставшееся время отмечается как неизвестное.
 - **Локализация:** Поддержка русского, английского и турецкого языков.
 - **Тёмная/Светлая тема:** Переключаемая тема интерфейса.
 

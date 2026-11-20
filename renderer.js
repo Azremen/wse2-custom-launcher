@@ -646,14 +646,12 @@ async function initMainWindow() {
         if (updatePromptShown) return;
         updatePromptShown = true;
         if (await showConfirm(t("msg_launcher_update"))) {
+            updateLauncherProgress();
             window.api.launcher.update();
-            $('#updater-progress-wrap').removeClass('d-none');
         }
     });
 
-    window.api.events.onUpdateProgress((pct) => {
-        $('#updater-progress-bar').css('width', pct + '%').text(pct + '%');
-    });
+    window.api.events.onUpdateProgress(updateLauncherProgress);
 
     window.api.events.onUpdateDownloaded(async () => {
         $('#updater-progress-wrap').addClass('d-none');
@@ -669,8 +667,8 @@ async function initMainWindow() {
         if (!updatePromptShown && startupUpdate?.hasUpdate) {
             updatePromptShown = true;
             if (await showConfirm(t("msg_launcher_update"))) {
+                updateLauncherProgress();
                 window.api.launcher.update();
-                $('#updater-progress-wrap').removeClass('d-none');
             }
         }
     } catch (err) {
@@ -1163,6 +1161,26 @@ function startDownload(url) {
     });
 }
 
+function formatDownloadTransfer({ bytesPerSecond, remainingSeconds }) {
+    const number = new Intl.NumberFormat(currentLocale, { maximumFractionDigits: 1 });
+    const speed = bytesPerSecond === null ? t('ui.download_estimating')
+        : bytesPerSecond >= 1024 ** 2 ? `${number.format(bytesPerSecond / 1024 ** 2)} MiB/s`
+            : `${number.format(bytesPerSecond / 1024)} KiB/s`;
+    const remaining = remainingSeconds === null ? t('ui.download_eta_unknown')
+        : t('ui.download_eta_seconds', { seconds: number.format(remainingSeconds) });
+    return t('ui.download_transfer', { speed, remaining });
+}
+
+function updateLauncherProgress(progress = { percent: 0, bytesPerSecond: null, remainingSeconds: null }) {
+    const { percent } = progress;
+    const $bar = $('#updater-progress-bar');
+    $('#updater-progress-wrap').removeClass('d-none');
+    if (percent === null) $bar.removeAttr('aria-valuenow');
+    else $bar.attr('aria-valuenow', Math.round(percent));
+    $bar.css('width', percent === null ? '100%' : `${percent}%`).text(percent === null ? '' : `${Math.round(percent)}%`);
+    $('#updater-download-status').text(percent === 100 ? t('ui.done') : formatDownloadTransfer(progress));
+}
+
 function updateProgressBar(progress = null) {
     const $bar = getProgressBar();
     const $status = getDownloadStatus();
@@ -1179,7 +1197,7 @@ function updateProgressBar(progress = null) {
     $bar.addClass('progress-bar-striped progress-bar-animated');
     $bar.removeClass('bg-success');
 
-    const { percent, bytesPerSecond, remainingSeconds } = progress;
+    const { percent } = progress;
     if (percent === null) $track.removeAttr('aria-valuenow');
     else $track.attr('aria-valuenow', Math.round(percent));
 
@@ -1187,14 +1205,8 @@ function updateProgressBar(progress = null) {
         $bar.css('width', '100%').text('100%');
         $status.text(t('ui.verifying_extracting'));
     } else {
-        const number = new Intl.NumberFormat(currentLocale, { maximumFractionDigits: 1 });
-        const speed = bytesPerSecond === null ? t('ui.download_estimating')
-            : bytesPerSecond >= 1024 ** 2 ? `${number.format(bytesPerSecond / 1024 ** 2)} MiB/s`
-                : `${number.format(bytesPerSecond / 1024)} KiB/s`;
-        const remaining = remainingSeconds === null ? t('ui.download_eta_unknown')
-            : t('ui.download_eta_seconds', { seconds: number.format(remainingSeconds) });
         $bar.css('width', percent === null ? '100%' : `${percent}%`).text(percent === null ? '' : `${Math.round(percent)}%`);
-        $status.text(t('ui.download_transfer', { speed, remaining }));
+        $status.text(formatDownloadTransfer(progress));
     }
 }
 
