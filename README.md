@@ -66,7 +66,7 @@ mb_warband_wse2_dedicated_campaign_x64.exe --config-path server_config.ini --mod
 
 #### Windows
 1. **Installer:** Run the Setup executable and install it in any folder. The launcher detects your Warband installation through Steam or the Windows registry and supports in-app updates.
-2. **Portable:** Place the portable executable next to `mb_warband_wse2.exe`, or let it detect an installed Steam copy. When an update is available, the launcher downloads the latest portable executable, replaces itself after closing, and restarts automatically.
+2. **Portable:** Place the portable executable next to `mb_warband_wse2.exe`, or let it detect an installed Steam copy. When an update is available, the launcher downloads the latest portable executable, closes, waits up to 60 seconds for the portable EXE's file lock to clear, replaces itself, and restarts automatically. Replacement/restart failures show an error and are recorded beside the EXE in `<portable-exe>.update.log`. If updating from an older portable version that cannot restart itself, close it and manually replace it with the latest portable download once.
 3. Run the launcher, configure your settings, and click **Launch**.
 
 #### Linux
@@ -242,7 +242,7 @@ mb_warband_wse2_dedicated_campaign_x64.exe --config-path server_config.ini --mod
 
 #### Windows
 1. **Kurulum:** Setup EXE dosyasını çalıştırın ve istediğiniz klasöre kurun. Başlatıcı Warband kurulumunu Steam veya Windows kayıt defteri üzerinden algılar ve uygulama içinden güncellenir.
-2. **Taşınabilir:** Portable EXE dosyasını `mb_warband_wse2.exe` yanına koyun ya da Steam kurulumunun algılanmasına izin verin. Güncelleme olduğunda başlatıcı yeni Portable EXE dosyasını indirir, kapandıktan sonra kendini değiştirir ve otomatik yeniden açılır.
+2. **Taşınabilir:** Portable EXE dosyasını `mb_warband_wse2.exe` yanına koyun ya da Steam kurulumunun algılanmasına izin verin. Güncelleme olduğunda başlatıcı yeni Portable EXE dosyasını indirir, kapanır, Portable EXE kilidinin kalkmasını 60 saniyeye kadar bekler, kendini değiştirir ve otomatik yeniden açılır. Değiştirme/yeniden başlatma hataları ekranda gösterilir ve EXE'nin yanındaki `<portable-exe>.update.log` dosyasına yazılır. Kendini yeniden başlatamayan eski bir portable sürüm kullanıyorsanız kapatıp en güncel portable dosyasıyla bir kez elle değiştirin.
 3. Başlatın, ayarları yapılandırın ve **Launch** butonuna basın.
 
 #### Linux
@@ -405,7 +405,7 @@ mb_warband_wse2_dedicated_campaign_x64.exe --config-path server_config.ini --mod
 
 #### Windows
 1. **Установщик:** Запустите Setup EXE и установите его в любую папку. Лаунчер определит Warband через Steam или реестр Windows и поддерживает обновления из приложения.
-2. **Portable:** Поместите Portable EXE рядом с `mb_warband_wse2.exe` или разрешите ему обнаружить установленную Steam-копию. При наличии обновления лаунчер загрузит новый Portable EXE, заменит себя после закрытия и автоматически перезапустится.
+2. **Portable:** Поместите Portable EXE рядом с `mb_warband_wse2.exe` или разрешите ему обнаружить установленную Steam-копию. При наличии обновления лаунчер загрузит новый Portable EXE, закроется, подождёт снятия блокировки EXE до 60 секунд, заменит себя и автоматически перезапустится. Ошибки замены/перезапуска отображаются на экране и записываются рядом с EXE в `<portable-exe>.update.log`. Если старая portable-версия не может перезапуститься, закройте её и один раз замените вручную последней portable-версией.
 3. Запустите, настройте параметры и нажмите **Launch**.
 
 #### Linux

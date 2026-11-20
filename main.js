@@ -349,6 +349,35 @@ async function checkPortableForUpdates() {
     return { hasUpdate };
 }
 
+function portableUpdaterScript(portablePath, updatePath, parentPid = process.pid) {
+    const data = Buffer.from(JSON.stringify({ portablePath, updatePath, parentPid }), 'utf8').toString('base64');
+    return `
+$ErrorActionPreference = 'Stop'
+$data = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('${data}')) | ConvertFrom-Json
+try {
+    $parent = Get-Process -Id $data.parentPid -ErrorAction SilentlyContinue
+    if ($parent -and -not $parent.WaitForExit(60000)) { throw 'Launcher did not exit within 60 seconds.' }
+    $deadline = [DateTime]::UtcNow.AddSeconds(60)
+    while ($true) {
+        try {
+            Move-Item -LiteralPath $data.updatePath -Destination $data.portablePath -Force -ErrorAction Stop
+            break
+        } catch {
+            if ([DateTime]::UtcNow -ge $deadline) { throw }
+            Start-Sleep -Milliseconds 500
+        }
+    }
+    Start-Process -FilePath $data.portablePath -WorkingDirectory (Split-Path -LiteralPath $data.portablePath)
+} catch {
+    $message = 'Portable update failed: ' + $_.Exception.Message + [Environment]::NewLine + 'Downloaded file: ' + $data.updatePath
+    $logPath = $data.portablePath + '.update.log'
+    $message | Out-File -LiteralPath $logPath -Encoding utf8 -Append
+    Add-Type -AssemblyName System.Windows.Forms
+    [System.Windows.Forms.MessageBox]::Show($message, 'WSE2 Launcher update') | Out-Null
+    exit 1
+}`;
+}
+
 async function downloadPortableUpdate() {
     if (!portableUpdate) {
         const result = await checkPortableForUpdates();
@@ -378,17 +407,20 @@ async function downloadPortableUpdate() {
         } finally {
             await file.close();
         }
+        if (!receivedBytes || (totalBytes && receivedBytes !== totalBytes)) {
+            throw new Error('The portable update download is incomplete.');
+        }
 
-        const script = [
-            `$parent = Get-Process -Id ${process.pid} -ErrorAction SilentlyContinue`,
-            'if ($parent) { $parent.WaitForExit() }',
-            `Move-Item -LiteralPath '${updatePath.replace(/'/g, "''")}' -Destination '${portablePath.replace(/'/g, "''")}' -Force`,
-            `Start-Process -FilePath '${portablePath.replace(/'/g, "''")}'`,
-        ].join('; ');
-        const updater = spawn('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden', '-Command', script], {
+        const script = Buffer.from(portableUpdaterScript(portablePath, updatePath), 'utf16le').toString('base64');
+        const updater = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden', '-EncodedCommand', script], {
             detached: true,
             stdio: 'ignore',
             windowsHide: true,
+            cwd: path.dirname(portablePath),
+        });
+        await new Promise((resolve, reject) => {
+            updater.once('error', reject);
+            updater.once('spawn', resolve);
         });
         updater.unref();
         app.quit();

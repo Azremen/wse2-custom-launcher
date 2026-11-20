@@ -109,7 +109,7 @@ test('dedicated validation requires the executable, command file, optional confi
     await assert.rejects(multiplayer.dedicatedSettings(settings, 'Native Expansion'), /exe_missing/);
 });
 
-function mainHarness(root, platform, spawnError = false) {
+function mainHarness(root, platform, spawnError = false, env = {}) {
     const handlers = new Map();
     const launches = [];
     const messages = [];
@@ -135,7 +135,11 @@ function mainHarness(root, platform, spawnError = false) {
         return { stdout: `Z:${args[1].replace(/\\/g, '/')}\n`, stderr: '' };
     };
     const electron = {
-        app: { isPackaged: false, getPath: () => root, on() { }, whenReady: () => ({ then() { } }) },
+        app: {
+            isPackaged: false, getPath: () => root, getVersion: () => '1.0.0',
+            quit() { this.quitCalled = true; },
+            on() { }, whenReady: () => ({ then() { } }),
+        },
         ipcMain: { handle: (name, handler) => handlers.set(name, handler) },
         dialog: {
             showOpenDialog: async () => dialogs.open,
@@ -155,15 +159,105 @@ function mainHarness(root, platform, spawnError = false) {
             return require(name);
         },
         __dirname: root,
-        process: { ...process, platform, env: { ...process.env, PATH: root }, on() { } },
+        process: { ...process, platform, env: { ...process.env, PATH: root, ...env }, on() { } },
         console: {}, Buffer, URL, TextDecoder,
         setTimeout() { return 1; }, clearTimeout() { },
     });
     vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'main.js'), 'utf8'), context);
     context.findGameInstallPath = async () => root;
     context.loadWineSettings = async () => ({ winePath: path.join(root, 'wine'), winePrefix: path.join(root, 'prefix') });
-    return { handlers, launches, messages, context, dialogs };
+    return { handlers, launches, messages, context, dialogs, app: electron.app };
 }
+
+test('portable update quits only after the helper spawns, and rejects incomplete downloads', async t => {
+    const { root } = await fixture(t);
+    const portablePath = path.join(root, "Launcher's portable.exe");
+    for (const scenario of ['success', 'spawn failure', 'incomplete']) {
+        const { handlers, context, launches, app, messages } = mainHarness(root, 'win32', scenario === 'spawn failure', {
+            PORTABLE_EXECUTABLE_DIR: root,
+            PORTABLE_EXECUTABLE_FILE: portablePath,
+        });
+        context.fetch = async url => url.includes('/releases/latest') ? {
+            ok: true, json: async () => ({
+                tag_name: 'v1.0.1',
+                assets: [{ name: 'wse2-launcher-Windows-Portable.exe', browser_download_url: 'https://example.invalid/portable.exe' }],
+            }),
+        } : {
+            ok: true, headers: { get: () => '4' },
+            body: (async function* () { yield Buffer.from(scenario === 'incomplete' ? 'bad' : 'MZok'); })(),
+        };
+        assert.equal(await handlers.get('start_update')(), scenario === 'success', scenario);
+        assert.equal(!!app.quitCalled, scenario === 'success', scenario);
+        if (scenario === 'success') {
+            assert.equal(launches[0].child.unreferenced, true);
+            assert.equal(launches[0].options.cwd, root);
+            assert.equal(fs.readFileSync(`${portablePath}.update`, 'utf8'), 'MZok');
+            fs.unlinkSync(`${portablePath}.update`);
+        } else {
+            assert.equal(fs.existsSync(`${portablePath}.update`), false);
+            assert.ok(messages.some(message => message.includes('Portable update failed')));
+        }
+    }
+});
+
+test('portable updater waits for a locked EXE, replaces it and starts the new executable', {
+    skip: process.platform !== 'win32',
+    timeout: 30000,
+}, async t => {
+    const { execFileSync, spawn } = require('node:child_process');
+    const { promisify } = require('node:util');
+    const { root } = await fixture(t);
+    const dir = path.join(root, "Portable's Türkçe folder");
+    fs.mkdirSync(dir);
+    const portablePath = path.join(dir, 'launcher.exe');
+    const updatePath = `${portablePath}.update`;
+    const sourcePath = path.join(root, 'portable-stub.cs');
+    const readyPath = `${portablePath}.ready`;
+    const startedPath = `${portablePath}.started`;
+    fs.writeFileSync(sourcePath, `
+using System;
+using System.IO;
+using System.Reflection;
+using System.Threading;
+class Stub {
+    static void Main(string[] args) {
+        string exe = Assembly.GetExecutingAssembly().Location;
+        if (args.Length > 0) {
+            File.WriteAllText(exe + ".ready", "ready");
+            Thread.Sleep(2000);
+        } else {
+            File.WriteAllText(exe + ".started", "started");
+        }
+    }
+}`);
+    const compiler = path.join(process.env.WINDIR, 'Microsoft.NET', 'Framework64', 'v4.0.30319', 'csc.exe');
+    execFileSync(compiler, ['/nologo', '/target:winexe', `/out:${portablePath}`, sourcePath], { windowsHide: true });
+    const replacement = Buffer.concat([fs.readFileSync(portablePath), Buffer.from('new version')]);
+    fs.writeFileSync(updatePath, replacement);
+    const old = spawn(portablePath, ['hold'], { stdio: 'ignore' });
+    const exited = new Promise((resolve, reject) => {
+        old.once('error', reject);
+        old.once('exit', resolve);
+    });
+    t.after(async () => { if (old.exitCode === null) old.kill(); await exited; });
+    const waitFor = async file => {
+        const deadline = Date.now() + 5000;
+        while (!fs.existsSync(file)) {
+            if (Date.now() > deadline) assert.fail(`Timed out waiting for ${file}`);
+            await new Promise(resolve => setTimeout(resolve, 50));
+        }
+    };
+    await waitFor(readyPath);
+    const { context } = mainHarness(root, 'win32');
+    // The Electron parent is already gone, but the portable wrapper still locks the EXE.
+    const script = context.portableUpdaterScript(portablePath, updatePath, 2147483647);
+    await promisify(require('node:child_process').execFile)('powershell.exe',
+        ['-NoProfile', '-NonInteractive', '-EncodedCommand', Buffer.from(script, 'utf16le').toString('base64')],
+        { windowsHide: true, timeout: 15000 });
+    await waitFor(startedPath);
+    assert.deepEqual(fs.readFileSync(portablePath), replacement);
+    assert.equal(fs.existsSync(updatePath), false);
+});
 
 test('download progress estimates bytes per second and rounds remaining time up', async t => {
     const { root } = await fixture(t);
